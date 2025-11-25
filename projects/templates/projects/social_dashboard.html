@@ -1,0 +1,200 @@
+{# projects/templates/projects/social_dashboard.html #}
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/social.css' %}" />
+{% endblock %}
+
+{% block title %}Gestão de Redes Sociais{% endblock %}
+
+{% block content %}
+
+    <div class="social-header">
+        <div>
+            <h1>Gestão de Redes Sociais</h1>
+            <p>Conecte suas contas, agende posts e veja métricas.</p>
+        </div>
+        <button
+            id="create-post-btn"
+            class="form-button"
+            style="background-color: var(--primary-color)"
+        >
+            <i data-feather="plus-square" style="margin-right: 8px"></i> Criar Novo Post
+        </button>
+    </div>
+
+    <h3 style="margin-bottom: 15px">Contas Conectadas</h3>
+    <div class="social-grid">
+        <div class="account-card">
+            <i data-feather="facebook" class="fb-color"></i>
+            <h4>Facebook</h4>
+            {% if connected_accounts %}
+            <span style="color: green; font-size: 0.8em">● Conectado</span>
+            {% else %}
+            <button
+                class="form-button"
+                style="padding: 5px 10px; font-size: 0.8em; margin-top: 10px"
+            >
+                Conectar
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="account-card">
+            <i data-feather="instagram" class="ig-color"></i>
+            <h4>Instagram</h4>
+            <button
+                class="form-button"
+                style="padding: 5px 10px; font-size: 0.8em; margin-top: 10px"
+            >
+                Conectar
+            </button>
+        </div>
+
+        <div class="account-card">
+            <i data-feather="linkedin" class="li-color"></i>
+            <h4>LinkedIn</h4>
+            <button
+                class="form-button"
+                style="padding: 5px 10px; font-size: 0.8em; margin-top: 10px"
+            >
+                Conectar
+            </button>
+        </div>
+    </div>
+
+    <h3 style="margin-bottom: 15px;">Agendados</h3>
+    <div class="posts-list">
+        {% for post in scheduled_posts %}
+            <div class="post-item scheduled">
+                <div>
+                    <strong>{{ post.scheduled_for|date:"d/m/Y H:i" }}</strong>
+                    <p style="margin: 5px 0; font-size: 0.9em;">
+                        {{ post.content|truncatechars:50 }}
+                    </p>
+                    <div style="font-size: 0.8em; color: #888">
+                        {% for acc in post.accounts.all %}
+                            {{ acc.get_platform_display }}
+                        {% endfor %}
+                    </div>
+                </div>
+                <span style="background: #e0f7fa; color: #006064; padding: 5px 10px; border-radius: 15px; font-size: 0.8em;">Agendado</span>
+            </div>
+        {% empty %}
+            <p style="color: #999;">Nenhum post agendado no momento.</p>
+        {% endfor %}
+    </div>
+
+    <h3 style="margin-top: 30px; margin-bottom: 15px;">Publicados Recentemente (Métricas)</h3>
+    <div class="posts-list">
+        {% for post in published_posts %}
+            <div class="post-item published">
+                <div style="flex-grow: 1;">
+                    <strong>{{ post.scheduled_for|date:"d/m/Y" }}</strong>
+                    <p style="margin: 5px 0; font-size: 0.9em;">{{ post.content|truncatechars:50 }}</p>
+                </div>
+                
+                <div class="metrics-box">
+                    <span title="Alcance/Views"><i data-feather="eye" style="width:14px"></i> {{ post.views_count }}</span>
+                    <span title="Curtidas"><i data-feather="thumbs-up" style="width:14px"></i> {{ post.likes_count }}</span>
+                    <span title="Compartilhamentos"><i data-feather="share" style="width:14px"></i> {{ post.shares_count }}</span>
+                </div>
+            </div>
+        {% empty %}
+            <p style="color: #999;">Nenhum post publicado ainda.</p>
+        {% endfor %}
+    </div>
+
+
+    <div id="create-post-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px">
+            <span class="close-button" data-modal-id="create-post-modal">&times;</span>
+            <h2>Agendar Nova Postagem</h2>
+            
+            <form id="create-post-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <form id="create-post-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                
+                    <div class="form-group">
+                        <label for="post-client">Cliente:</label>
+                        <select id="post-client" name="client" class="form-input" required>
+                            <option value="" disabled selected>Selecione o Cliente...</option>
+                            {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-content">Legenda / Conteúdo:</label>
+                        <textarea id="post-content" name="content" class="form-input" rows="5" required></textarea>
+                    </div>
+                
+                    </form>
+
+                <div class="form-group">
+                    <label for="post-content">Legenda / Conteúdo:</label>
+                    <textarea id="post-content" name="content" class="form-input" rows="5" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="post-image">Mídia (Imagem ou Vídeo):</label>
+                    <input type="file" id="post-image" name="image" class="form-input" accept="image/*,video/*" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="scheduled-for">Agendar para:</label>
+                    <input type="datetime-local" id="scheduled-for" name="scheduled_for" class="form-input" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Publicar nas Contas:</label>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap">
+                        {% for account in connected_accounts %}
+                        <label
+                            style="display: flex; align-items: center; cursor: pointer; font-weight: normal;">
+                            <input
+                                type="checkbox"
+                                name="accounts"
+                                value="{{ account.id }}"
+                                style="margin-right: 5px"
+                            />
+                            <i
+                                data-feather="{{ account.platform }}"
+                                style="width: 16px; margin-right: 5px"
+                                class="{{ account.platform }}-color"
+                            ></i>
+                            {{ account.platform|capfirst }} ({{ account.account_name }})
+                        </label>
+                        {% empty %}
+                        <p style="color: #dc3545">
+                            Nenhuma conta conectada. Conecte contas para agendar posts.
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="modal-button"
+                    style="background-color: var(--secondary-color)"
+                >
+                    <i data-feather="send" style="width: 16px; margin-right: 5px"></i>
+                    Agendar Post
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // --- Variáveis globais para o JS ---
+    const CSRF_TOKEN = "{{ csrf_token }}";
+    const CREATE_POST_API_URL = "{% url 'create_social_post_api' %}";
+    // Adicione outras URLs aqui conforme necessário
+</script>
+<script src="{% static 'js/social.js' %}"></script>
+{% endblock %}

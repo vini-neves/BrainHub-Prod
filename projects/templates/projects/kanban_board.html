@@ -1,0 +1,111 @@
+{# projects/templates/projects/kanban_board.html #}
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
+{% endblock %}
+
+{% block title %}Quadro Kanban{% endblock %}
+
+{% block content %}
+
+    <div class="kanban-header">
+        <div> <h1>Quadro Kanban</h1>
+            <p>Organize suas tarefas e acompanhe o progresso dos projetos.</p>
+        </div>
+        <div> <button id="toggle-done-column" class="toggle-button">
+                <i data-feather="eye-off"></i> <span>Ocultar Concluídos</span>
+            </button>
+            <button id="add-task-btn" class="add-task-button">
+                <i data-feather="plus"></i> Adicionar Nova Tarefa
+            </button>
+        </div>
+    </div>
+
+    <div class="kanban-board">
+        <div class="kanban-column" id="column-todo" data-status="todo">
+            <div class="column-header">
+                <h3>A Fazer</h3>
+                <span class="task-count">0</span>
+            </div>
+            <div class="column-cards"></div>
+        </div>
+
+        <div class="kanban-column" id="column-doing" data-status="doing">
+            <div class="column-header">
+                <h3>Em Andamento</h3>
+                <span class="task-count">0</span>
+            </div>
+            <div class="column-cards"></div>
+        </div>
+
+        <div class="kanban-column" id="column-done" data-status="done">
+            <div class="column-header">
+                <h3>Concluído</h3>
+                <span class="task-count">0</span>
+            </div>
+            <div class="column-cards"></div>
+        </div>
+    </div>
+
+    {# --- MODAL DE ADICIONAR TAREFA (ATUALIZADO) --- #}
+    <div id="add-task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" data-modal-id="add-task-modal">&times;</span>
+            <h2>Adicionar Nova Tarefa</h2>
+            <form id="add-task-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="task-title">Título:</label>
+                    <input type="text" id="task-title" name="title" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Descrição:</label>
+                    <textarea id="task-description" name="description" class="form-input" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-project">Projeto:</label>
+                    <select id="task-project" name="project" class="form-input" required>
+                        <option value="" disabled selected>Selecione um projeto...</option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-assigned-to">Atribuir a:</label>
+                    <select id="task-assigned-to" name="assigned_to" class="form-input">
+                        <option value="">Ninguém</option>
+                        {% for user in agency_users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="modal-button" style="background-color: var(--primary-color);">Criar Tarefa</button>
+            </form>
+        </div>
+    </div>
+    
+    {# --- NOVO MODAL: DETALHES DA TAREFA --- #}
+    <div id="task-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" data-modal-id="task-details-modal">&times;</span>
+            <div id="task-details-content">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const KANBAN_INITIAL_DATA = {{ kanban_data|safe }};
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        const KANBAN_UPDATE_URL = "{% url 'kanban_update_task' %}";
+        const ADD_TASK_API_URL = "{% url 'add_task_api' %}";
+        const GET_TASK_DETAILS_URL_BASE = "{% url 'get_task_details_api' 0 %}".replace('0', '');
+        const DELETE_TASK_URL_BASE = "{% url 'delete_task_api' 0 %}".replace('0', '');
+    </script>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/kanban.js' %}"></script>
+{% endblock %}

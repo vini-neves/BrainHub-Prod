@@ -1,0 +1,73 @@
+{# projects/templates/projects/dashboard.html #}
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+    <div class="dashboard-header">
+        <h1 id="dynamic-greeting" data-username="{{ user.username }}">Olá, {{ user.username }}!</h1>
+        <p>Aqui está um resumo da sua agência hoje.</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <h3>{{ project_count }}</h3>
+                <p>Projetos Ativos</p>
+            </div>
+            <i data-feather="briefcase" style="width: 32px; height: 32px; color: var(--primary-color);"></i>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <h3>{{ pending_tasks_count }}</h3>
+                <p>Tarefas Pendentes</p>
+            </div>
+            <i data-feather="clock" style="width: 32px; height: 32px; color: #ffc107;"></i>
+        </div>
+
+        <div class="stat-card" style="align-items: center;">
+            <div class="stat-card-info">
+                <h3>{{ completed_tasks_count }} / {{ total_tasks }}</h3>
+                <p>Tarefas Concluídas</p>
+            </div>
+            <div class="progress-circle" 
+                 style="--progress-value: {{ completion_percent }}%;" 
+                 data-progress="{{ completion_percent }}%">
+            </div>
+        </div>
+    </div>
+
+    <div class="widget-grid">
+
+        <div class="widget-card">
+            <div class="widget-header">
+                <h3><i data-feather="calendar" style="width:18px; height:18px; margin-right: 5px;"></i> Próximos Eventos</h3>
+            </div>
+            <ul class="widget-list">
+                {% for event in upcoming_events %}
+                    <li class="widget-list-item">
+                        <span class="item-title">{{ event.title }}</span>
+                        <span class="item-date">{{ event.start_date|date:"d M, Y" }}</span>
+                    </li>
+                {% empty %}
+                    <li class="empty-message">Nenhum evento futuro agendado.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        
+
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

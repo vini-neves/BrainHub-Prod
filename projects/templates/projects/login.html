@@ -1,0 +1,46 @@
+{# projects/templates/projects/login.html #}
+{% extends "projects/auth_base.html" %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <h2>Faça seu login</h2>
+    
+    {% if form.errors %}
+        <p class="form-error">Seu usuário ou senha estão incorretos.</p>
+    {% endif %}
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_username">Usuário:</label>
+            {{ form.username }}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password">Senha:</label>
+            <div class="password-wrapper">
+                {{ form.password }}
+                <span id="toggle-password" class="toggle-password">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </span>
+            </div>
+        </div>
+        
+        <button type="submit" class="auth-button">Entrar</button>
+    </form>
+    
+    <div class="auth-links">
+        <a href="{% url 'password_reset' %}">Esqueceu sua senha?</a>
+    </div>
+{% endblock %}
+
+
+{% block extra_js %}
+    <script src="{% static 'js/login.js' %}"></script>
+{% endblock %}

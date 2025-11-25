@@ -1,0 +1,416 @@
+/* static/css/base.css */
+
+/* Base e Layout Principal */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-light);
+    color: #333;
+}
+
+.app-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* --- Sidebar Moderna --- */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    transition: width 0.3s ease; /* Para futuras animações de "encolher" */
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.agency-logo { max-width: 100%; height: auto; max-height: 80px; }
+.agency-name { margin: 0; font-size: 1.5em; font-weight: 600; }
+
+/* --- Navegação Principal (com Ícones) --- */
+.main-nav {
+    flex-grow: 1;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    display: flex; /* Alinha ícone e texto */
+    align-items: center;
+    gap: 12px; /* Espaço entre ícone e texto */
+    
+    color: var(--text-on-primary);
+    opacity: 0.8;
+    text-decoration: none;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 1.05em;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+    transform: translateX(5px);
+}
+
+/* ESTADO ATIVO! */
+.nav-link.active {
+    background-color: var(--secondary-color); /* Usa a cor secundária */
+    color: var(--text-on-secondary);
+    opacity: 1;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.nav-link i {
+    width: 20px; /* Tamanho do ícone */
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* --- Perfil do Usuário --- */
+.user-profile {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.username {
+    display: block;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    opacity: 0.8;
+}
+
+.logout-form {
+    margin: 0;
+}
+
+.logout-link {
+    /* Faz o <button> parecer o <a> antigo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    
+    /* Reseta os padrões do botão */
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit; /* Usa a fonte da página */
+    width: 100%; /* Ocupa toda a largura */
+    
+    /* Estilos originais do link */
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+    font-size: 0.9em;
+}
+.logout-link:hover {
+    background-color: rgba(0,0,0,0.4);
+    color: #fff;
+}
+.logout-link i {
+    width: 18px;
+    height: 18px;
+}
+
+/* --- Conteúdo Principal --- */
+.content {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background-color: var(--bg-light);
+}
+
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed; /* Fica no lugar mesmo com rolagem */
+    z-index: 1000; /* Fica na frente de tudo */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Habilita rolagem se necessário */
+    background-color: rgba(0,0,0,0.6); /* Fundo escurecido */
+    backdrop-filter: blur(3px); /* Efeito de desfoque */
+    display: flex; /* Para centralizar o conteúdo */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    max-width: 600px; /* Largura máxima do modal */
+    width: 90%;
+    position: relative;
+    animation: fadeInScale 0.3s ease-out; /* Animação de entrada */
+    max-height: 90vh; /* Altura máxima para não passar da tela */
+    overflow-y: auto; /* Rolagem interna se o conteúdo for grande */
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #333;
+}
+
+.modal-content h2 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+/* Estilos para o formulário dentro do modal */
+.modal-content .form-group {
+    margin-bottom: 15px;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #444;
+}
+
+.modal-content .form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+.modal-content .form-input[type="file"] {
+    padding: 5px; /* Ajuste para input file */
+}
+.modal-content .form-input:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--secondary-color-rgb-val, 0,123,255), 0.25);
+}
+
+button {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Estilo do botão da sua imagem */
+    background-color: var(--primary-color); /* Vermelho/Laranja como na imagem */
+    color: white;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+.modal-content .form-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.2s ease;
+    background-color: var(--primary-color); /* Garante a cor padrão */
+}
+.modal-content .form-button:hover {
+    filter: brightness(110%);
+}
+
+/* Estilos para a visualização de detalhes dentro do modal */
+.detail-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.detail-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+.detail-section h3 {
+    color: var(--secondary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+.detail-item {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+.detail-item strong {
+    color: #333;
+    display: inline-block;
+    min-width: 150px; /* Alinha os dois pontos */
+}
+.detail-item span {
+    color: #555;
+}
+.detail-item a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+.detail-item a:hover {
+    text-decoration: underline;
+}
+
+.project-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.project-list-item {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+.project-list-item:last-child {
+    margin-bottom: 0;
+}
+.project-list-item strong {
+    color: var(--primary-color);
+}
+.project-list-item span {
+    color: #777;
+    font-size: 0.85rem;
+}
+
+.empty-message {
+    color: #999;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* --- Estilos do Submenu Kanban --- */
+
+.nav-group {
+    /* Herda o estilo base do nav-link para o destaque ativo */
+    margin-bottom: 8px;
+}
+
+.nav-link-header {
+    /* Adapta o estilo do nav-link para ser um container flex */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-link-header:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+}
+
+/* O conteúdo principal do link (ícone + texto) */
+.nav-link-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* DESTAQUE DO ITEM PRINCIPAL QUANDO ATIVO */
+.nav-group.active > .nav-link-header {
+    background-color: var(--secondary-color);
+    color: var(--text-on-secondary);
+    opacity: 1;
+    font-weight: 600;
+}
+
+/* O Submenu (Os links em si) */
+.submenu {
+    max-height: 0; /* Começa fechado */
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    background-color: rgba(0, 0, 0, 0.1); /* Um fundo sutil */
+    border-radius: 0 0 8px 8px;
+    padding-top: 0;
+}
+
+.nav-group.open > .nav-link-header .toggle-icon {
+    transform: rotate(90deg); /* Gira o chevron para indicar que está aberto */
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease-in-out;
+    width: 16px;
+    height: 16px;
+}
+
+/* Estilo dos Itens do Submenu */
+.nav-item-sub {
+    display: block;
+    color: var(--text-on-primary);
+    opacity: 0.75;
+    text-decoration: none;
+    padding: 8px 15px 8px 45px; /* Mais indentação (45px) */
+    font-size: 0.95em;
+    transition: background-color 0.2s ease;
+}
+
+.nav-item-sub:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Destaque do Submenu ATIVO */
+.nav-item-sub.active {
+    opacity: 1;
+    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.2);
+}

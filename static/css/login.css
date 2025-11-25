@@ -1,0 +1,137 @@
+/* static/css/login.css */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6;
+}
+
+.auth-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* --- Lado Esquerdo (Branding) --- */
+.auth-brand-side {
+    flex-basis: 50%;
+    background-color: var(--primary-color); /* Cor da agência! */
+    color: var(--text-on-primary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
+}
+
+.auth-logo {
+    max-width: 150px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.auth-brand-side h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+/* --- Lado Direito (Formulário) --- */
+.auth-form-side {
+    flex-basis: 50%;
+    display: grid;
+    place-items: center;
+    padding: 40px;
+}
+
+.auth-form-side > * {
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-form-side h2 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* --- Formulário e Links --- */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+}
+
+.password-wrapper input {
+    width: 100%;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+}
+
+.auth-button {
+    padding: 14px;
+    background: var(--primary-color);
+    color: var(--text-on-primary);
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: filter 0.2s;
+}
+
+.auth-button:hover {
+    filter: brightness(110%);
+}
+
+.auth-links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.auth-links a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-error {
+    color: #d93025;
+    background-color: #fdd;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}

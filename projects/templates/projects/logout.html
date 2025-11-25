@@ -1,0 +1,12 @@
+{# projects/templates/projects/logout.html #}
+{% extends "projects/auth_base.html" %}
+{% block title %}Você Saiu{% endblock %}
+
+{% block content %}
+    <h2>Você saiu da sua conta.</h2>
+    <p>Obrigado por usar nossa plataforma.</p>
+    
+    <div class="auth-links">
+        <a href="{% url 'login' %}">Fazer login novamente</a>
+    </div>
+{% endblock %}

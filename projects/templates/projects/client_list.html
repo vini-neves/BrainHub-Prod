@@ -1,0 +1,133 @@
+{# projects/templates/projects/client_list.html #}
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+/>
+{% endblock %}
+
+{% block title %}Gerenciar Clientes{% endblock %}
+
+{% block content %}
+
+
+  <h1>Meus Clientes</h1>
+  <button
+    id="add-client-btn"
+    style="background-color: var(--primary-color)"
+  >
+    + Cadastrar Novo Cliente
+  </button>
+
+<p>
+  Gerencie todos os clientes da sua agência. Clique no nome de um cliente para
+  ver seus detalhes e projetos.
+</p>
+
+<div class="list-card" style="margin-top: 20px">
+  <table id="client-table" class="styled-table" style="width: 100%">
+    <thead>
+      <tr>
+        <th>Nome do Cliente</th>
+        <th>CNPJ</th>
+        <th>Representante</th>
+        <th>Email</th>
+        <th>Status Contrato</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for client in clients %}
+      <tr>
+          <td>
+              <a href="#" class="view-client-details" data-client-id="{{ client.pk }}" style="font-weight: bold; color: var(--primary-color);">
+                  {{ client.name }}
+              </a>
+          </td>
+          <td>{{ client.cnpj|default:"Não informado" }}</td>
+          <td>{{ client.nome_representante|default:"-" }}</td>
+          <td>{{ client.email_representante|default:"-" }}</td>
+          <td>
+              {% if client.data_finalizacao_contrato %}
+                  Finaliza em {{ client.data_finalizacao_contrato|date:"d/m/Y" }}
+              {% else %}
+                  Ativo
+              {% endif %}  </td>
+      </tr>
+      {% empty %}
+      <tr>
+          <td colspan="5">Você ainda não cadastrou nenhum cliente.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# --- MODAL DE CADASTRO DE CLIENTE (JÁ DEVE ESTAR AQUI) --- #}
+<div id="add-client-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" data-modal-id="add-client-modal">&times;</span>
+    <h2>Cadastrar Novo Cliente</h2>
+    <form id="add-client-form" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ add_client_form.as_p }}
+      <button type="submit" class="form-button">Salvar Cliente</button>
+    </form>
+  </div>
+</div>
+{# --- FIM DO MODAL DE CADASTRO --- #}
+
+{# --- MODAL DE DETALHES DO CLIENTE (JÁ DEVE ESTAR AQUI) --- #}
+<div id="client-detail-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" data-modal-id="client-detail-modal">&times;</span>
+    <div id="client-detail-content">
+      {# Conteúdo será carregado aqui via AJAX #}
+    </div>
+  </div>
+</div>
+
+{# --- NOVO MODAL: ADICIONAR PROJETO --- #}
+<div id="add-project-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" data-modal-id="add-project-modal">&times;</span>
+        <h2>Adicionar Novo Projeto</h2>
+        <form id="add-project-form" method="post">
+            {% csrf_token %}
+            {{ project_form.as_p }} 
+            <button type="submit" class="form-button">Salvar Projeto</button>
+        </form>
+    </div>
+</div>
+{# --- FIM DO NOVO MODAL --- #}
+
+{% endblock %} {% block extra_js %} <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  // Variáveis globais para o JavaScript customizado
+  const CSRF_TOKEN = "{{ csrf_token }}";
+  const ADD_PROJECT_URL = "{% url 'add_project_api' %}";
+  const ADD_CLIENT_URL = "{% url 'add_client_api' %}";
+  const CLIENT_DETAIL_URL_BASE = "{% url 'client_detail_api' 0 %}".replace(
+    "0/details/",
+    ""
+  );
+
+  // Ativa o DataTable na nossa tabela
+  $(document).ready(function () {
+    $("#client-table").DataTable({
+      language: {
+        url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json",
+      },
+      order: [[0, "asc"]], // Ordena pela primeira coluna (Nome do Cliente)
+      columnDefs: [
+        { orderable: false, targets: [3, 4] }, // Colunas 3 e 4 (Email, Status) não ordenáveis
+      ],
+    });
+  });
+</script>
+{# Carrega nosso JS customizado por último #}
+<script src="{% static 'js/client.js' %}"></script>
+{% endblock %}

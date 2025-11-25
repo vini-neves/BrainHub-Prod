@@ -1,0 +1,72 @@
+{# projects/templates/projects/client_detail.html #}
+{% extends "projects/base.html" %}
+
+{% block title %}{{ client.name }}{% endblock %}
+
+{% block content %}
+
+    <a href="{% url 'client_list' %}" style="text-decoration: none; color: var(--secondary-color); font-weight: bold;">
+        &larr; Voltar para todos os clientes
+    </a>
+
+    <h1 style="color: var(--primary-color); margin-top: 10px;">{{ client.name }}</h1>
+    <p>CNPJ: {{ client.cnpj|default:"Não informado" }}</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+
+        <div class="form-card">
+            <h2>Informações de Cadastro</h2>
+            <ul style="list-style: none; padding-left: 0;">
+                <li><strong>Representante:</strong><br> {{ client.nome_representante|default:"-" }}</li>
+                <hr style="border: 1px solid #f0f0f0;">
+                <li><strong>Email:</strong><br> {{ client.email_representante|default:"-" }}</li>
+                <hr style="border: 1px solid #f0f0f0;">
+                <li><strong>Celular:</strong><br> {{ client.celular_representante|default:"-" }}</li>
+                <hr style="border: 1px solid #f0f0f0;">
+                <li><strong>Início Contrato:</strong><br> {{ client.data_inicio_contrato|date:"d/m/Y"|default:"-" }}</li>
+                <hr style="border: 1px solid #f0f0f0;">
+                <li><strong>Fim Contrato:</strong><br> {{ client.data_finalizacao_contrato|date:"d/m/Y"|default:"-" }}</li>
+                <hr style="border: 1px solid #f0f0f0;">
+                <li>
+                    <strong>Contrato Anexado:</strong><br>
+                    {% if client.anexo_contrato %}
+                        <a href="{{ client.anexo_contrato.url }}" target="_blank">Baixar Contrato</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        <div>
+            <div class="list-card" style="margin-bottom: 20px;">
+                <h2 style="padding: 15px; margin: 0; background-color: #f9f9f9;">Projetos Em Andamento</h2>
+                <ul class="widget-list">
+                    {% for project in projects_andamento %}
+                        <li class="widget-list-item">
+                            <span class="item-title">{{ project.name }}</span>
+                            <span class="item-date">{{ project.created_at|date:"d/m/Y" }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="empty-message">Nenhum projeto em andamento.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="list-card">
+                <h2 style="padding: 15px; margin: 0; background-color: #f9f9f9;">Projetos Finalizados</h2>
+                <ul class="widget-list">
+                    {% for project in projects_finalizados %}
+                        <li class="widget-list-item">
+                            <span class="item-title">{{ project.name }}</span>
+                            <span class="item-date">{{ project.created_at|date:"d/m/Y" }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="empty-message">Nenhum projeto finalizado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

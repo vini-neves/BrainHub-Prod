@@ -1,0 +1,53 @@
+from django.urls import path, include
+from . import views
+from django.contrib.auth import views as auth_views
+
+urlpatterns = [
+    # --- KANBAN UNIFICADO ---
+    path('', views.dashboard, name='dashboard'), 
+    path('kanban/', views.kanban_view, {'kanban_type': 'general'}, name='kanban_general'),
+    path('kanban/operational/', views.kanban_view, {'kanban_type': 'operational'}, name='kanban_operational'),
+    
+    # --- GESTÃO DE CLIENTES ---
+    path('clients/', views.client_list_create, name='client_list'),
+    path('api/clients/add/', views.AddClientAPI.as_view(), name='add_client_api'),
+    path('api/clients/<int:pk>/details/', views.client_detail_api, name='client_detail_api'),
+
+    # --- CALENDÁRIO ---
+    path('calendar/', views.calendar_view, name='calendar_view'),
+    path('api/calendar/get-events/', views.get_calendar_events, name='get_calendar_events'),
+    path('api/calendar/add-event/', views.add_calendar_event, name='add_calendar_event'),
+
+    # --- POSTAGENS E SOCIAL MEDIA ---
+    path('social/', views.social_dashboard, name='social_dashboard'),
+    path('api/social/create-post/', views.CreateSocialPostAPI.as_view(), name='create_social_post_api'),
+    
+    # --- APIs DE TAREFAS ---
+    path('api/task/update-status/', views.KanbanUpdateTask.as_view(), name='kanban_update_task'),
+    path('api/task/add/', views.AddTaskAPI.as_view(), name='add_task_api'),
+    path('api/task/<int:pk>/details/', views.get_task_details_api, name='get_task_details_api'),
+    path('api/task/<int:pk>/delete/', views.DeleteTaskAPI.as_view(), name='delete_task_api'),
+
+    #URL do Dashboard
+    path('', views.dashboard, name='dashboard'),
+
+    #Url de Projeto
+    path('api/projects/add/', views.AddProjectAPI.as_view(), name='add_project_api'),
+    
+    # --- FLUXO DE LOGIN / LOGOUT ---
+    path('login/', views.TenantLoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='projects/logout.html'), name='logout'),
+
+    # --- NOVO: FLUXO DE "ESQUECI A SENHA" ---
+    path('password_reset/', auth_views.PasswordResetView.as_view(template_name='projects/password_reset_form.html', email_template_name='projects/password_reset_email.html', subject_template_name='projects/password_reset_subject.txt'), name='password_reset'),
+    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='projects/password_reset_done.html'), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='projects/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='projects/password_reset_complete.html'), name='password_reset_complete'),
+
+    # Url de Redes sociais
+    path('social/', views.social_dashboard, name='social_dashboard'),
+    path('api/social/create-post/', views.CreateSocialPostAPI.as_view(), name='create_social_post_api'),
+    path('api/social/send-approval/<int:post_id>/', views.send_approval_link, name='send_approval_link'),
+    path('approval/<str:token>/', views.external_approval_view, name='external_approval_view'), 
+    path('api/approval/action/', views.approval_action, name='approval_action'),
+]

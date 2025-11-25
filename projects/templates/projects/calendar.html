@@ -1,0 +1,65 @@
+{# projects/templates/projects/calendar.html #}
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block title %}Calendário de Conteúdo{% endblock %}
+
+{% block content %}
+<div class="calendar-wrapper">
+    <div class="calendar-container" id="calendar-app">
+
+        <header class="calendar-header">
+            <div> <button id="prev-month" class="nav-button">&lt;</button>
+                <h2 id="month-year-display">Carregando...</h2>
+                <button id="next-month" class="nav-button">&gt;</button>
+                <button id="today-button" class="today-button">HOJE</button>
+            </div>
+            <div> <button id="add-event-button" class="add-button">+ ADICIONAR EVENTO</button>
+            </div>
+        </header>
+
+        <div class="calendar-grid">
+            </div>
+
+    </div>
+</div>
+
+<div id="event-modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <form id="event-form">
+            <h3>Adicionar Entrega</h3>
+
+            <div class="form-group">
+                <label for="event-title">Título da Entrega:</label>
+                <input type="text" id="event-title" required>
+            </div>
+
+            <div class="form-group">
+                <label for="event-date">Data:</label>
+                <input type="date" id="event-date" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="modal-cancel-button" class="button-cancel">Cancelar</button>
+                <button type="submit" id="modal-save-button" class="button-save">Salvar</button>
+            </div>
+        </form>
+        <button id="modal-close-button" class="modal-close-button">&times;</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script id="django-urls" type="application/json">
+        {
+            "getEvents": "{% url 'get_calendar_events' %}",
+            "addEvent": "{% url 'add_calendar_event' %}",
+            "csrfToken": "{{ csrf_token }}"
+        }
+    </script>
+    <script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}

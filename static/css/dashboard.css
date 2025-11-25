@@ -1,0 +1,101 @@
+/* static/css/dashboard.css */
+
+.dashboard-header {
+    margin-bottom: 30px;
+}
+.dashboard-header h1 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 2.5rem;
+}
+.dashboard-header p {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+/* --- Stats Grid (Responsividade e Estilo) --- */
+.stats-grid {
+    /* Adapta-se a 4 colunas em desktop, ou 2, ou 1 em mobile */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    display: grid;
+    gap: 25px; /* Aumenta o espaçamento */
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 12px; /* Mais arredondado */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08); /* Sombra mais suave e moderna */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-card-info h3 {
+    font-size: 2rem;
+    color: #333;
+    margin: 0 0 5px 0;
+}
+.stat-card-info p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+
+/* --- Círculo de Progresso (CSS Dinâmico) --- */
+.progress-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    /* A cor e o progresso são injetados via style="--progress-value: X%;" no HTML */
+    background: conic-gradient(
+        var(--secondary-color) var(--progress-value), 
+        #f0f0f0 var(--progress-value)
+    );
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: attr(data-progress);
+    position: absolute;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+/* --- Widget Grid (Responsivo) --- */
+.widget-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.widget-card {
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+}
+
+.widget-header h3 i {
+    color: var(--primary-color);
+}
+
+/* --- Media Queries (Mobile) --- */
+@media (max-width: 768px) {
+    .content {
+        padding: 20px;
+    }
+    .stats-grid {
+        gap: 15px;
+        grid-template-columns: 1fr; /* Coluna única em mobile */
+    }
+    .widget-grid {
+        grid-template-columns: 1fr; /* Coluna única */
+    }
+}

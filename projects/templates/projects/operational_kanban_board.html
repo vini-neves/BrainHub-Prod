@@ -1,0 +1,114 @@
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
+    <style>
+        /* Ajuste de largura para 6 colunas (Briefing até Agendamento) */
+        .kanban-column {
+            min-width: 200px; 
+            flex: 1; /* Permite que mais colunas caibam na tela */
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Kanban Operacional{% endblock %}
+
+{% block content %}
+    
+    <div class="kanban-header">
+        <div>
+            <h1>Kanban Operacional</h1>
+            <p>Fluxo de trabalho de produção e aprovação de conteúdo.</p>
+        </div>
+        <div>
+            <a href="{% url 'kanban_board' %}" class="toggle-button" style="text-decoration: none;">
+                <i data-feather="repeat"></i> <span>Mudar para Kanban Geral</span>
+            </a>
+            <button id="add-task-btn" class="add-task-button">
+                <i data-feather="plus"></i> Adicionar Postagem
+            </button>
+        </div>
+    </div>
+
+    <div class="kanban-board">
+        
+        {% for stage_value, stage_label in stages %}
+        <div class="kanban-column" id="column-{{ stage_value }}" data-status="{{ stage_value }}">
+            <div class="column-header">
+                <h3>{{ stage_label }}</h3>
+                <span class="task-count">0</span>
+            </div>
+            <div class="column-cards">
+                {# Cards serão inseridos aqui via JS #}
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {# --- MODAL DE ADICIONAR TAREFA (OPERACIONAL) --- #}
+    <div id="add-task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" data-modal-id="add-task-modal">&times;</span>
+            <h2>Criar Tarefa de Postagem</h2>
+            <form id="add-task-form">
+                {% csrf_token %}
+                
+                <input type="hidden" name="kanban_type" value="operational"> 
+
+                <div class="form-group">
+                    <label for="task-title">Título (Nome do Post):</label>
+                    <input type="text" id="task-title" name="title" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Objetivo/Briefing:</label>
+                    <textarea id="task-description" name="description" class="form-input" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-project">Projeto:</label>
+                    <select id="task-project" name="project" class="form-input" required>
+                        <option value="" disabled selected>Selecione um projeto...</option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-assigned-to">Atribuir a:</label>
+                    <select id="task-assigned-to" name="assigned_to" class="form-input">
+                        <option value="">Ninguém</option>
+                        {% for user in agency_users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="modal-button" style="background-color: var(--primary-color);">Criar Postagem</button>
+            </form>
+        </div>
+    </div>
+    
+    {# --- MODAL DE DETALHES DA TAREFA (Reutilizado) --- #}
+    <div id="task-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" data-modal-id="task-details-modal">&times;</span>
+            <div id="task-details-content">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados JSON das tarefas passados pela view Django
+        const KANBAN_INITIAL_DATA = {{ kanban_data|safe }};
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        const KANBAN_UPDATE_URL = "{% url 'kanban_update_task' %}";
+        const ADD_TASK_API_URL = "{% url 'add_task_api' %}";
+        const GET_TASK_DETAILS_URL_BASE = "{% url 'get_task_details_api' 0 %}".replace('0', '');
+        const DELETE_TASK_URL_BASE = "{% url 'delete_task_api' 0 %}".replace('0', '');
+    </script>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/kanban.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{# projects/templates/projects/auth_base.html #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Autenticação{% endblock %} - Minha Plataforma</title>
+    
+    <style>
+        :root {
+            --primary-color: {{ agency_primary_color|default:"#333366" }};
+            --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
+            --text-on-primary: #ffffff;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    
+    <div class="auth-container">
+        <div class="auth-brand-side">
+            {% if agency_logo %}
+                <img src="{{ agency_logo.url }}" alt="Logo da Agência" class="auth-logo">
+            {% endif %}
+            <h1>Bem-vindo à sua plataforma</h1>
+            <p>Gerencie suas campanhas em um só lugar.</p>
+        </div>
+        
+        <div class="auth-form-side">
+            {% block content %}
+                {% endblock %}
+        </div>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

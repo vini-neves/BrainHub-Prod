@@ -1,0 +1,149 @@
+{# projects/templates/projects/base.html #} {% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% if agency_logo %}
+    <link rel="icon" href="{{ agency_logo.url }}" />
+    {% endif %}
+
+    <title>{% block title %}Plataforma{% endblock %}</title>
+
+    <style>
+        :root {
+            --primary-color: {{ agency_primary_color|default:"#333366" }};
+            --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
+            --text-on-primary: #ffffff;
+            --text-on-secondary: #ffffff;
+            --bg-light: #f8f9fa;
+            --border-color: #dee2e6;
+            --sidebar-width: 250px;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <div class="app-container">
+      <aside class="sidebar">
+        <div class="logo-container">
+          {% if agency_logo %}
+          <img
+            src="{{ agency_logo.url }}"
+            alt="Logo da Agência"
+            class="agency-logo"
+          />
+          {% else %}
+          <h3 class="agency-name">{{ request.tenant.name }}</h3>
+          {% endif %}
+        </div>
+
+        <nav class="main-nav">
+          {# Verificamos qual é a URL atual para adicionar a classe 'active' #}
+          <a
+            href="{% url 'dashboard' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+          >
+            <i data-feather="home"></i>
+            <span>Dashboard</span>
+          </a>
+          <div
+            class="nav-group {% if 'kanban' in request.resolver_match.url_name %} active open {% endif %}"
+            id="kanban-group-toggle"
+          >
+            <div class="nav-link nav-link-header">
+              <div class="nav-link-content">
+                <i data-feather="trello"></i>
+                <span>Kanban</span>
+              </div>
+              <i data-feather="chevron-right" class="toggle-icon"></i>
+            </div>
+
+            <div class="submenu">
+              <a
+                href="{% url 'kanban_general' %}"
+                class="nav-item-sub {% if request.resolver_match.url_name == 'kanban_general' %}active{% endif %}"
+              >
+                Kanban Geral
+              </a>
+              <a
+                href="{% url 'kanban_operational' %}"
+                class="nav-item-sub {% if request.resolver_match.url_name == 'kanban_operational' %}active{% endif %}"
+              >
+                Kanban Operacional
+              </a>
+            </div>
+          </div>
+          <a
+            href="{% url 'calendar_view' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'calendar_view' %}active{% endif %}"
+          >
+            <i data-feather="calendar"></i>
+            <span>Calendário</span>
+          </a>
+          <a
+            href="{% url 'social_dashboard' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'social_dashboard' %}active{% endif %}"
+          >
+            <i data-feather="share-2"></i>
+            <span>Postagens</span>
+          </a>
+          <a
+            href="{% url 'client_list' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}"
+          >
+            <i data-feather="users"></i>
+            <span>Clientes</span>
+          </a>
+          {# Adicione mais links aqui (ex: 'activity' para relatórios) #}
+        </nav>
+
+        <div class="user-profile">
+          <span class="username">Olá, {{ user.username }}</span>
+
+          <form action="{% url 'logout' %}" method="post" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="logout-link">
+              <i data-feather="log-out"></i>
+              <span>Sair</span>
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <main class="content">{% block content %} {% endblock %}</main>
+    </div>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+      feather.replace(); // Ativa os ícones
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const toggleGroup = document.getElementById("kanban-group-toggle");
+        const submenu = toggleGroup.querySelector(".submenu");
+
+        toggleGroup
+          .querySelector(".nav-link-header")
+          .addEventListener("click", () => {
+            const is_open = toggleGroup.classList.toggle("open");
+            // Altera a altura máxima para animar o submenu
+            submenu.style.maxHeight = is_open
+              ? submenu.scrollHeight + "px"
+              : "0";
+          });
+
+        // Abre o submenu ao carregar se já estiver ativo
+        if (toggleGroup.classList.contains("open")) {
+          submenu.style.maxHeight = submenu.scrollHeight + "px";
+        }
+      });
+    </script>
+
+    {% block extra_js %} {% endblock %}
+  </body>
+</html>
