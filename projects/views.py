@@ -12,7 +12,7 @@ import datetime
 from django.utils import timezone
 import secrets
 from django.contrib.auth import views as auth_views
-from .models import Task, CalendarEvent, Project, Client, SocialPost, SocialAccount
+from .models import Task, CalendarEvent, Project, Client, SocialPost, SocialAccount, SocialPostDestination
 from .forms import ClientForm, TenantAuthenticationForm, ProjectForm
 from accounts.models import CustomUser
 
@@ -376,6 +376,79 @@ def client_list_create(request):
     }
     return render(request, 'projects/client_list.html', context)
 pass
+
+@login_required
+def client_metrics_dashboard(request, pk):
+    """
+    Tela dedicada a mostrar métricas e dados sociais de um cliente específico.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    
+    # Aqui futuramente buscaremos dados reais das APIs
+    # Por enquanto, passamos as contas conectadas
+    connected_accounts = client.social_accounts.all()
+    
+    # Projetos do cliente
+    projects = client.projects.all()
+
+    context = {
+        'client': client,
+        'connected_accounts': connected_accounts,
+        'projects': projects,
+    }
+    return render(request, 'projects/client_metrics.html', context)
+
+@login_required
+def get_client_data_api(request, pk):
+    """
+    Retorna os dados do cliente em JSON para preencher o modal de edição.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    
+    data = {
+        'id': client.id,
+        'name': client.name,
+        'cnpj': client.cnpj,
+        'nome_representante': client.nome_representante,
+        'celular_representante': client.celular_representante,
+        'email_representante': client.email_representante,
+        'data_inicio_contrato': client.data_inicio_contrato.strftime('%Y-%m-%d') if client.data_inicio_contrato else '',
+        'data_finalizacao_contrato': client.data_finalizacao_contrato.strftime('%Y-%m-%d') if client.data_finalizacao_contrato else '',
+        'is_active': client.is_active,
+    }
+    return JsonResponse(data)
+
+# --- NOVA API: OBTER DADOS DO CLIENTE (PARA EDIÇÃO) ---
+@method_decorator(csrf_exempt, name='dispatch')
+class AddClientAPI(View):
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        # Verifica se é EDICÃO (tem ID) ou CRIAÇÃO
+        client_id = request.POST.get('client_id')
+        
+        if client_id:
+            client = get_object_or_404(Client, id=client_id)
+            form = ClientForm(request.POST, request.FILES, instance=client)
+        else:
+            form = ClientForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            client = form.save()
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Cliente salvo com sucesso!',
+                'client': {
+                    'id': client.id,
+                    'name': client.name,
+                    'cnpj': client.cnpj,
+                    'representative': client.nome_representante,
+                    'email': client.email_representante,
+                    'status': 'Ativo' if client.is_active else 'Inativo'
+                }
+            }, status=200)
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
 @method_decorator(csrf_exempt, name='dispatch') # Para permitir POST do JS
 class AddClientAPI(View):
     @method_decorator(login_required)
@@ -472,54 +545,78 @@ class AddProjectAPI(View):
 @login_required
 def social_dashboard(request):
     """
-    Painel principal de gestão de redes sociais.
+    Renderiza o painel principal com métricas e lista de posts.
     """
-    # Busca as contas conectadas
+    # 1. Busca dados básicos
     connected_accounts = SocialAccount.objects.all()
     clients = Client.objects.all()
-    
-    # Pega a hora atual para saber o que é passado e futuro
+    # 2. Separa posts por status e data
     now = timezone.now()
     
-    # CORREÇÃO: Usamos 'approval_status' e data para filtrar
-    
-    # 1. Posts Agendados (Aprovados e Data no Futuro)
-    scheduled_posts = SocialPost.objects.filter(
-        approval_status='approved_to_schedule',
-        scheduled_for__gte=now
-    ).order_by('scheduled_for')
-    
-    # 2. Posts Publicados (Aprovados e Data no Passado)
-    published_posts = SocialPost.objects.filter(
-        approval_status='approved_to_schedule',
-        scheduled_for__lt=now
-    ).order_by('-scheduled_for')
-    
+    all_posts_history = SocialPost.objects.all().select_related('client').order_by('-created_at')
+
     context = {
         'connected_accounts': connected_accounts,
-        'scheduled_posts': scheduled_posts,
-        'published_posts': published_posts,
-        'clients': clients,
+        'clients': clients, # Necessário para o modal de seleção
+        'posts_history': all_posts_history, # Histórico unificado
     }
     return render(request, 'projects/social_dashboard.html', context)
-pass
     
+@login_required
+def create_post_studio_view(request):
+    """
+    Renderiza a tela de criação e envia o mapa de contas de TODOS os clientes.
+    """
+    clients = Client.objects.all()
+    
+    # 1. Monta o Mapa: { ID_CLIENTE: { 'facebook': {...}, 'instagram': {...} } }
+    clients_map = {}
+    
+    for client in clients:
+        # Pega todas as contas sociais deste cliente
+        accounts = client.social_accounts.all()
+        acct_dict = {}
+        
+        for acc in accounts:
+            # A chave é a plataforma (ex: 'facebook') para o JS encontrar fácil
+            acct_dict[acc.platform] = {
+                'id': acc.id,
+                'name': acc.account_name,
+                'platform': acc.platform
+            }
+        
+        # Guarda no dicionário principal usando o ID do cliente como chave
+        clients_map[client.id] = acct_dict
+
+    # 2. Verifica se veio um cliente pré-selecionado da URL (?client_id=1)
+    pre_selected = request.GET.get('client_id')
+    
+    context = {
+        'clients': clients,
+        # AQUI ESTÁ A MÁGICA: Convertemos o dicionário Python para Texto JSON
+        'clients_map_json': json.dumps(clients_map), 
+        'pre_selected_client_id': int(pre_selected) if pre_selected else None
+    }
+    
+    return render(request, 'projects/create_post_studio.html', context)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CreateSocialPostAPI(View):
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         try:
-            
             data = request.POST
             content = data.get('content')
             scheduled_at_str = data.get('scheduled_for')
-            account_ids = data.getlist('accounts')
-            image_file = request.FILES.get('image')
             client_id = data.get('client')
+            image_file = request.FILES.get('image')
             
-            if not content or not scheduled_at_str or not account_ids or not client_id:
-                 return JsonResponse({'status': 'error', 'message': 'Campos obrigatórios faltando.'}, status=400)
+            # IDs das contas selecionadas (checkboxes)
+            account_ids = data.getlist('accounts') 
+
+            # Validações
+            if not content or not scheduled_at_str or not client_id:
+                 return JsonResponse({'status': 'error', 'message': 'Preencha cliente, conteúdo e data.'}, status=400)
 
             client = get_object_or_404(Client, pk=client_id)
             
@@ -527,26 +624,28 @@ class CreateSocialPostAPI(View):
                 scheduled_for = datetime.datetime.strptime(scheduled_at_str, '%Y-%m-%dT%H:%M')
             except ValueError:
                 return JsonResponse({'status': 'error', 'message': 'Data inválida.'}, status=400)
-            # O status inicial é 'scheduled' (agendado)
+
+            # 1. CRIAR O SOCIAL POST
             post = SocialPost.objects.create(
-                content=content,
+                client=client,
+                caption=content,
                 scheduled_for=scheduled_for,
                 image=image_file,
-                approval_status='draft',
-                created_by=request.user,
-                client=client
+                approval_status='draft', # Começa como Rascunho para ir pro Kanban
+                created_by=request.user
             )
 
+            # 2. VINCULAR AS CONTAS (Cria os Destinos)
             if account_ids:
                 accounts = SocialAccount.objects.filter(id__in=account_ids)
-                from .models import SocialPostDestination
+                
                 for acc in accounts:
-                    # Tenta adivinhar o formato baseado na plataforma
+                    # Lógica inteligente para definir o formato
                     fmt = 'feed'
-                    if acc.platform in ['instagram', 'tiktok', 'youtube']:
-                        # Lógica simples: se for tiktok é vertical, etc.
-                        # (Podemos melhorar isso depois)
-                        pass 
+                    if acc.platform in ['tiktok', 'youtube']: 
+                        # Se for youtube, assumimos video por enquanto, ou shorts se for curto
+                        # Aqui você pode refinar a lógica no futuro
+                        fmt = 'video' 
                     
                     SocialPostDestination.objects.create(
                         post=post, 
@@ -554,30 +653,32 @@ class CreateSocialPostAPI(View):
                         format_type=fmt
                     )
 
-                # 3. CRIAÇÃO AUTOMÁTICA DA TAREFA NO KANBAN OPERACIONAL
-                # Calcula a ordem
-                max_order = Task.objects.filter(
-                    kanban_type='operational', 
-                    status='briefing'
-                ).aggregate(models.Max('order'))['order__max']
-                new_order = (max_order if max_order is not None else -1) + 1
+            # 3. CRIAÇÃO AUTOMÁTICA DA TAREFA NO KANBAN OPERACIONAL
+            # Isso é vital: O post vira um card na coluna "Briefing" ou "Copy"
+            
+            # Pega a ordem máxima
+            max_order = Task.objects.filter(
+                kanban_type='operational', 
+                status='briefing'
+            ).aggregate(models.Max('order'))['order__max']
+            new_order = (max_order if max_order is not None else -1) + 1
 
-                Task.objects.create(
-                    kanban_type='operational',
-                    status='briefing', # Entra na primeira coluna do fluxo
-                    title=f"Post: {client.name} - {scheduled_for.strftime('%d/%m')}", # Título automático
-                    description=content[:100], # Usa o começo do post como descrição
-                    social_post=post, # VINCULA AO POST
-                    project=None, # (Opcional: se o cliente tiver um projeto padrão, poderia vincular)
-                    created_by=request.user,
-                    order=new_order
-                )
+            Task.objects.create(
+                kanban_type='operational',
+                status='briefing', # Entra no início do fluxo
+                title=f"Post: {client.name} - {scheduled_for.strftime('%d/%m')}",
+                description=content[:150], # Resumo da legenda
+                social_post=post, # VINCULA AO POST
+                project=None, 
+                created_by=request.user,
+                order=new_order
+            )
 
-                return JsonResponse({
-                    'status': 'success',
-                    'message': 'Post criado e tarefa enviada para o Kanban!',
-                    'id': post.id
-                }, status=201)
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Post criado! Tarefa enviada para o Kanban Operacional.',
+                'id': post.id
+            }, status=201)
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Erro interno: {str(e)}'}, status=500)

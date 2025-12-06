@@ -1,133 +1,199 @@
-{# projects/templates/projects/client_list.html #}
 {% extends "projects/base.html" %}
 {% load static %}
 
 {% block extra_css %}
-<link
-  rel="stylesheet"
-  href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
-/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        /* Estilos específicos para esta página */
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        /* Ajuste do botão Adicionar para ficar igual ao Salvar */
+        .btn-add-client {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-add-client:hover { filter: brightness(110%); }
+
+        /* Estilos do DataTable */
+        table.dataTable thead th { background-color: #f8f9fa; color: var(--primary-color); }
+        .action-btn { cursor: pointer; color: #666; transition: color 0.2s; margin-left: 10px; }
+        .action-btn:hover { color: var(--secondary-color); }
+        
+        /* Status Badge */
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+        .status-active { background-color: #d4edda; color: #155724; }
+        .status-inactive { background-color: #f8d7da; color: #721c24; }
+
+        /* Ícones Sociais no Form */
+        .social-connect-grid { display: flex; gap: 10px; margin-top: 10px; }
+        .social-connect-item {
+            width: 40px; height: 40px; border-radius: 50%; background: #eee;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: all 0.2s; border: 2px solid transparent;
+        }
+        .social-connect-item:hover { transform: scale(1.1); filter: brightness(0.95); }
+        /* Cores */
+        .sc-facebook { background: #1877F2; color: white; }
+        .sc-instagram { background: linear-gradient(45deg, #f09433, #bc1888); color: white; }
+        .sc-linkedin { background: #0077B5; color: white; }
+        .sc-tiktok { background: #000; color: white; }
+    </style>
 {% endblock %}
 
 {% block title %}Gerenciar Clientes{% endblock %}
 
 {% block content %}
 
-
-  <h1>Meus Clientes</h1>
-  <button
-    id="add-client-btn"
-    style="background-color: var(--primary-color)"
-  >
-    + Cadastrar Novo Cliente
-  </button>
-
-<p>
-  Gerencie todos os clientes da sua agência. Clique no nome de um cliente para
-  ver seus detalhes e projetos.
-</p>
-
-<div class="list-card" style="margin-top: 20px">
-  <table id="client-table" class="styled-table" style="width: 100%">
-    <thead>
-      <tr>
-        <th>Nome do Cliente</th>
-        <th>CNPJ</th>
-        <th>Representante</th>
-        <th>Email</th>
-        <th>Status Contrato</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for client in clients %}
-      <tr>
-          <td>
-              <a href="#" class="view-client-details" data-client-id="{{ client.pk }}" style="font-weight: bold; color: var(--primary-color);">
-                  {{ client.name }}
-              </a>
-          </td>
-          <td>{{ client.cnpj|default:"Não informado" }}</td>
-          <td>{{ client.nome_representante|default:"-" }}</td>
-          <td>{{ client.email_representante|default:"-" }}</td>
-          <td>
-              {% if client.data_finalizacao_contrato %}
-                  Finaliza em {{ client.data_finalizacao_contrato|date:"d/m/Y" }}
-              {% else %}
-                  Ativo
-              {% endif %}  </td>
-      </tr>
-      {% empty %}
-      <tr>
-          <td colspan="5">Você ainda não cadastrou nenhum cliente.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-{# --- MODAL DE CADASTRO DE CLIENTE (JÁ DEVE ESTAR AQUI) --- #}
-<div id="add-client-modal" class="modal">
-  <div class="modal-content">
-    <span class="close-button" data-modal-id="add-client-modal">&times;</span>
-    <h2>Cadastrar Novo Cliente</h2>
-    <form id="add-client-form" method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {{ add_client_form.as_p }}
-      <button type="submit" class="form-button">Salvar Cliente</button>
-    </form>
-  </div>
-</div>
-{# --- FIM DO MODAL DE CADASTRO --- #}
-
-{# --- MODAL DE DETALHES DO CLIENTE (JÁ DEVE ESTAR AQUI) --- #}
-<div id="client-detail-modal" class="modal">
-  <div class="modal-content">
-    <span class="close-button" data-modal-id="client-detail-modal">&times;</span>
-    <div id="client-detail-content">
-      {# Conteúdo será carregado aqui via AJAX #}
+    <div class="header-actions">
+        <div>
+            <h1 style="color: var(--primary-color); margin: 0;">Meus Clientes</h1>
+            <p style="margin: 5px 0 0; color: #666;">Gerencie cadastro, contratos e redes sociais.</p>
+        </div>
+        <button id="btn-open-modal" class="btn-add-client">
+            <i data-feather="plus"></i> Novo Cliente
+        </button>
     </div>
-  </div>
-</div>
 
-{# --- NOVO MODAL: ADICIONAR PROJETO --- #}
-<div id="add-project-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" data-modal-id="add-project-modal">&times;</span>
-        <h2>Adicionar Novo Projeto</h2>
-        <form id="add-project-form" method="post">
-            {% csrf_token %}
-            {{ project_form.as_p }} 
-            <button type="submit" class="form-button">Salvar Projeto</button>
-        </form>
+    <div class="list-card">
+        <table id="client-table" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nome (Acesse Métricas)</th>
+                    <th>CNPJ</th>
+                    <th>Representante</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>
+                        <a href="{% url 'client_metrics' pk=client.pk %}" style="font-weight: bold; color: var(--primary-color); text-decoration: none;">
+                            {{ client.name }}
+                        </a>
+                    </td>
+                    <td>{{ client.cnpj|default:"-" }}</td>
+                    <td>{{ client.nome_representante|default:"-" }}</td>
+                    <td>{{ client.email_representante|default:"-" }}</td>
+                    <td>
+                        {% if client.is_active %}
+                            <span class="status-badge status-active">Ativo</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <i data-feather="edit" class="action-btn edit-client-btn" data-id="{{ client.id }}" title="Editar Cadastro"></i>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</div>
-{# --- FIM DO NOVO MODAL --- #}
 
-{% endblock %} {% block extra_js %} <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script>
-  // Variáveis globais para o JavaScript customizado
-  const CSRF_TOKEN = "{{ csrf_token }}";
-  const ADD_PROJECT_URL = "{% url 'add_project_api' %}";
-  const ADD_CLIENT_URL = "{% url 'add_client_api' %}";
-  const CLIENT_DETAIL_URL_BASE = "{% url 'client_detail_api' 0 %}".replace(
-    "0/details/",
-    ""
-  );
+    {# --- MODAL ÚNICO DE CADASTRO/EDIÇÃO --- #}
+    <div id="client-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close-button">&times;</span>
+            <h2 id="modal-title">Cadastrar Novo Cliente</h2>
+            
+            <form id="client-form" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="client_id" id="client_id_hidden">
 
-  // Ativa o DataTable na nossa tabela
-  $(document).ready(function () {
-    $("#client-table").DataTable({
-      language: {
-        url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json",
-      },
-      order: [[0, "asc"]], // Ordena pela primeira coluna (Nome do Cliente)
-      columnDefs: [
-        { orderable: false, targets: [3, 4] }, // Colunas 3 e 4 (Email, Status) não ordenáveis
-      ],
-    });
-  });
-</script>
-{# Carrega nosso JS customizado por último #}
-<script src="{% static 'js/client.js' %}"></script>
+                <h4 style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Dados Empresariais</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Nome Fantasia *</label>
+                        {{ add_client_form.name }}
+                    </div>
+                    <div class="form-group">
+                        <label>CNPJ</label>
+                        {{ add_client_form.cnpj }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Início Contrato</label>
+                        {{ add_client_form.data_inicio_contrato }}
+                    </div>
+                    <div class="form-group">
+                        <label>Fim Contrato</label>
+                        {{ add_client_form.data_finalizacao_contrato }}
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Representante</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        {{ add_client_form.nome_representante }}
+                    </div>
+                    <div class="form-group">
+                        <label>Celular</label>
+                        {{ add_client_form.celular_representante }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    {{ add_client_form.email_representante }}
+                </div>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Configurações e Arquivos</h4>
+                
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 5px;">
+                    {{ add_client_form.is_active }}
+                    <label style="margin:0; cursor:pointer;" for="{{ add_client_form.is_active.id_for_label }}">Cliente Ativo no Sistema</label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Contrato (PDF)</label>
+                        {{ add_client_form.anexo_contrato }}
+                    </div>
+                    <div class="form-group">
+                        <label>Logo (Imagem)</label>
+                        {{ add_client_form.logo }}
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">Conectar Redes Sociais (Opcional)</h4>
+                <p style="font-size: 0.85em; color: #666;">Clique para iniciar a conexão da API para este cliente.</p>
+                <div class="social-connect-grid">
+                    <div class="social-connect-item sc-facebook" onclick="connectSocial('facebook')" title="Facebook"><i data-feather="facebook"></i></div>
+                    <div class="social-connect-item sc-instagram" onclick="connectSocial('instagram')" title="Instagram"><i data-feather="instagram"></i></div>
+                    <div class="social-connect-item sc-linkedin" onclick="connectSocial('linkedin')" title="LinkedIn"><i data-feather="linkedin"></i></div>
+                    <div class="social-connect-item sc-tiktok" onclick="connectSocial('tiktok')" title="TikTok"><i data-feather="video"></i></div>
+                </div>
+
+                <button type="submit" class="form-button" style="margin-top: 25px; background-color: var(--primary-color);">Salvar Dados do Cliente</button>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        const SAVE_CLIENT_URL = "{% url 'add_client_api' %}";
+        const GET_CLIENT_DATA_URL_BASE = "{% url 'get_client_data_api' 0 %}".replace('0/get/', '');
+        const CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
+    
+    <script src="{% static 'js/client.js' %}"></script>
 {% endblock %}

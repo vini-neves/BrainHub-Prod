@@ -5,41 +5,32 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
 class ClientForm(forms.ModelForm):
-    
-    # Inputs de data para o navegador mostrar o calendário
+    # Campos de data com type="date"
     data_inicio_contrato = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}), 
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}), 
         required=False
     )
     data_finalizacao_contrato = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}), 
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}), 
         required=False
     )
 
     class Meta:
         model = Client
-        # Lista de todos os campos que o formulário deve mostrar
-        fields = [
-            'name', 
-            'cnpj', 
-            'data_inicio_contrato', 
-            'data_finalizacao_contrato',
-            'nome_representante', 
-            'celular_representante', 
-            'email_representante',
-            'anexo_contrato',
-            'manual_marca'
-        ]
+        fields = '__all__' # Pega todos, inclusive is_active
         
-        # Adiciona classes CSS e placeholders para os inputs
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nome Fantasia'}),
-            'cnpj': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '00.000.000/0001-00'}),
-            'nome_representante': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nome do Responsável'}),
-            'celular_representante': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '(XX) 9XXXX-XXXX'}),
-            'email_representante': forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'contato@cliente.com'}),
+            # Adicionamos classes específicas para o JS pegar e aplicar máscara
+            'cnpj': forms.TextInput(attrs={'class': 'form-input mask-cnpj', 'placeholder': '00.000.000/0001-00', 'maxlength': '18'}),
+            'celular_representante': forms.TextInput(attrs={'class': 'form-input mask-phone', 'placeholder': '(00) 00000-0000', 'maxlength': '15'}),
+            
+            'nome_representante': forms.TextInput(attrs={'class': 'form-input'}),
+            'email_representante': forms.EmailInput(attrs={'class': 'form-input'}),
             'anexo_contrato': forms.FileInput(attrs={'class': 'form-input'}),
             'manual_marca': forms.FileInput(attrs={'class': 'form-input'}),
+            'logo': forms.FileInput(attrs={'class': 'form-input'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
         }
 
 

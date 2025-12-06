@@ -12,6 +12,9 @@ urlpatterns = [
     path('clients/', views.client_list_create, name='client_list'),
     path('api/clients/add/', views.AddClientAPI.as_view(), name='add_client_api'),
     path('api/clients/<int:pk>/details/', views.client_detail_api, name='client_detail_api'),
+    path('clients/<int:pk>/metrics/', views.client_metrics_dashboard, name='client_metrics'),
+    path('api/clients/<int:pk>/get/', views.get_client_data_api, name='get_client_data_api'),
+    path('api/clients/save/', views.AddClientAPI.as_view(), name='add_client_api'),
 
     # --- CALENDÁRIO ---
     path('calendar/', views.calendar_view, name='calendar_view'),
@@ -45,7 +48,13 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='projects/password_reset_complete.html'), name='password_reset_complete'),
 
     # Url de Redes sociais
+# DASHBOARD SOCIAL
     path('social/', views.social_dashboard, name='social_dashboard'),
+    
+    # ESTÚDIO DE CRIAÇÃO (Tela Cheia)
+    path('social/create/', views.create_post_studio_view, name='create_post_studio'),
+    
+    # API QUE SALVA O POST
     path('api/social/create-post/', views.CreateSocialPostAPI.as_view(), name='create_social_post_api'),
     path('api/social/send-approval/<int:post_id>/', views.send_approval_link, name='send_approval_link'),
     path('approval/<str:token>/', views.external_approval_view, name='external_approval_view'), 

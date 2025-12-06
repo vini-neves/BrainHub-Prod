@@ -45,6 +45,7 @@ class Client(models.Model):
     manual_marca = models.FileField(upload_to='manual/', verbose_name="Anexo do Manual da Marca", blank=True, null=True)
     # Logo para o mockup de aprovação
     logo = models.ImageField(upload_to='logos_clientes/', verbose_name="Logo do Cliente", blank=True, null=True)
+    is_active = models.BooleanField(default=True, verbose_name="Cliente Ativo?")
 
     def __str__(self):
         return self.name

@@ -1,173 +1,175 @@
 // static/js/client.js
 
+document.addEventListener("DOMContentLoaded", () => {
+  // --- 1. Inicializações ---
+  if (typeof feather !== "undefined") feather.replace();
 
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Seletores dos Modais ---
-    const addClientBtn = document.getElementById('add-client-btn');
-    const addClientModal = document.getElementById('add-client-modal');
-    const addClientForm = document.getElementById('add-client-form');
-    
-    const clientDetailModal = document.getElementById('client-detail-modal');
-    const clientDetailContent = document.getElementById('client-detail-content');
-    
-    // --- NOVO: Seletores do Modal de Projeto ---
-    const addProjectModal = document.getElementById('add-project-modal');
-    const addProjectForm = document.getElementById('add-project-form');
-    // --- FIM NOVO ---
+  const table = $("#client-table").DataTable({
+    language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+    order: [[0, "asc"]],
+  });
 
-    const closeButtons = document.querySelectorAll('.close-button');
+  // --- 2. Controle do Modal ---
+  const modal = document.getElementById("client-modal");
+  const openBtn = document.getElementById("btn-open-modal");
+  // Busca o botão de fechar DENTRO do modal para garantir que é o certo
+  const closeBtn = modal ? modal.querySelector(".close-button") : null;
 
-    // --- Funções Auxiliares ---
-    function openModal(modalElement) {
-        modalElement.style.display = 'flex';
-        document.body.classList.add('modal-open');
-    }
+  const form = document.getElementById("client-form");
+  const modalTitle = document.getElementById("modal-title");
+  const hiddenIdInput = document.getElementById("client_id_hidden");
 
-    function closeModal(modalElement) {
-        modalElement.style.display = 'none';
-        document.body.classList.remove('modal-open');
-    }
+  if (modal && openBtn && closeBtn) {
+    // Abrir Modal (Cadastro Limpo)
+    openBtn.addEventListener("click", () => {
+      form.reset();
+      hiddenIdInput.value = "";
+      modalTitle.innerText = "Cadastrar Novo Cliente";
+      // Reseta o checkbox de ativo
+      const activeCheck = document.getElementById("id_is_active");
+      if (activeCheck) activeCheck.checked = true;
 
-    function addNewClientRow(clientData) {
-        const table = $('#client-table').DataTable();
-        const newRow = `
-            <tr>
-                <td><a href="#" class="view-client-details" data-client-id="${clientData.id}" style="font-weight: bold; color: var(--primary-color);">${clientData.name}</a></td>
-                <td>${clientData.cnpj || 'Não informado'}</td>
-                <td>${clientData.nome_representante || '-'}</td>
-                <td>${clientData.email_representante || '-'}</td>
-                <td>${clientData.data_finalizacao_contrato || 'Ativo'}</td>
-            </tr>
-        `;
-        table.row.add($(newRow)).draw(false);
-    }
-    
-    // --- NOVO: Função de Alerta (usando SweetAlert) ---
-    function showAlert(icon, title, text) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: icon,
-                title: title,
-                text: text,
-                timer: (icon === 'success' ? 2000 : 4000),
-                showConfirmButton: (icon === 'error')
-            });
-        } else {
-            alert(text);
+      modal.style.display = "flex";
+    });
+
+    // Fechar Modal (Botão X)
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    // Fechar Modal (Clicar no fundo escuro)
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  } else {
+    console.error("Erro Crítico: Elementos do modal não encontrados no DOM.");
+    console.log(
+      "Modal:",
+      modal,
+      "Btn Abrir:",
+      openBtn,
+      "Btn Fechar:",
+      closeBtn
+    );
+  }
+
+  // --- 3. Lógica de Edição ---
+  // Usamos delegação de eventos pois os botões estão dentro do DataTable
+  document
+    .querySelector("#client-table")
+    .addEventListener("click", async (e) => {
+      if (e.target.closest(".edit-client-btn")) {
+        const btn = e.target.closest(".edit-client-btn");
+        const clientId = btn.dataset.id;
+
+        // Busca dados do cliente
+        try {
+          const response = await fetch(
+            `${GET_CLIENT_DATA_URL_BASE}${clientId}/get/`
+          );
+          const data = await response.json();
+
+          // Preenche o formulário
+          hiddenIdInput.value = data.id;
+          document.getElementById("id_name").value = data.name;
+          document.getElementById("id_cnpj").value = data.cnpj || "";
+          document.getElementById("id_nome_representante").value =
+            data.nome_representante || "";
+          document.getElementById("id_celular_representante").value =
+            data.celular_representante || "";
+          document.getElementById("id_email_representante").value =
+            data.email_representante || "";
+          document.getElementById("id_data_inicio_contrato").value =
+            data.data_inicio_contrato || "";
+          document.getElementById("id_data_finalizacao_contrato").value =
+            data.data_finalizacao_contrato || "";
+          document.getElementById("id_is_active").checked = data.is_active;
+
+          modalTitle.innerText = "Editar Cliente";
+          modal.style.display = "flex";
+        } catch (error) {
+          console.error(error);
+          Swal.fire("Erro", "Não foi possível carregar os dados.", "error");
         }
-    }
+      }
+    });
 
-    // --- Event Listeners ---
-    addClientBtn.addEventListener('click', () => openModal(addClientModal));
+  // --- 4. Submissão do Formulário (AJAX) ---
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
 
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const modalId = button.dataset.modalId;
-            const modalElement = document.getElementById(modalId);
-            if (modalElement) closeModal(modalElement);
+    try {
+      const response = await fetch(SAVE_CLIENT_URL, {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF_TOKEN },
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        Swal.fire("Sucesso!", result.message, "success").then(() => {
+          location.reload(); // Recarrega para atualizar a tabela
         });
-    });
+      } else {
+        Swal.fire("Erro", "Verifique os campos.", "error");
+        console.error(result.errors);
+      }
+    } catch (error) {
+      Swal.fire("Erro", "Erro de conexão.", "error");
+    }
+  });
 
-    window.addEventListener('click', (event) => {
-        if (event.target == addClientModal) closeModal(addClientModal);
-        if (event.target == clientDetailModal) closeModal(clientDetailModal);
-        if (event.target == addProjectModal) closeModal(addProjectModal); // <-- NOVO
-    });
+  // --- 5. Máscaras de Input (CNPJ e Telefone) ---
 
-    // Submissão do formulário de CADASTRO DE CLIENTE
-    addClientForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(addClientForm);
-        
-        try {
-            const response = await fetch(ADD_CLIENT_URL, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': CSRF_TOKEN },
-                body: formData
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.status === 'success') {
-                    showAlert('success', 'Sucesso!', result.message);
-                    addNewClientRow(result.client);
-                } else {
-                    showAlert('error', 'Erro de Validação', 'Por favor, corrija os erros no formulário.');
-                }
-            } else {
-                showAlert('error', 'Erro no Servidor', 'Não foi possível salvar o cliente.');
-            }
-        } catch (error) {
-            showAlert('error', 'Erro de Rede', 'Não foi possível conectar ao servidor.');
-        }
+  // Máscara CNPJ (00.000.000/0000-00)
+  const cnpjInput = document.getElementById("id_cnpj");
+  if (cnpjInput) {
+    cnpjInput.addEventListener("input", function (e) {
+      let x = e.target.value
+        .replace(/\D/g, "")
+        .match(/(\d{0,2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2})/);
+      e.target.value = !x[2]
+        ? x[1]
+        : x[1] +
+          "." +
+          x[2] +
+          "." +
+          x[3] +
+          "/" +
+          x[4] +
+          (x[5] ? "-" + x[5] : "");
     });
+  }
 
-    // Submissão do formulário de CADASTRO DE PROJETO (NOVO)
-    addProjectForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(addProjectForm);
-        
-        try {
-            const response = await fetch(ADD_PROJECT_URL, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': CSRF_TOKEN },
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (response.ok) {
-                showAlert('success', 'Sucesso!', result.message);
-                closeModal(addProjectModal);
-                addProjectForm.reset();
-                // TODO: Recarregar o modal de detalhes do cliente para mostrar o novo projeto
-                // (Por enquanto, o usuário precisa fechar e abrir o modal de detalhes)
-            } else {
-                showAlert('error', 'Erro de Validação', 'Por favor, corrija os erros no formulário.');
-            }
-        } catch (error) {
-            showAlert('error', 'Erro de Rede', 'Não foi possível salvar o projeto.');
-        }
+  // Máscara Celular ( (00) 00000-0000 )
+  const phoneInput = document.getElementById("id_celular_representante");
+  if (phoneInput) {
+    phoneInput.addEventListener("input", function (e) {
+      let x = e.target.value
+        .replace(/\D/g, "")
+        .match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+      e.target.value = !x[2]
+        ? x[1]
+        : "(" + x[1] + ") " + x[2] + (x[3] ? "-" + x[3] : "");
     });
+  }
 
-    // Lógica de "Delegação de Eventos" para os Modais
-    document.body.addEventListener('click', async (e) => {
-        
-        // --- Abrir Modal de DETALHES DO CLIENTE ---
-        if (e.target.classList.contains('view-client-details')) {
-            e.preventDefault();
-            const clientId = e.target.dataset.clientId;
-            if (clientId) {
-                try {
-                    const response = await fetch(`${CLIENT_DETAIL_URL_BASE}${clientId}/details/`);
-                    if (response.ok) {
-                        clientDetailContent.innerHTML = await response.text();
-                        openModal(clientDetailModal);
-                        // Re-ativa o Feather icons para os ícones no modal
-                        if (typeof feather !== 'undefined') feather.replace();
-                    } else {
-                        showAlert('error', 'Erro', 'Não foi possível carregar os detalhes do cliente.');
-                    }
-                } catch (error) {
-                    showAlert('error', 'Erro de Rede', 'Não foi possível conectar ao servidor.');
-                }
-            }
-        }
-        
-        // --- Abrir Modal de ADICIONAR PROJETO (vindo do modal de detalhes) ---
-        if (e.target.classList.contains('add-project-from-detail')) {
-            e.preventDefault();
-            const clientId = e.target.dataset.clientId;
-            
-            // Pré-seleciona o cliente no formulário de projeto
-            const clientSelect = addProjectForm.querySelector('#id_client');
-            if (clientSelect) {
-                clientSelect.value = clientId;
-            }
-            
-            // Fecha o modal de detalhes e abre o modal de projeto
-            closeModal(clientDetailModal);
-            openModal(addProjectModal);
-        }
+  // --- 6. Conectar Social (Mockup) ---
+  window.connectSocial = function (platform) {
+    // Em um cenário real, isso abriria o fluxo OAuth
+    Swal.fire({
+      title: `Conectar ${platform}`,
+      text: "O cliente foi salvo? Recomendamos salvar o cliente antes de conectar contas. Deseja prosseguir para a tela de conexões?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Ir para Conexões",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = "/social/"; // Redireciona para o dashboard social
+      }
     });
+  };
 });
