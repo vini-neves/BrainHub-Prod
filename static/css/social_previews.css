@@ -1,105 +1,107 @@
 /* static/css/social_previews.css */
 
 /* --- Container Geral --- */
-.preview-container {
+.preview-panel {
     background-color: #f0f2f5;
     padding: 20px;
-    border-radius: 12px;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 600px;
+    flex-direction: column;
+    align-items: center;
+    border-left: 1px solid #ddd;
+    overflow-y: auto;
 }
 
 /* --- O "Celular" (Mockup Base) --- */
 .device-mockup {
     background: white;
-    width: 375px; /* Largura padrão de mobile */
-    min-height: 600px;
+    width: 375px;
+    min-height: 600px; /* Altura fixa para simular tela */
     border-radius: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    border: 12px solid #333; /* Borda do celular */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border: 10px solid #222;
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     position: relative;
+    display: none; /* Escondido por padrão */
 }
 
-/* =========================================
-   ESTILOS DO INSTAGRAM (FEED)
-   ========================================= */
-.preview-instagram-feed .header {
-    display: flex; align-items: center; padding: 10px;
+/* Exibir o ativo */
+.device-mockup.active { display: block; }
+
+/* --- ARQUÉTIPO 1: FEED PADRÃO (Insta, Face, LinkedIn) --- */
+.preview-feed .header {
+    display: flex; align-items: center; padding: 12px; background: white;
 }
-.preview-instagram-feed .avatar {
-    width: 32px; height: 32px; border-radius: 50%; background: #ddd; margin-right: 10px; object-fit: cover;
+.preview-feed .avatar {
+    width: 32px; height: 32px; border-radius: 50%; margin-right: 10px; object-fit: cover;
 }
-.preview-instagram-feed .username {
-    font-weight: 600; font-size: 14px; color: #262626;
+.preview-feed .user-info { display: flex; flex-direction: column; }
+.preview-feed .username { font-weight: 600; font-size: 14px; color: #262626; }
+.preview-feed .subtext { font-size: 12px; color: #8e8e8e; }
+
+.preview-feed .media-area {
+    width: 100%; aspect-ratio: 1/1; /* Quadrado padrão */
+    background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.preview-instagram-feed .media-area {
-    width: 100%; aspect-ratio: 1/1; background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden;
-}
-.preview-instagram-feed .media-area img, 
-.preview-instagram-feed .media-area video {
+.preview-feed .media-area img, .preview-feed .media-area video {
     width: 100%; height: 100%; object-fit: cover;
 }
-.preview-instagram-feed .actions {
-    padding: 10px; display: flex; gap: 15px;
-}
-.preview-instagram-feed .caption-area {
-    padding: 0 10px 20px 10px; font-size: 14px; line-height: 1.4;
-}
-.preview-instagram-feed .caption-username {
-    font-weight: 600; margin-right: 5px;
-}
 
-/* =========================================
-   ESTILOS DO LINKEDIN
-   ========================================= */
-.preview-linkedin-feed .device-mockup {
-    border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 500px;
-}
-.preview-linkedin-feed .header {
-    display: flex; padding: 12px;
-}
-.preview-linkedin-feed .avatar {
-    width: 48px; height: 48px; border-radius: 0; margin-right: 10px;
-}
-.preview-linkedin-feed .user-info h4 {
-    margin: 0; font-size: 14px; color: rgba(0,0,0,0.9);
-}
-.preview-linkedin-feed .user-info span {
-    font-size: 12px; color: rgba(0,0,0,0.6); display: block;
-}
-.preview-linkedin-feed .caption-area {
-    padding: 0 12px 10px 12px; font-size: 14px; color: rgba(0,0,0,0.9);
-}
-.preview-linkedin-feed .media-area {
-    width: 100%;
-}
-.preview-linkedin-feed .media-area img {
-    width: 100%; height: auto;
-}
+.preview-feed .actions { padding: 10px; display: flex; gap: 15px; font-size: 20px; }
+.preview-feed .caption-area { padding: 0 12px 20px; font-size: 14px; line-height: 1.4; color: #262626; }
+.preview-feed .caption-username { font-weight: 600; margin-right: 5px; }
 
-/* =========================================
-   ESTILOS VERTICAIS (STORIES / REELS / TIKTOK)
-   ========================================= */
-.preview-vertical .device-mockup {
-    background: black; color: white;
-}
+/* Variação LinkedIn */
+.preview-feed.linkedin .header { padding: 12px; }
+.preview-feed.linkedin .avatar { border-radius: 0; width: 48px; height: 48px; } /* Avatar quadrado */
+.preview-feed.linkedin .caption-area { padding-bottom: 10px; } /* Texto antes da imagem */
+
+/* --- ARQUÉTIPO 2: VERTICAL FULL (Stories, Reels, TikTok) --- */
+.preview-vertical { background: black; color: white; }
 .preview-vertical .media-area {
     width: 100%; height: 100%; position: absolute; top: 0; left: 0;
 }
-.preview-vertical .media-area img,
-.preview-vertical .media-area video {
+.preview-vertical .media-area img, .preview-vertical .media-area video {
     width: 100%; height: 100%; object-fit: cover;
 }
-.preview-vertical .overlay {
-    position: absolute; bottom: 20px; left: 10px; z-index: 2; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+.preview-vertical .overlay-ui {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    padding: 20px 15px 40px; box-sizing: border-box; z-index: 2;
 }
 .preview-vertical .header {
-    position: absolute; top: 20px; left: 10px; z-index: 2; display: flex; align-items: center;
+    position: absolute; top: 30px; left: 15px; z-index: 2; display: flex; align-items: center;
 }
-.preview-vertical .avatar {
-    width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; margin-right: 10px;
+.preview-vertical .avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; margin-right: 10px; }
+.preview-vertical .username { font-weight: 600; font-size: 14px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+.preview-vertical .side-actions {
+    position: absolute; bottom: 100px; right: 10px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 2;
 }
+
+/* --- ARQUÉTIPO 3: X (TWITTER) --- */
+.preview-tweet { padding: 15px; }
+.preview-tweet .header { display: flex; margin-bottom: 5px; }
+.preview-tweet .avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 12px; }
+.preview-tweet .name-row { display: flex; gap: 5px; font-size: 15px; }
+.preview-tweet .display-name { font-weight: 700; color: #0f1419; }
+.preview-tweet .handle { color: #536471; }
+.preview-tweet .caption-area { 
+    font-size: 15px; line-height: 1.5; color: #0f1419; margin-bottom: 10px; white-space: pre-wrap; 
+}
+.preview-tweet .media-area {
+    width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid #cfd9de; margin-bottom: 10px;
+}
+.preview-tweet .media-area img { width: 100%; height: auto; display: block; }
+.preview-tweet .actions {
+    display: flex; justify-content: space-between; color: #536471; padding-top: 5px; max-width: 80%;
+}
+
+/* --- ARQUÉTIPO 4: YOUTUBE VIDEO --- */
+.preview-youtube { background: #f9f9f9; padding: 0; }
+.preview-youtube .media-area { width: 100%; aspect-ratio: 16/9; background: black; display: flex; align-items: center; justify-content: center; }
+.preview-youtube .media-area img { width: 100%; height: 100%; object-fit: contain; }
+.preview-youtube .info-area { padding: 12px; }
+.preview-youtube .video-title { font-size: 16px; font-weight: 500; color: #0f0f0f; margin-bottom: 8px; line-height: 1.4; }
+.preview-youtube .channel-row { display: flex; align-items: center; }
+.preview-youtube .avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 10px; }
+.preview-youtube .channel-name { font-size: 12px; color: #606060; }

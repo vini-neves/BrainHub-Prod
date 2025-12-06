@@ -1,94 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Aprovação de Post - {{ post.client.name }}</title>
-    <link rel="stylesheet" href="{% static 'css/social_previews.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprovação de Conteúdo - {{ post.client.name }}</title>
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/social.css' %}">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { background-color: #f4f6f8; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; min-height: 100vh; }
+        
+        .approval-wrapper {
+            display: flex; gap: 40px; margin-top: 40px; max-width: 1200px; width: 95%;
+            flex-wrap: wrap; justify-content: center;
+        }
+
+        /* Lado Esquerdo: O Post */
+        .preview-container {
+            flex: 1; min-width: 380px; display: flex; flex-direction: column; align-items: center;
+        }
+        
+        /* Lado Direito: Ações */
+        .actions-panel {
+            flex: 1; min-width: 300px; max-width: 400px;
+            background: white; padding: 30px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); height: fit-content;
+        }
+
+        h1 { color: var(--primary-color); margin-top: 0; font-size: 1.5rem; }
+        p { color: #666; line-height: 1.5; }
+
+        .btn-action {
+            width: 100%; padding: 15px; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        .btn-action:hover { transform: translateY(-2px); }
+        
+        .btn-approve { background-color: #2ecc71; color: white; }
+        .btn-reject-copy { background-color: #f1c40f; color: #333; }
+        .btn-reject-design { background-color: #e74c3c; color: white; }
+
+        /* Área de Desenho (Canvas) */
+        .canvas-container-wrapper {
+            position: relative;
+            margin-top: 20px;
+            display: none; /* Escondido até clicar em Reprovar Design */
+            border: 2px dashed #e74c3c;
+        }
+        
+        .drawing-tools {
+            display: none; margin-top: 15px; background: #eee; padding: 10px; border-radius: 8px;
+        }
+        
+        .color-dot {
+            width: 25px; height: 25px; border-radius: 50%; display: inline-block; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .color-dot.active { transform: scale(1.2); border-color: #333; }
+
+    </style>
 </head>
 <body>
 
-<div class="approval-container">
-    
-    <div class="preview-area">
-        <div class="device-mockup">
-            <div class="insta-header">
-                <img src="{{ post.client.logo.url }}" class="avatar">
-                <span>{{ post.client.name }}</span>
+<div class="approval-wrapper">
+
+    <div class="preview-container">
+        <div class="device-mockup mockup-feed active" style="display: block;">
+            <div class="header">
+                <img src="https://ui-avatars.com/api/?name={{ post.client.name }}" class="avatar">
+                <span class="username">{{ post.client.name }}</span>
             </div>
             
-            <div class="canvas-wrapper">
-                <canvas id="c" width="400" height="400"></canvas>
+            <div class="media-area" id="media-area-container">
+                {% if post.media_file %}
+                    <img src="{{ post.media_file.url }}" id="original-image" style="width:100%; height:100%; object-fit:cover;">
+                {% else %}
+                    <div style="padding:50px; text-align:center;">Sem Imagem</div>
+                {% endif %}
+                
+                <canvas id="drawing-canvas"></canvas>
             </div>
-            
-            <div class="insta-actions">❤️ 💬 🚀</div>
-            
-            <div class="insta-caption">
-                <strong>{{ post.client.name }}</strong> {{ post.caption }}
+
+            <div class="actions">
+                <span>❤️ 💬 🚀</span>
+            </div>
+            <div class="caption-area">
+                <span class="caption-username">{{ post.client.name }}</span>
+                <span>{{ post.caption }}</span>
             </div>
         </div>
     </div>
 
-    <div class="actions-area">
-        <h1>Aprovação de Conteúdo</h1>
+    <div class="actions-panel">
+        <h1>Aprovação</h1>
+        <p>Olá! Por favor, revise o conteúdo ao lado. Se tudo estiver correto, clique em Aprovar.</p>
         
-        <div class="button-group">
-            <button onclick="approvePost()" class="btn-approve">✅ APROVAR TUDO</button>
+        <div id="main-actions">
+            <button onclick="sendAction('approve')" class="btn-action btn-approve">✅ APROVAR TUDO</button>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <p>Precisa de ajustes?</p>
+            <button onclick="startRejectCopy()" class="btn-action btn-reject-copy">📝 Ajustar Texto</button>
+            <button onclick="startRejectDesign()" class="btn-action btn-reject-design">🎨 Ajustar Design (Rabiscar)</button>
         </div>
 
-        <hr>
-
-        <h3>Precisa de ajustes?</h3>
-        
-        <button onclick="rejectCopy()" class="btn-reject">❌ Reprovar Texto (Copy)</button>
-        
-        <button onclick="enableDrawingMode()" class="btn-reject">🎨 Rabiscar na Imagem (Design)</button>
-        
-        <div id="drawing-controls" style="display:none;">
-            <p>Desenhe na imagem ao lado para indicar as alterações.</p>
-            <button onclick="saveRejectDesign()" class="btn-save-reject">Enviar Reprova de Design</button>
+        <div id="drawing-tools" class="drawing-tools">
+            <p><strong>Modo Rabisco Ativo:</strong> Desenhe na imagem onde precisa de alterações.</p>
+            <div style="margin-bottom: 10px;">
+                <span class="color-dot active" style="background:red;" onclick="setBrushColor('red')"></span>
+                <span class="color-dot" style="background:blue;" onclick="setBrushColor('blue')"></span>
+                <span class="color-dot" style="background:green;" onclick="setBrushColor('green')"></span>
+                <span class="color-dot" style="background:yellow;" onclick="setBrushColor('yellow')"></span>
+                <button onclick="canvas.clear(); reloadImage();" style="float:right; font-size:0.8em;">Limpar</button>
+            </div>
+            <textarea id="design-feedback-text" placeholder="Descreva o que precisa mudar..." style="width:100%; padding:10px; margin-bottom:10px;"></textarea>
+            
+            <button onclick="saveDesignRejection()" class="btn-action btn-reject-design">Enviar Solicitação de Design</button>
+            <button onclick="cancelDrawing()" style="background:none; border:none; color:#666; width:100%; cursor:pointer;">Cancelar</button>
         </div>
+
     </div>
 
 </div>
 
 <script>
-    // Inicializa o Canvas com a imagem do post
-    const canvas = new fabric.Canvas('c');
-    const bgUrl = "{{ post.media_file.url }}";
-
-    fabric.Image.fromURL(bgUrl, function(img) {
-        // Ajusta imagem ao canvas
-        img.scaleToWidth(400);
-        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
-        canvas.setDimensions({width: 400, height: img.getScaledHeight()});
-    });
-
-    // Função para ativar modo de desenho (Rabiscar)
-    function enableDrawingMode() {
-        canvas.isDrawingMode = true;
-        canvas.freeDrawingBrush.width = 5;
-        canvas.freeDrawingBrush.color = "red";
-        document.getElementById('drawing-controls').style.display = 'block';
-    }
-
-    // Função para salvar a reprova de design
-    function saveRejectDesign() {
-        // Pega a imagem com os rabiscos em Base64
-        const dataURL = canvas.toDataURL({ format: 'png' });
-        
-        // Envia para o Django via API
-        fetch('/api/approval/reject-design/', {
-            method: 'POST',
-            body: JSON.stringify({
-                token: "{{ post.approval_token }}",
-                image_data: dataURL,
-                feedback: "Ajustes marcados na imagem."
-            })
-        }).then(res => {
-            if(res.ok) alert("Feedback enviado para a equipe de Design!");
-        });
-    }
+    const API_URL = "{% url 'process_approval_action' %}";
+    const TOKEN = "{{ post.approval_token }}";
+    const IMAGE_URL = "{{ post.media_file.url }}";
 </script>
+
+<script src="{% static 'js/approval.js' %}"></script>
 
 </body>
 </html>

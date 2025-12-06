@@ -2,140 +2,213 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Inicializa ícones
+    // Inicializa ícones do Feather se disponível
     if (typeof feather !== 'undefined') feather.replace();
 
-    // --- 1. Lógica de Preview (O que você vê é o que você tem) ---
-
-    // Atualiza o texto em TODOS os mockups ao mesmo tempo
+    // --- ELEMENTOS DO DOM ---
+    const clientSelect = document.getElementById('post-client');
+    const channelBar = document.getElementById('channel-bar-container');
     const captionInput = document.getElementById('input-caption');
-    if (captionInput) {
-        captionInput.addEventListener('input', function() {
-            const text = this.value;
-            const displayText = text || "Sua legenda aparecerá aqui...";
-            document.querySelectorAll('.caption-text').forEach(el => el.innerText = displayText);
+    const mediaInput = document.getElementById('input-media');
+    
+    // --- LISTA MESTRA DE PLATAFORMAS (Fixa) ---
+    // O JS vai desenhar ESSA lista, não importa o que venha do banco.
+    const SUPPORTED_PLATFORMS = [
+        { id: 'facebook', name: 'Facebook', icon: 'facebook' },
+        { id: 'instagram', name: 'Instagram', icon: 'instagram' },
+        { id: 'linkedin', name: 'LinkedIn', icon: 'linkedin' },
+        { id: 'youtube', name: 'YouTube', icon: 'youtube' },
+        { id: 'tiktok', name: 'TikTok', icon: 'video' },
+        { id: 'twitter', name: 'X (Twitter)', icon: 'twitter' },
+        { id: 'pinterest', name: 'Pinterest', icon: 'map-pin' }
+    ];
+
+    // --- FUNÇÃO DE RENDERIZAÇÃO ---
+    function renderChannelBar(clientId) {
+        // Limpa a barra atual
+        channelBar.innerHTML = ''; 
+        
+        // Se nenhum cliente selecionado, mostra aviso
+        if (!clientId) {
+            channelBar.innerHTML = '<p style="color:#999; font-size:0.9em; width:100%; text-align:center;">Selecione um cliente acima para ver os canais.</p>';
+            return;
+        }
+
+        // Pega as contas conectadas deste cliente específico
+        // Se o cliente não tiver nada, retorna objeto vazio {}
+        const clientAccounts = (typeof CLIENTS_MAP !== 'undefined' && CLIENTS_MAP[clientId]) ? CLIENTS_MAP[clientId] : {};
+
+        // LOOP PRINCIPAL: Percorre as plataformas FIXAS
+        SUPPORTED_PLATFORMS.forEach(platform => {
+            
+            // Verifica se o cliente tem essa plataforma conectada
+            const account = clientAccounts[platform.id]; 
+            const isConnected = !!account; // True ou False
+
+            // Cria o elemento visual (Label)
+            const label = document.createElement('label');
+            label.className = 'channel-select-item';
+            
+            if (isConnected) {
+                // --- CENÁRIO 1: CONECTADO (Mostra Colorido e Checkbox) ---
+                label.title = `${platform.name}: ${account.name}`;
+                label.innerHTML = `
+                    <input type="checkbox" name="accounts" value="${account.id}" data-platform="${platform.id}">
+                    <div class="channel-icon-lg bg-${platform.id}">
+                        <i data-feather="${platform.icon}"></i>
+                    </div>
+                `;
+                
+                // Adiciona evento para atualizar o preview ao clicar
+                const checkbox = label.querySelector('input');
+                checkbox.addEventListener('change', () => {
+                    if (window.updateTabs) window.updateTabs();
+                });
+
+            } else {
+                // --- CENÁRIO 2: DESCONECTADO (Mostra Cinza com +) ---
+                // Isso vai aparecer mesmo que o banco venha vazio!
+                label.title = `Conectar ${platform.name}`;
+                label.innerHTML = `
+                    <div class="channel-icon-lg disconnected" onclick="redirectToConnect('${platform.name}')">
+                        <i data-feather="${platform.icon}"></i>
+                        <span class="plus-badge">+</span>
+                    </div>
+                `;
+            }
+
+            // Adiciona na tela
+            channelBar.appendChild(label);
+        });
+
+        // Atualiza os ícones SVG
+        if (typeof feather !== 'undefined') feather.replace();
+    }
+
+    // --- FUNÇÃO PARA CONECTAR (Redirecionamento) ---
+    window.redirectToConnect = function(platformName) {
+        const targetUrl = (typeof SOCIAL_DASHBOARD_URL !== 'undefined') ? SOCIAL_DASHBOARD_URL : '/social/';
+        
+        Swal.fire({
+            title: `Conectar ${platformName}?`,
+            text: `Nenhuma conta vinculada. Deseja ir para a tela de conexões?`,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Ir para Conexões',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: 'var(--primary-color)'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.open(targetUrl, '_blank');
+            }
+        });
+    };
+
+    // --- INICIALIZAÇÃO DA TELA ---
+    
+    // 1. Verifica se veio cliente pré-selecionado da URL
+    if (typeof PRE_SELECTED_CLIENT_ID !== 'undefined' && PRE_SELECTED_CLIENT_ID && PRE_SELECTED_CLIENT_ID !== 'None') {
+        if(clientSelect) clientSelect.value = PRE_SELECTED_CLIENT_ID;
+        renderChannelBar(PRE_SELECTED_CLIENT_ID);
+        // Atualiza avatar
+        updateClientPreviewInfo(clientSelect);
+    }
+
+    // 2. Listener para troca manual de cliente
+    if (clientSelect) {
+        clientSelect.addEventListener('change', function() {
+            renderChannelBar(this.value);
+            updateClientPreviewInfo(this);
         });
     }
 
-    // Atualiza a Mídia (Imagem/Vídeo)
-    const mediaInput = document.getElementById('input-media');
-    if (mediaInput) {
+    // --- (RESTO DO CÓDIGO: PREVIEW, UPLOAD, ETC.) ---
+    
+    function updateClientPreviewInfo(selectElement) {
+        if (selectElement.selectedIndex > -1) {
+            const opt = selectElement.options[selectElement.selectedIndex];
+            const name = opt.text;
+            const logo = opt.dataset.logo || "https://ui-avatars.com/api/?name=" + name + "&background=random";
+            
+            document.querySelectorAll('.client-name').forEach(el => el.innerText = name);
+            document.querySelectorAll('.client-avatar').forEach(el => el.src = logo);
+        }
+    }
+
+    if(captionInput) {
+        captionInput.addEventListener('input', function() {
+            const text = this.value || "Sua legenda...";
+            document.querySelectorAll('.caption-text').forEach(el => el.innerText = text);
+        });
+    }
+    
+    if(mediaInput) {
         mediaInput.addEventListener('change', function() {
             const file = this.files[0];
-            
             if (file) {
                 const objectUrl = URL.createObjectURL(file);
-                const isImage = file.type.startsWith('image/');
                 const isVideo = file.type.startsWith('video/');
-
-                // Esconde placeholder
-                document.querySelectorAll('#placeholder-media').forEach(el => el.style.display = 'none');
-
-                if (isImage) {
-                    document.querySelectorAll('video').forEach(v => v.style.display = 'none');
-                    document.querySelectorAll('img[id^="preview-img"]').forEach(img => {
-                        img.src = objectUrl;
-                        img.style.display = 'block';
+                document.querySelectorAll('.placeholder-media').forEach(el => el.style.display = 'none');
+                
+                if (isVideo) {
+                    document.querySelectorAll('.preview-img').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.preview-video').forEach(el => {
+                        el.src = objectUrl; el.style.display = 'block';
                     });
-                } else if (isVideo) {
-                    document.querySelectorAll('img[id^="preview-img"]').forEach(img => img.style.display = 'none');
-                    document.querySelectorAll('video').forEach(video => {
-                        video.src = objectUrl;
-                        video.style.display = 'block';
+                } else {
+                    document.querySelectorAll('.preview-video').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.preview-img').forEach(el => {
+                        el.src = objectUrl; el.style.display = 'block';
                     });
                 }
+                const fileNameDisplay = document.getElementById('file-name-display');
+                if(fileNameDisplay) fileNameDisplay.innerText = file.name;
             }
         });
     }
 
-    // Atualiza o Cliente (Nome e Avatar)
-    const clientSelect = document.getElementById('post-client');
-    if (clientSelect) {
-        clientSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const name = selectedOption.text;
-            const logo = selectedOption.dataset.logo || "https://via.placeholder.com/50";
-
-            document.querySelectorAll('.client-name').forEach(el => el.innerText = name);
-            document.querySelectorAll('.client-avatar').forEach(img => img.src = logo);
-        });
-    }
-
-    // --- 2. Lógica de Abas ---
-    
-    // Torna a função global para ser usada no onclick do HTML, ou adiciona listeners aqui
-    window.switchPreview = function(type) {
-        document.querySelectorAll('.device-mockup').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.preview-tab').forEach(tab => tab.classList.remove('active'));
-        
-        // Adiciona classe active na aba clicada (gambiarra visual simples)
-        // O ideal seria passar o evento 'e' e fazer e.target.classList.add('active')
-        
-        if (type === 'feed') {
-            document.getElementById('mockup-instagram_feed').style.display = 'block';
-        } else if (type === 'story') {
-            document.getElementById('mockup-vertical').style.display = 'block';
-        } else if (type === 'linkedin') {
-            document.getElementById('mockup-linkedin').style.display = 'block';
-        }
-    };
-
-
-    // --- 3. Envio do Formulário ---
-
+    // SUBMIT FORM
     const form = document.getElementById('create-post-form');
     if (form) {
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            // Valida se tem conta selecionada
+            if(document.querySelectorAll('input[name="accounts"]:checked').length === 0) {
+                Swal.fire('Atenção', 'Selecione pelo menos uma rede social para publicar.', 'warning');
+                return;
+            }
             
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerText;
-            submitBtn.innerText = "Salvando...";
-            submitBtn.disabled = true;
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
 
             const formData = new FormData(this);
 
             try {
-                // USA AS VARIÁVEIS GLOBAIS DEFINIDAS NO HTML
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': CSRF_TOKEN
-                    },
+                    headers: { 'X-CSRFToken': CSRF_TOKEN },
                     body: formData
                 });
-
                 const result = await response.json();
 
                 if (response.ok) {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Sucesso!',
-                            text: 'Postagem criada e enviada para o Kanban Operacional!',
-                            confirmButtonText: 'Ir para o Kanban'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = KANBAN_URL;
-                            }
-                        });
-                    } else {
-                        alert("Postagem criada com sucesso!");
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Post agendado e enviado para o Kanban!'
+                    }).then(() => {
                         window.location.href = KANBAN_URL;
-                    }
+                    });
                 } else {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Erro', result.message, 'error');
-                    } else {
-                        alert('Erro: ' + result.message);
-                    }
+                    Swal.fire('Erro', result.message, 'error');
                 }
             } catch (error) {
-                console.error(error);
-                alert('Erro de rede ao salvar postagem.');
+                Swal.fire('Erro', 'Falha na conexão.', 'error');
             } finally {
-                submitBtn.innerText = originalText;
-                submitBtn.disabled = false;
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         });
     }

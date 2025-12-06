@@ -1,202 +1,104 @@
-{# projects/templates/projects/social_dashboard.html #}
 {% extends "projects/base.html" %}
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/social.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/social.css' %}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 {% endblock %}
 
-{% block title %}Gestão de Redes Sociais{% endblock %}
+{% block title %}Social Dashboard{% endblock %}
 
 {% block content %}
-
     <div class="social-header">
         <div>
-            <h1>Gestão de Redes Sociais</h1>
-            <p>Conecte suas contas, agende posts e veja métricas.</p>
+            <h1>Dashboard de Publicações</h1>
+            <p>Visão geral de todos os clientes da agência.</p>
         </div>
-        <a 
-    href="{% url 'create_post_studio' %}" 
-    class="form-button" 
-    style="background-color: var(--primary-color); text-decoration: none; display: inline-flex; align-items: center;"
->
-    <i data-feather="plus-square" style="margin-right: 8px"></i> Criar Novo Post
-</a>
+        <button onclick="openClientSelector()" class="form-button" style="background-color: var(--primary-color);">
+            <i data-feather="plus-square" style="margin-right:8px"></i> Agendar Novo Post
+        </button>
     </div>
 
-    <h3 style="margin-bottom: 15px">Contas Conectadas</h3>
-    <div class="social-grid">
-        <div class="account-card">
-            <i data-feather="facebook" class="fb-color"></i>
-            <h4>Facebook</h4>
-            {% if connected_accounts %}
-            <span style="color: green; font-size: 0.8em">● Conectado</span>
-            {% else %}
-            <button
-                class="form-button"
-                style="padding: 5px 10px; font-size: 0.8em; margin-top: 10px"
-            >
-                Conectar
-            </button>
-            {% endif %}
-        </div>
-
-        <div class="account-card">
-            <i data-feather="instagram" class="ig-color"></i>
-            <h4>Instagram</h4>
-            <button
-                class="form-button"
-                style="padding: 5px 10px; font-size: 0.8em; margin-top: 10px"
-            >
-                Conectar
-            </button>
-        </div>
-
-        <div class="account-card">
-            <i data-feather="linkedin" class="li-color"></i>
-            <h4>LinkedIn</h4>
-            <button
-                class="form-button"
-                style="padding: 5px 10px; font-size: 0.8em; margin-top: 10px"
-            >
-                Conectar
-            </button>
-        </div>
-    </div>
-
-    <h3 style="margin-bottom: 15px;">Agendados</h3>
-    <div class="posts-list">
-        {% for post in scheduled_posts %}
-            <div class="post-item scheduled">
-                <div>
-                    <strong>{{ post.scheduled_for|date:"d/m/Y H:i" }}</strong>
-                    <p style="margin: 5px 0; font-size: 0.9em;">
-                        {{ post.content|truncatechars:50 }}
-                    </p>
-                    <div style="font-size: 0.8em; color: #888">
+    <div class="list-card">
+        <h3>Histórico de Postagens (Todos os Clientes)</h3>
+        <table id="posts-table" class="styled-table" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Conteúdo</th>
+                    <th>Canais</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts_history %}
+                <tr>
+                    <td>{{ post.scheduled_for|date:"d/m/Y H:i" }}</td>
+                    <td><span style="font-weight:bold; color:var(--primary-color)">{{ post.client.name }}</span></td>
+                    <td>{{ post.caption|truncatechars:40 }}</td>
+                    <td>
+                        <div class="platform-icons-row">
                         {% for acc in post.accounts.all %}
-                            {{ acc.get_platform_display }}
+                            <i data-feather="{{ acc.platform }}" class="icon-small"></i>
                         {% endfor %}
-                    </div>
-                </div>
-                <span style="background: #e0f7fa; color: #006064; padding: 5px 10px; border-radius: 15px; font-size: 0.8em;">Agendado</span>
-            </div>
-        {% empty %}
-            <p style="color: #999;">Nenhum post agendado no momento.</p>
-        {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if post.approval_status == 'approved_to_schedule' %}
+                            <span class="badge badge-success">Agendado</span>
+                        {% elif post.approval_status == 'draft' %}
+                            <span class="badge badge-gray">Rascunho</span>
+                        {% else %}
+                            <span class="badge badge-warning">{{ post.get_approval_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="#" class="icon-btn"><i data-feather="edit-2"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <h3 style="margin-top: 30px; margin-bottom: 15px;">Publicados Recentemente (Métricas)</h3>
-    <div class="posts-list">
-        {% for post in published_posts %}
-            <div class="post-item published">
-                <div style="flex-grow: 1;">
-                    <strong>{{ post.scheduled_for|date:"d/m/Y" }}</strong>
-                    <p style="margin: 5px 0; font-size: 0.9em;">{{ post.content|truncatechars:50 }}</p>
-                </div>
-                
-                <div class="metrics-box">
-                    <span title="Alcance/Views"><i data-feather="eye" style="width:14px"></i> {{ post.views_count }}</span>
-                    <span title="Curtidas"><i data-feather="thumbs-up" style="width:14px"></i> {{ post.likes_count }}</span>
-                    <span title="Compartilhamentos"><i data-feather="share" style="width:14px"></i> {{ post.shares_count }}</span>
-                </div>
-            </div>
-        {% empty %}
-            <p style="color: #999;">Nenhum post publicado ainda.</p>
-        {% endfor %}
-    </div>
-
-
-    <div id="create-post-modal" class="modal">
-        <div class="modal-content" style="max-width: 600px">
-            <span class="close-button" data-modal-id="create-post-modal">&times;</span>
-            <h2>Agendar Nova Postagem</h2>
-            
-            <form id="create-post-form" enctype="multipart/form-data">
-                {% csrf_token %}
-                <form id="create-post-form" enctype="multipart/form-data">
-                    {% csrf_token %}
-                
-                    <div class="form-group">
-                        <label for="post-client">Cliente:</label>
-                        <select id="post-client" name="client" class="form-input" required>
-                            <option value="" disabled selected>Selecione o Cliente...</option>
-                            {% for client in clients %}
-                                <option value="{{ client.id }}">{{ client.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="post-content">Legenda / Conteúdo:</label>
-                        <textarea id="post-content" name="content" class="form-input" rows="5" required></textarea>
-                    </div>
-                
-                    </form>
-
-                <div class="form-group">
-                    <label for="post-content">Legenda / Conteúdo:</label>
-                    <textarea id="post-content" name="content" class="form-input" rows="5" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="post-image">Mídia (Imagem ou Vídeo):</label>
-                    <input type="file" id="post-image" name="image" class="form-input" accept="image/*,video/*" required />
-                </div>
-
-                <div class="form-group">
-                    <label for="scheduled-for">Agendar para:</label>
-                    <input type="datetime-local" id="scheduled-for" name="scheduled_for" class="form-input" required />
-                </div>
-
-                <div class="form-group">
-                    <label>Publicar nas Contas:</label>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap">
-                        {% for account in connected_accounts %}
-                        <label
-                            style="display: flex; align-items: center; cursor: pointer; font-weight: normal;">
-                            <input
-                                type="checkbox"
-                                name="accounts"
-                                value="{{ account.id }}"
-                                style="margin-right: 5px"
-                            />
-                            <i
-                                data-feather="{{ account.platform }}"
-                                style="width: 16px; margin-right: 5px"
-                                class="{{ account.platform }}-color"
-                            ></i>
-                            {{ account.platform|capfirst }} ({{ account.account_name }})
-                        </label>
-                        {% empty %}
-                        <p style="color: #dc3545">
-                            Nenhuma conta conectada. Conecte contas para agendar posts.
-                        </p>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    class="modal-button"
-                    style="background-color: var(--secondary-color)"
-                >
-                    <i data-feather="send" style="width: 16px; margin-right: 5px"></i>
-                    Agendar Post
-                </button>
-            </form>
-        </div>
-    </div>
-    {% endblock %}
-
-    {% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // --- PONTE DE CONFIGURAÇÃO ---
-        // Passamos as variáveis do Django para o JavaScript Global aqui.
-        // O arquivo externo lerá estas constantes.
-        const CSRF_TOKEN = "{{ csrf_token }}";
-        const API_URL = "{% url 'create_social_post_api' %}";
-        const KANBAN_URL = "{% url 'kanban_operational' %}";
+        function openClientSelector() {
+            Swal.fire({
+                title: 'Selecione o Cliente',
+                text: 'Para qual cliente você deseja criar o post?',
+                input: 'select',
+                inputOptions: {
+                    {% for client in clients %}
+                        '{{ client.id }}': '{{ client.name }}',
+                    {% endfor %}
+                },
+                inputPlaceholder: 'Selecione um cliente...',
+                showCancelButton: true,
+                confirmButtonText: 'Continuar para o Estúdio',
+                confirmButtonColor: 'var(--primary-color)',
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    // Redireciona para o estúdio com o ID na URL
+                    window.location.href = "{% url 'create_post_studio' %}?client_id=" + result.value;
+                }
+            });
+        }
     </script>
-    
-    <script src="{% static 'js/create_post_studio.js' %}"></script>
-    {% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#posts-table').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+                "order": [[ 0, "desc" ]] // Ordena por data decrescente
+            });
+            feather.replace();
+        });
+    </script>
+{% endblock %}

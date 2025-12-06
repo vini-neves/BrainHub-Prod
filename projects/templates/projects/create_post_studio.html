@@ -2,229 +2,217 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/social_previews.css' %}">
+    <link rel="stylesheet" href="{% static 'css/social.css' %}">
     <style>
-        /* Layout de 2 colunas */
-        .studio-wrapper {
+        .studio-layout {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 50% Config, 50% Preview */
-            gap: 30px;
-            height: calc(100vh - 80px); /* Ocupa a tela toda */
-        }
-        .config-panel {
-            background: white; padding: 30px; overflow-y: auto;
-            border-right: 1px solid #ddd;
-        }
-        .preview-panel {
-            background: #f4f6f8; padding: 30px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            grid-template-columns: 1fr 380px; /* Editor Livre | Preview Fixo */
+            gap: 20px;
+            height: calc(100vh - 80px);
         }
         
-        /* Tabs para selecionar qual preview ver */
-        .preview-tabs {
-            display: flex; gap: 10px; margin-bottom: 20px;
+        /* Área de Edição (Esquerda) */
+        .editor-panel {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
         }
-        .preview-tab {
-            padding: 8px 16px; background: white; border: 1px solid #ddd; border-radius: 20px;
-            cursor: pointer; font-size: 0.9em;
+
+        /* 1. Barra de Canais (Topo) */
+        .channel-bar {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 50px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border: 1px solid #eee;
         }
-        .preview-tab.active {
-            background: var(--primary-color); color: white; border-color: var(--primary-color);
+        .channel-select-item {
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .channel-select-item:hover { transform: scale(1.1); }
+        .channel-select-item input { display: none; }
+        
+        .channel-icon-lg {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+            opacity: 0.4; /* Desativado por padrão */
+            filter: grayscale(100%);
+        }
+        
+        /* Quando checado */
+        .channel-select-item input:checked + .channel-icon-lg {
+            opacity: 1;
+            filter: grayscale(0%);
+            border-color: #28a745; /* Borda verde de selecionado */
+        }
+
+        /* Cores das Redes */
+        .bg-facebook { background: #1877F2; }
+        .bg-instagram { background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); }
+        .bg-linkedin { background: #0077B5; }
+        .bg-youtube { background: #FF0000; }
+        .bg-tiktok { background: #000000; }
+        .bg-twitter { background: #1DA1F2; }
+
+        /* 2. Área de Conteúdo (Texto e Mídia lado a lado) */
+        .content-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .input-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fff;
+        }
+        .input-box h4 { margin-top: 0; color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        textarea.studio-textarea {
+            width: 100%; border: none; outline: none; font-size: 1rem; resize: vertical; min-height: 150px; background: transparent;
+        }
+
+        .media-uploader {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            cursor: pointer;
+            background: #fafafa;
+            transition: background 0.2s;
+        }
+        .media-uploader:hover { background: #f0f0f0; }
+
+        /* 3. Agendamento (Barra inferior) */
+        .schedule-bar {
+            background: #eef2f5;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Área de Preview (Direita) */
+        .preview-sidebar {
+            background: #f4f6f8;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
         }
     </style>
 {% endblock %}
 
-{% block title %}Novo Agendamento{% endblock %}
+{% block title %}Criar Post{% endblock %}
 
 {% block content %}
-<div class="studio-wrapper">
+<form id="create-post-form" enctype="multipart/form-data" class="studio-layout">
+    {% csrf_token %}
+    <input type="hidden" name="client" value="{{ pre_selected_client_id }}">
 
-    <div class="config-panel">
-        <h2>Criar Publicação</h2>
-        <form id="create-post-form" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label>Cliente:</label>
-                <select id="post-client" name="client" class="form-input" required>
-                    <option value="" disabled selected>Selecione...</option>
-                    {% for client in clients %}
-                        <option value="{{ client.id }}" data-logo="{{ client.logo.url|default:'' }}">{{ client.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Onde publicar?</label>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    {% for account in connected_accounts %}
-                        <label class="account-selector">
-                            <input type="checkbox" name="accounts" value="{{ account.id }}" 
-                                   data-platform="{{ account.platform }}" 
-                                   onchange="updatePreviewTabs()">
-                            <i data-feather="{{ account.platform }}"></i> {{ account.account_name }}
-                        </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Mídia (Imagem/Vídeo):</label>
-                <input type="file" id="input-media" name="image" class="form-input" accept="image/*,video/*" onchange="updatePreviewMedia()">
-            </div>
-
-            <div class="form-group">
-                <label>Legenda:</label>
-                <textarea id="input-caption" name="content" class="form-input" rows="6" oninput="updatePreviewText()" placeholder="Escreva sua legenda aqui..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Data e Hora:</label>
-                <input type="datetime-local" name="scheduled_for" class="form-input" required>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="form-button">Agendar Publicação</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="preview-panel">
+    <div class="editor-panel">
         
-        <div class="preview-tabs" id="preview-tabs-container">
-            <span class="preview-tab active" onclick="switchPreview('instagram_feed')">Instagram Feed</span>
+        <div style="text-align: center; color: #666; margin-bottom: 5px;">1. Selecione os canais</div>
+        <div class="channel-bar" id="channel-bar-container">
+            <p style="color:#999; font-size:0.9em;">Selecione um cliente acima para ver os canais.</p>
+        </div>
+
+        <div class="content-row">
+            <div class="input-box">
+                <h4>Texto do Post</h4>
+                <textarea id="input-caption" name="content" class="studio-textarea" placeholder="Digite a legenda do post aqui..."></textarea>
+                <div style="text-align: right; font-size: 0.8em; color: #999;">
+                    <i data-feather="smile" style="width:14px; cursor:pointer;"></i>
+                </div>
             </div>
 
-        <div id="mockup-instagram_feed" class="device-mockup preview-instagram-feed">
-            <div class="header">
-                <img src="" class="avatar client-avatar">
-                <span class="username client-name">Nome do Cliente</span>
-            </div>
-            <div class="media-area">
-                <img src="" id="preview-img-feed" style="display:none;">
-                <video src="" id="preview-video-feed" style="display:none;" controls></video>
-                <div id="placeholder-media" style="color:#ccc;">Sem Mídia</div>
-            </div>
-            <div class="actions">
-                <i data-feather="heart"></i> <i data-feather="message-circle"></i> <i data-feather="send"></i>
-            </div>
-            <div class="caption-area">
-                <span class="caption-username client-name">Nome do Cliente</span>
-                <span class="caption-text">Sua legenda aparecerá aqui...</span>
+            <div class="input-box">
+                <h4>Mídia</h4>
+                <label for="input-media" class="media-uploader">
+                    <i data-feather="image" style="width: 32px; height: 32px; margin-bottom: 10px;"></i>
+                    <span>Clique para upload</span>
+                    <span style="font-size: 0.8em;">(Imagem ou Vídeo)</span>
+                </label>
+                <input type="file" id="input-media" name="image" accept="image/*,video/*" style="display: none;">
+                <div id="file-name-display" style="text-align: center; font-size: 0.8em; margin-top: 5px; color: var(--primary-color);"></div>
             </div>
         </div>
 
-        <div id="mockup-vertical" class="device-mockup preview-vertical" style="display:none;">
-            <div class="media-area">
-                <img src="" id="preview-img-story" style="display:none;">
-                <video src="" id="preview-video-story" style="display:none;"></video>
+        <div class="schedule-bar">
+            <i data-feather="calendar"></i>
+            <div style="flex-grow: 1;">
+                <label style="display: block; font-size: 0.85em; font-weight: bold; color: #555;">Data e Horário</label>
+                <input type="datetime-local" name="scheduled_for" class="form-input" style="background: white;" required>
             </div>
-            <div class="header">
-                <img src="" class="avatar client-avatar">
-                <span class="username client-name" style="font-size:12px;">Nome do Cliente</span>
-            </div>
-            <div class="overlay">
-                </div>
-        </div>
-
-        <div id="mockup-linkedin" class="device-mockup preview-linkedin-feed" style="display:none;">
-            <div class="header">
-                <img src="" class="avatar client-avatar">
-                <div class="user-info">
-                    <h4 class="client-name">Nome do Cliente</h4>
-                    <span>12.456 seguidores • 2h • 🌐</span>
-                </div>
-            </div>
-            <div class="caption-area">
-                <span class="caption-text">Sua legenda aparecerá aqui...</span>
-            </div>
-            <div class="media-area">
-                <img src="" id="preview-img-linkedin">
-            </div>
+            <button type="submit" class="form-button" style="background-color: var(--secondary-color); padding: 12px 30px;">
+                AGENDAR POST
+            </button>
         </div>
 
     </div>
-</div>
-{% endblock %}
 
+    <div class="preview-sidebar">
+        <h4 style="margin-top: 0; color: #666;">Pré-visualização</h4>
+        
+        <div class="preview-tabs" id="preview-tabs-container" style="margin-bottom: 20px;">
+            <span style="color:#aaa; font-size: 0.9em;">Selecione canais para ver.</span>
+        </div>
+
+        <div id="mockup-feed" class="device-mockup mockup-feed">
+            <div class="header">
+                <img src="" class="avatar client-avatar">
+                <span class="username client-name">Nome Cliente</span>
+            </div>
+            <div class="media-area">
+                <img src="" class="preview-img" style="display:none;">
+                <div class="placeholder-media" style="color:#ccc;">Mídia</div>
+            </div>
+            <div class="caption-area">
+                <span class="caption-username client-name">Nome Cliente</span>
+                <span class="caption-text">Legenda...</span>
+            </div>
+        </div>
+        
+        </div>
+</form>
+{% endblock %}
 {% block extra_js %}
 <script>
     const CSRF_TOKEN = "{{ csrf_token }}";
     const API_URL = "{% url 'create_social_post_api' %}";
-
-    // --- Atualização em Tempo Real ---
-
-    function updatePreviewText() {
-        const text = document.getElementById('input-caption').value;
-        // Atualiza em TODOS os lugares que usam a classe .caption-text
-        document.querySelectorAll('.caption-text').forEach(el => el.innerText = text || "Sua legenda...");
-    }
-
-    function updatePreviewMedia() {
-        const input = document.getElementById('input-media');
-        const file = input.files[0];
-        
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            
-            // Lógica para Imagem vs Vídeo
-            if (file.type.startsWith('image/')) {
-                document.querySelectorAll('video').forEach(v => v.style.display = 'none');
-                document.querySelectorAll('img[id^="preview-img"]').forEach(img => {
-                    img.src = objectUrl;
-                    img.style.display = 'block';
-                });
-                document.getElementById('placeholder-media').style.display = 'none';
-            } 
-            else if (file.type.startsWith('video/')) {
-                document.querySelectorAll('img[id^="preview-img"]').forEach(img => img.style.display = 'none');
-                document.querySelectorAll('video').forEach(video => {
-                    video.src = objectUrl;
-                    video.style.display = 'block';
-                });
-                document.getElementById('placeholder-media').style.display = 'none';
-            }
-        }
-    }
-
-    // Atualiza nome e logo do cliente quando selecionado
-    document.getElementById('post-client').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const name = selectedOption.text;
-        // const logo = selectedOption.dataset.logo; // Se você tiver o logo URL no data attribute
-
-        document.querySelectorAll('.client-name').forEach(el => el.innerText = name);
-        // document.querySelectorAll('.client-avatar').forEach(img => img.src = logo);
-    });
-
-    // --- Lógica de Abas e Troca de Visualização ---
-
-    function switchPreview(type) {
-        // Esconde todos
-        document.getElementById('mockup-instagram_feed').style.display = 'none';
-        document.getElementById('mockup-vertical').style.display = 'none';
-        document.getElementById('mockup-linkedin').style.display = 'none';
-
-        // Remove active das abas
-        document.querySelectorAll('.preview-tab').forEach(tab => tab.classList.remove('active'));
-        event.target.classList.add('active');
-
-        // Mostra o certo
-        if (type === 'instagram_feed' || type === 'facebook_feed') {
-            document.getElementById('mockup-instagram_feed').style.display = 'block';
-        } else if (type.includes('story') || type.includes('reel') || type.includes('tiktok')) {
-            document.getElementById('mockup-vertical').style.display = 'block';
-        } else if (type === 'linkedin') {
-            document.getElementById('mockup-linkedin').style.display = 'block';
-        }
-    }
-
-    // Função para atualizar as abas baseada nos checkboxes selecionados (Lógica simplificada)
-    function updatePreviewTabs() {
-        // Aqui você pode adicionar lógica para mostrar/esconder abas baseado no que o usuário selecionou
-    }
-
-    // Inicializa ícones
-    feather.replace();
+    const KANBAN_URL = "{% url 'kanban_operational' %}";
+    const SOCIAL_DASHBOARD_URL = "{% url 'social_dashboard' %}";
+    
+    // --- CORREÇÃO AQUI ---
+    // Adicionei |default:"{}" para garantir que nunca fique vazio
+    const CLIENTS_MAP = {{ clients_map_json|default:"{}"|safe }}; 
+    
+    const PRE_SELECTED_CLIENT_ID = "{{ pre_selected_client_id|default:'' }}"; 
+    console.log("CLIENTS_MAP carregado:", CLIENTS_MAP);
 </script>
+<script src="{% static 'js/create_post_studio.js' %}"></script>
 {% endblock %}
