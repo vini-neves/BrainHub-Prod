@@ -7,7 +7,9 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.db import models # Para usar models.Max
 from django.urls import reverse
+from django.conf import settings
 import json
+from django.contrib import messages
 import datetime
 from django.utils import timezone
 import secrets
@@ -15,6 +17,9 @@ from django.contrib.auth import views as auth_views
 from .models import Task, CalendarEvent, Project, Client, SocialPost, SocialAccount, SocialPostDestination
 from .forms import ClientForm, TenantAuthenticationForm, ProjectForm
 from accounts.models import CustomUser
+import secrets
+from django.shortcuts import redirect
+from .services import MetaService
 
 GENERAL_STAGES = [
     ('todo', 'A Fazer'),
@@ -442,6 +447,8 @@ def get_client_data_api(request, pk):
     """
     client = get_object_or_404(Client, pk=pk)
     
+    connected_platforms = list(client.social_accounts.filter(is_active=True).values_list('platform', flat=True))
+    
     data = {
         'id': client.id,
         'name': client.name,
@@ -452,6 +459,7 @@ def get_client_data_api(request, pk):
         'data_inicio_contrato': client.data_inicio_contrato.strftime('%Y-%m-%d') if client.data_inicio_contrato else '',
         'data_finalizacao_contrato': client.data_finalizacao_contrato.strftime('%Y-%m-%d') if client.data_finalizacao_contrato else '',
         'is_active': client.is_active,
+        'connected_platforms': connected_platforms,
     }
     return JsonResponse(data)
 
@@ -955,3 +963,74 @@ def get_clients_list_api(request):
     """
     clients = Client.objects.all().values('id', 'name')
     return JsonResponse({'clients': list(clients)})
+
+@login_required
+def meta_auth_start(request, client_id):
+    """
+    Inicia o fluxo de conexão para um Cliente específico.
+    """
+    # Guardamos o ID do cliente na sessão para saber a quem vincular depois
+    request.session['meta_connect_client_id'] = client_id
+    
+    # Gera um token de estado aleatório para segurança
+    state = secrets.token_urlsafe(16)
+    request.session['meta_oauth_state'] = state
+    
+    service = MetaService()
+    url = service.get_auth_url(state)
+    
+    return redirect(url)
+
+@login_required
+def meta_auth_callback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    
+    print(f"--- CALLBACK INICIADO ---")
+    
+    if not state or state != request.session.get('meta_oauth_state'):
+        messages.error(request, "Erro de Segurança: Estado inválido (CSRF).")
+        return redirect('social_dashboard')
+    
+    client_id = request.session.get('meta_connect_client_id')
+    client = get_object_or_404(Client, pk=client_id)
+    
+    # URL de retorno (deve ser idêntica à usada no início)
+    current_domain = request.get_host()
+    protocol = 'https' if request.is_secure() else 'http'
+    callback_url = f"{protocol}://{current_domain}/meta-callback/"
+
+    # Troca o Code pelo Token
+    service = MetaService()
+    
+    # Vamos fazer a troca manualmente aqui para pegar o erro se houver
+    import requests
+    token_url = (
+        f"https://graph.facebook.com/v19.0/oauth/access_token?"
+        f"client_id={settings.META_APP_ID}&"
+        f"redirect_uri={callback_url}&"
+        f"client_secret={settings.META_APP_SECRET}&"
+        f"code={code}"
+    )
+    
+    resp = requests.get(token_url)
+    token_data = resp.json()
+    
+    print(f"Resposta do Token: {token_data}") # Olha o terminal!
+
+    if 'access_token' in token_data:
+        # Busca as páginas
+        accounts = service.get_user_pages(token_data['access_token'], client)
+        
+        if not accounts:
+            # SE ENTRAR AQUI, O FACEBOOK NÃO MANDOU NENHUMA PÁGINA
+            messages.warning(request, "Conexão feita, mas NENHUMA página foi encontrada. Você marcou as páginas no popup?")
+        else:
+            messages.success(request, f"Sucesso! {len(accounts)} contas conectadas.")
+            
+        return redirect('social_dashboard')
+    else:
+        # Se der erro na troca do token
+        error_msg = token_data.get('error', {}).get('message', 'Erro desconhecido')
+        messages.error(request, f"Erro ao conectar Facebook: {error_msg}")
+        return redirect('social_dashboard')

@@ -1,6 +1,7 @@
 from django.urls import path, include
 from . import views
 from django.contrib.auth import views as auth_views
+from projects import views as project_views
 
 urlpatterns = [
     # --- KANBAN UNIFICADO ---
@@ -80,4 +81,8 @@ urlpatterns = [
     # 3. Ação do Cliente (Aprovar/Reprovar via API)
     path('api/approval/action/', views.ProcessApprovalAction.as_view(), name='process_approval_action'),
     path('social/create/', views.create_post_studio_view, name='create_post_studio'),
+
+    # Rotas da Meta
+    path('meta/connect/<int:client_id>/', project_views.meta_auth_start, name='meta_auth_start'),
+    path('meta-callback/', project_views.meta_auth_callback, name='meta_auth_callback'),
 ]

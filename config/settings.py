@@ -26,8 +26,19 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['brainz.localhost', 'tenant2.localhost', 'tenant1.localhost', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'brainz.localhost', 
+    'tenant2.localhost', 
+    'tenant1.localhost', 
+    'localhost', 
+    '127.0.0.1',
+    'randolph-governable-ayana.ngrok-free.dev',
+    '.ngrok-free.app', # Para garantir compatibilidade futura   
+    ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://randolph-governable-ayana.ngrok-free.dev',
+]
 
 # Application definition
 
@@ -191,3 +202,23 @@ GOOGLE_OAUTH_SCOPES = [
 
 # Para desenvolvimento, imprime e-mails no console em vez de enviá-los.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# META API
+META_APP_ID = config('META_APP_ID')
+META_APP_SECRET = config('META_APP_SECRET')
+META_REDIRECT_URI = config('META_REDIRECT_URI')
+
+# Escopos (Permissões) que vamos pedir
+# Precisamos de permissão para ler páginas, publicar posts e ler insights
+META_SCOPES = [
+    'email',
+    'public_profile',
+    'pages_show_list',
+    'pages_read_engagement',
+    'pages_manage_posts',
+    'pages_read_user_content',
+    'instagram_basic',
+    'instagram_content_publish',
+    'instagram_manage_insights',
+    # 'business_management' 
+]

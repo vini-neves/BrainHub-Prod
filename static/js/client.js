@@ -19,12 +19,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalTitle = document.getElementById("modal-title");
   const hiddenIdInput = document.getElementById("client_id_hidden");
 
+  function clearSocialHighlights() {
+    document.querySelectorAll('.social-connect-item').forEach(item => {
+        item.classList.remove('is-connected');
+        item.title = item.title.replace(' (Conectado)', ''); // Limpa tooltip
+    });
+}
+
   if (modal && openBtn && closeBtn) {
     // Abrir Modal (Cadastro Limpo)
     openBtn.addEventListener("click", () => {
       form.reset();
       hiddenIdInput.value = "";
       modalTitle.innerText = "Cadastrar Novo Cliente";
+
+      clearSocialHighlights();
+
       // Reseta o checkbox de ativo
       const activeCheck = document.getElementById("id_is_active");
       if (activeCheck) activeCheck.checked = true;
@@ -86,6 +96,20 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("id_data_finalizacao_contrato").value =
             data.data_finalizacao_contrato || "";
           document.getElementById("id_is_active").checked = data.is_active;
+
+          clearSocialHighlights(); // Limpa primeiro
+
+          if (data.connected_platforms && data.connected_platforms.length > 0) {
+              data.connected_platforms.forEach(platform => {
+                  // Procura o elemento pela classe .sc-nome_da_rede
+                  // Ex: .sc-facebook, .sc-instagram
+                  const icon = document.querySelector(`.social-connect-item.sc-${platform}`);
+                  if (icon) {
+                      icon.classList.add('is-connected');
+                      icon.title += " (Conectado)"; // Dica visual ao passar o mouse
+                  }
+              });
+          }
 
           modalTitle.innerText = "Editar Cliente";
           modal.style.display = "flex";
@@ -159,17 +183,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 6. Conectar Social (Mockup) ---
   window.connectSocial = function (platform) {
-    // Em um cenário real, isso abriria o fluxo OAuth
-    Swal.fire({
-      title: `Conectar ${platform}`,
-      text: "O cliente foi salvo? Recomendamos salvar o cliente antes de conectar contas. Deseja prosseguir para a tela de conexões?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Ir para Conexões",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        window.location.href = "/social/"; // Redireciona para o dashboard social
+    if (platform === "facebook" || platform === "instagram") {
+      // Redireciona para nossa rota Django, passando o ID do cliente atual
+      // Assumindo que você tem uma variável 'currentClientId' ou pega do input hidden
+      const clientId = document.getElementById("client_id_hidden").value;
+      if (clientId) {
+        window.location.href = `/meta/connect/${clientId}/`;
+      } else {
+        alert("Salve o cliente primeiro!");
       }
-    });
+    } else {
+      alert("Integração em breve...");
+    }
   };
 });
