@@ -16,7 +16,17 @@ ENV DATABASE_USER=dummy_user
 ENV DATABASE_PASSWORD=dummy_password
 ENV DATABASE_HOST=localhost
 ENV DATABASE_PORT=5432
-# Adicione outras se ele reclamar (ex: EMAIL_HOST, etc)
+
+# 2. Google OAuth (O erro atual)
+ENV GOOGLE_OAUTH_CLIENT_ID=dummy_google_id
+ENV GOOGLE_OAUTH_CLIENT_SECRET=dummy_google_secret
+
+# 3. Email (Prevenindo o próximo erro provável)
+ENV EMAIL_HOST=localhost
+ENV EMAIL_PORT=587
+ENV EMAIL_HOST_USER=dummy_email_user
+ENV EMAIL_HOST_PASSWORD=dummy_email_password
+ENV EMAIL_USE_TLS=True
 
 # Roda o collectstatic
 RUN python manage.py collectstatic --noinput
