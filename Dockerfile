@@ -1,28 +1,25 @@
-# Usa uma imagem leve do Python
 FROM python:3.10-slim
 
-# Evita arquivos .pyc e logs presos
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Cria a pasta do app
 WORKDIR /app
 
-# Instala as dependências
 COPY requirements.txt /app/
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Copia o código do projeto
 COPY . /app/
+ENV SECRET_KEY=django-insecure-z3#bm50(&%a4peq8+#o8q@fwv5440o9hz2a)^tw%ou1c$n_in5
+ENV DATABASE_NAME=dummy_db
+ENV DATABASE_USER=dummy_user
+ENV DATABASE_PASSWORD=dummy_password
+ENV DATABASE_HOST=localhost
+ENV DATABASE_PORT=5432
+# Adicione outras se ele reclamar (ex: EMAIL_HOST, etc)
 
-# --- A CORREÇÃO ESTÁ AQUI EMBAIXO ---
-# Define uma chave falsa apenas para o comando collectstatic funcionar
-ENV SECRET_KEY=chave_temporaria_apenas_para_build_nao_preocupe
-
-# Roda o collectstatic para arrumar o CSS
+# Roda o collectstatic
 RUN python manage.py collectstatic --noinput
 
-# Comando para iniciar
-# ATENÇÃO: Verifique se 'config.wsgi:application' está certo para o seu projeto
+# Comando final
 CMD ["gunicorn", "--bind", "0.0.0.0:80", "config.wsgi:application"]
