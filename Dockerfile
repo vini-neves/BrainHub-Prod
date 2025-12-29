@@ -33,6 +33,7 @@ ENV META_APP_ID=dummy_meta_id
 ENV META_APP_SECRET=dummy_meta_secret
 ENV META_ACCESS_TOKEN=dummy_meta_token
 ENV META_ACCOUNT_ID=dummy_account_id
+ENV META_REDIRECT_URI=http://localhost/dummy-callback
 
 # Roda o collectstatic
 RUN python manage.py collectstatic --noinput
