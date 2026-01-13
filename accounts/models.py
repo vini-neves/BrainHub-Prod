@@ -29,6 +29,12 @@ class CustomUser(AbstractUser):
         ('admin', 'Administrador'),
         ('editor', 'Editor'),
         ('viewer', 'Visualizador'),
+        ("designer", 'Designer'),
+        ('traffic_manager', 'Gestor de Tráfego'),
+        ('photographer', 'Fotógrafo'),
+        ('social_media', 'Social Media'),
+        ('copywriter', 'Copywriter'),
+        ('client', 'Cliente'),
     )
 
     # Link com a Agência
