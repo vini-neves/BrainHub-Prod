@@ -56,36 +56,33 @@ function confirmDelete(event, title, text) {
         }
     });
 }
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function uploadInBatch(inputElement) {
-    // 1. Verificação de Segurança da Biblioteca
     if (typeof Swal === 'undefined') {
-        alert("ERRO: A biblioteca SweetAlert2 não foi carregada no HTML.");
+        alert("ERRO: SweetAlert2 não carregado.");
         return;
     }
 
-    const files = Array.from(inputElement.files); // Garante que é um Array
+    const files = Array.from(inputElement.files);
     const total = files.length;
     
     if (total === 0) return;
 
-    // 2. Abre o Alerta de Progresso
     Swal.fire({
         title: 'Iniciando Upload...',
         html: `Preparando fila de <b>${total}</b> arquivos.`,
         allowOutsideClick: false,
         allowEscapeKey: false,
         showConfirmButton: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => { Swal.showLoading(); }
     });
 
-    // Pega os tokens necessários
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const clientIdInput = document.getElementById('clientId');
 
     if (!csrfInput || !clientIdInput) {
-        Swal.fire('Erro', 'Não foi possível encontrar o Token ou o ID do Cliente.', 'error');
+        Swal.fire('Erro', 'Dados do cliente não encontrados.', 'error');
         return;
     }
 
@@ -95,21 +92,24 @@ async function uploadInBatch(inputElement) {
     let successCount = 0;
     let errorCount = 0;
 
-    // 3. O LOOP MÁGICO (Um por um)
-    // Usamos 'for...of' porque ele respeita o 'await'. 
-    // Se usar 'forEach', ele tenta enviar tudo de uma vez e trava no arquivo 6.
+    // --- O LOOP SEQUENCIAL ---
     for (const [index, file] of files.entries()) {
         
-        // Atualiza a mensagem na tela
-        const msg = `Enviando <b>${index + 1}</b> de <b>${total}</b>...<br><small style="color:#666">${file.name}</small>`;
+        // Atualiza mensagem visual
+        const msg = `Enviando <b>${index + 1}</b> de <b>${total}</b>...<br><small>${file.name}</small>`;
         if(Swal.getHtmlContainer()) Swal.getHtmlContainer().innerHTML = msg;
 
         const formData = new FormData();
-        formData.append('foto', file); // Nome do campo esperado no Django
+        formData.append('foto', file);
         formData.append('client_id', clientId);
 
         try {
-            // AWAIT é o segredo: O código PARA aqui e espera o upload terminar antes de ir pro próximo
+            // === NOVO: DELAY DE 500ms ENTRE ARQUIVOS ===
+            // Isso impede que o servidor bloqueie por excesso de requisições
+            if (index > 0) {
+                await sleep(500); 
+            }
+
             const response = await fetch('/api/upload/photo/', { 
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrfToken },
@@ -119,28 +119,28 @@ async function uploadInBatch(inputElement) {
             if (response.ok) {
                 successCount++;
             } else {
-                console.error(`Erro servidor no arquivo ${file.name}`);
+                console.error(`Erro ${response.status} no arquivo: ${file.name}`);
                 errorCount++;
             }
         } catch (err) {
-            console.error(`Erro de rede no arquivo ${file.name}`, err);
+            console.error(`Erro de rede: ${file.name}`, err);
             errorCount++;
         }
     }
 
-    // 4. Relatório Final
+    // Relatório Final
     let iconType = 'success';
-    let titleText = 'Finalizado!';
+    let titleText = 'Upload Finalizado';
     
     if (errorCount > 0) {
         iconType = successCount > 0 ? 'warning' : 'error';
-        titleText = 'Atenção no Resultado';
+        titleText = `Finalizado com ${errorCount} erros`;
     }
 
     Swal.fire({
         title: titleText,
         html: `
-            Processo finalizado.<br>
+            Total processado: <b>${total}</b><br>
             <b style="color:var(--c-green)">Sucesso: ${successCount}</b><br>
             <b style="color:var(--c-red)">Falhas: ${errorCount}</b>
         `,
