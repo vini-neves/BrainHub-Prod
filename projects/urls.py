@@ -83,7 +83,7 @@ urlpatterns = [
     path('meta/connect/<int:client_id>/', project_views.meta_auth_start, name='meta_auth_start'),
     path('meta-callback/', project_views.meta_auth_callback, name='meta_auth_callback'),
 
-     #GESTÃO DE MIDIAS/FOTOS
+    #GESTÃO DE MIDIAS/FOTOS
     path('client/<int:client_id>/media/', views.media_manager, name='media_root'),
     path('client/<int:client_id>/media/<int:folder_id>/', views.media_manager, name='media_folder'),
     path('media-center/', views.media_dashboard, name='media_dashboard'),

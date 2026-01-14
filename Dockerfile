@@ -115,5 +115,4 @@ ENV R2_ENDPOINT_URL=https://dummy.r2.cloudflarestorage.com
 ENV R2_ACCESS_KEY_ID=dummy_key_id
 ENV R2_SECRET_ACCESS_KEY=dummy_secret_key
 
-# Roda o collectstatic
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:3000 config.wsgi:application"]
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:3000 --timeout 600 --keep-alive 5 --workers 3 config.wsgi:application"]
