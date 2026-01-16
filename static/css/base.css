@@ -8,8 +8,8 @@ body {
     box-sizing: border-box;
     display: flex;
     min-height: 100vh;
-    background-color: var(--bg-light);
-    color: #333;
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
 }
 
 /* --- Container Principal --- */
@@ -52,17 +52,25 @@ body {
     color: var(--text-on-primary);
     padding: 20px 15px;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; 
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     flex-shrink: 0;
-    transition: width 0.3s ease; /* Para futuras animações de "encolher" */
+    transition: width 0.3s ease;
+    z-index: 1000;
+    justify-content: space-between; /* Garante distribuição */
+    top: 0;
+    left: 0;
+    height: 100vh; 
+    overflow: hidden;
 }
+
+
 
 .logo-container {
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom:1px solid rgba(255, 255, 255, 0.2);
 }
 .agency-logo { max-width: 100%; height: auto; max-height: 80px; }
 .agency-name { margin: 0; font-size: 1.5em; font-weight: 600; }
@@ -74,13 +82,15 @@ body {
 }
 
 .nav-link {
-    display: flex;
+    display: flex; /* Alinha ícone e texto */
     align-items: center;
-    gap: 12px;
+    gap: 12px; /* Espaço entre ícone e texto */
+    
     color: var(--text-on-primary);
     opacity: 0.8;
     text-decoration: none;
     padding: 12px 15px;
+    margin-bottom: 8px;
     border-radius: 8px;
     transition: all 0.3s ease;
     font-size: 1.05em;
@@ -96,7 +106,7 @@ body {
 /* ESTADO ATIVO! */
 .nav-link.active {
     background-color: var(--secondary-color); /* Usa a cor secundária */
-    color: var(--text-on-secondary);
+    color: var(--text-on-primary);
     opacity: 1;
     font-weight: 600;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -109,6 +119,28 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.nav-scroll-area {
+    flex-grow: 1; /* Ocupa todo o espaço disponível entre logo e footer */
+    overflow-y: auto; /* Habilita rolagem vertical SE necessário */
+    overflow-x: hidden;
+    padding: 10px 0;
+}
+
+/* --- Estilizando a Barra de Rolagem (Scrollbar) para ficar bonita --- */
+.nav-scroll-area::-webkit-scrollbar {
+    width: 5px;
+}
+.nav-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+.nav-scroll-area::-webkit-scrollbar-thumb {
+    background: #e9ecef;
+    border-radius: 4px;
+}
+.nav-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: #ced4da;
 }
 
 /* --- Perfil do Usuário --- */
@@ -136,15 +168,11 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    
-    /* Reseta os padrões do botão */
     background: none;
     border: none;
     cursor: pointer;
-    font-family: inherit; /* Usa a fonte da página */
-    width: 100%; /* Ocupa toda a largura */
-    
-    /* Estilos originais do link */
+    font-family: inherit;
+    width: 100%;
     color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
     padding: 10px 15px;
@@ -412,6 +440,7 @@ button {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+    color: var(--text-on-primary);
     padding: 12px 15px;
     border-radius: 8px;
     transition: background-color 0.3s ease;
@@ -502,12 +531,18 @@ button {
         height: 100vh;
         z-index: 1050; /* Fica acima de tudo */
         transition: left 0.3s ease-in-out; /* Animação suave */
-        width: 250px; /* Garante a largura */
+        width: 250px; 
+        /* transform: translateX(-100%); Esconde por padrão no mobile */
+        /* transition: transform 0.3s ease; */
     }
-
-    /* Classe adicionada pelo JS para mostrar o menu */
     .sidebar.active {
-        left: 0; /* Traz para a tela */
+        left: 0;
+        transform: translateX(0); /* Mostra quando ativo */
+    }
+    .content {
+        padding-top: 70px; /* Espaço para não ficar atrás do botão hambúrguer */
+        width: 100%;
+        margin-left: 0; /* Conteúdo ocupa tudo no mobile */
     }
 
     /* 2. Botão Hambúrguer Flutuante */
@@ -562,12 +597,6 @@ button {
     .sidebar-overlay.active {
         display: block;
         opacity: 1;
-    }
-
-    /* 5. Ajuste do Conteúdo Principal */
-    .content {
-        padding-top: 70px; /* Espaço para não ficar atrás do botão hambúrguer */
-        width: 100%;
     }
 
     /* Ajuste na Logo para não colar no botão de fechar */
