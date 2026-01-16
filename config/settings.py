@@ -13,8 +13,26 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+from django.core.cache import cache
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+def get_allowed_hosts():
+    hosts = cache.get('DYNAMIC_ALLOWED_HOSTS')
+    
+    if hosts is None:
+        hosts = ['localhost', '127.0.0.1', '.localhost']
+        try:
+            from accounts.models import Domain
+            domains = list(Domain.objects.values_list('domain', flat=True))
+            hosts.extend(domains)
+            cache.set('DYNAMIC_ALLOWED_HOSTS', hosts, 300)
+            
+        except Exception:
+            pass
+            
+    return hosts
+
+ALLOWED_HOSTS = get_allowed_hosts()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -44,19 +62,6 @@ SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = [
-    'app.brainzhub.com.br',
-    'brainz.localhost', 
-    'tenant2.localhost', 
-    'tenant1.localhost', 
-    'localhost', 
-    '127.0.0.1',
-    'randolph-governable-ayana.ngrok-free.dev',
-    '.ngrok-free.app',
-    '31.97.175.182',
-    '*',
-    ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://randolph-governable-ayana.ngrok-free.dev',
@@ -96,6 +101,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
+    'accounts.middleware.TrialPeriodMiddleware',
 ]
 
 TENANT_MODEL = "accounts.Agency" 
@@ -114,6 +120,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.agency_config',
+                'accounts.context_processors.sidebar_menu',
             ],
         },
     },

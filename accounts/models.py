@@ -1,14 +1,25 @@
 # accounts/models.py
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django_tenants.models import TenantMixin, DomainMixin
 from django.conf import settings
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 
 # 1. Modelo da Agência (Tenant)
 class Agency(TenantMixin):
     name = models.CharField(max_length=255, verbose_name="Nome da Agência")
-    created_on = models.DateField(auto_now_add=True)
+    
+    # Configuração de Menu
+    menu_config = models.JSONField(default=dict, blank=True, null=True)
+    
+    # Campos de Controle
+    paid_until = models.DateField(verbose_name="Pago até", blank=True, null=True)
+    on_trial = models.BooleanField(default=True, verbose_name="Em período de teste?")
+    
+    # CORREÇÃO: Havia dois 'created_on'. Mantive apenas este com verbose_name.
+    created_on = models.DateField(auto_now_add=True, verbose_name="Criado em")
 
     # Customização White-Label
     logo = models.ImageField(upload_to='logos/', null=True, blank=True)
@@ -64,3 +75,12 @@ class GoogleApiCredentials(models.Model):
 
     def __str__(self):
         return f"Credenciais do Google para {self.user.username}"
+    
+@receiver(post_save, sender=Domain)
+@receiver(post_delete, sender=Domain)
+def clear_hosts_cache(sender, instance, **kwargs):
+    """
+    Sempre que um domínio é criado ou deletado,
+    limpa o cache para que o ALLOWED_HOSTS atualize na hora.
+    """
+    cache.delete('DYNAMIC_ALLOWED_HOSTS')

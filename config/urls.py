@@ -33,6 +33,7 @@ urlpatterns = [
     
     # Rota raiz (geralmente fica por último)
     path('', include('projects.urls')),
+    path('', include('accounts.urls')),
 ]
 
 if settings.DEBUG:
