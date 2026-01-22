@@ -10,6 +10,60 @@ let currentFileUrls = {
 let activeInputId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    const linkedinSwitch = document.getElementById('toggleLinkedin');
+    
+    if (linkedinSwitch) {
+        linkedinSwitch.addEventListener('change', function() {
+            // 1. Verifica se está sendo marcado (ativado)
+            if (this.checked) {
+                // 2. Pega o ID do cliente do formulário
+                const clientId = document.getElementById('clientId').value;
+
+                // 3. Validação: O cliente precisa existir antes de conectar
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro antes de conectar as redes sociais.', 'warning');
+                    this.checked = false; // Desmarca o botão visualmente
+                    return;
+                }
+
+                // 4. Redireciona para a rota do Django que inicia a autenticação
+                // Certifique-se que esta URL bate com o seu urls.py
+                window.location.href = `/auth/linkedin/start/${clientId}/`;
+            }
+        });
+    }
+
+    const tiktokSwitch = document.getElementById('toggleTiktok');
+    if (tiktokSwitch) {
+        tiktokSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false;
+                    return;
+                }
+                window.location.href = `/auth/tiktok/start/${clientId}/`;
+            }
+        });
+    }
+
+    const metaSwitch = document.getElementById('toggleFacebook'); // Ou toggleInstagram
+    if (metaSwitch) {
+        metaSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false;
+                    return;
+                }
+                window.location.href = `/auth/meta/start/${clientId}/`; // Ajuste conforme sua URL da Meta
+            }
+        });
+    }
+
     // 1. Configuração do Modal
     const modalElement = document.getElementById('clientModal');
     if (modalElement) {
