@@ -4,12 +4,16 @@ import secrets
 import os
 import uuid
 from django.utils.text import slugify
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
-# --- ESCOLHAS GLOBAIS (STATUS) ---
+# ==============================================================================
+# 1. ESCOLHAS GLOBAIS E CONSTANTES (KANBAN & REDES)
+# ==============================================================================
 
 KANBAN_TYPES = [
     ('general', 'Geral'),
-    ('operational', 'Operacional'),
+    ('operational', 'Operacional (Social Media)'),
 ]
 
 # Unificamos todos os status possíveis aqui
@@ -20,16 +24,41 @@ ALL_STATUS_CHOICES = [
     ('done', 'Concluído'),
     
     # --- Status Operacionais (Fluxo de Produção) ---
-    ('briefing', 'Briefing'),
-    ('copy', 'Copy'),
-    ('design', 'Design'),
-    ('internal_approval', 'Aprovação Interna'),
-    ('client_approval', 'Aprovação Cliente'),
-    ('scheduling', 'Agendamento'),
-    ('published', 'Publicado'),
+    ('briefing', '1. Briefing'),
+    ('copy', '2. Copywriting'),
+    ('design', '3. Design'),
+    ('review_internal', '4. Aprovação Interna'),
+    ('review_client', '5. Aprovação Cliente'),
+    ('scheduled', '6. Agendado/Finalizado'),
 ]
 
-# --- 1. CLIENTE ---
+# --- NOVAS CONSTANTES PARA O KANBAN OPERACIONAL ---
+
+# Redes Sociais (A Plataforma)
+SOCIAL_NETWORKS = [
+    ('instagram', 'Instagram'),
+    ('facebook', 'Facebook'),
+    ('tiktok', 'TikTok'),
+    ('youtube', 'YouTube'),
+    ('linkedin', 'LinkedIn'),
+    ('x', 'X (Twitter)'),
+    ('pinterest', 'Pinterest'),
+    ('threads', 'Threads'),
+]
+
+# Tipos de Conteúdo (O Formato Agrupado)
+CONTENT_TYPES = [
+    ('feed', 'Feed / Postagem (Quadrado/Portrait)'), # Serve para: Insta, Face, LinkedIn, X, Threads
+    ('story', 'Story (Vertical)'),                   # Serve para: Insta, Face
+    ('reel_short', 'Reels / TikTok / Shorts'),       # Serve para: Insta, TikTok, YouTube Shorts
+    ('video_long', 'Vídeo Longo (Horizontal)'),      # Serve para: YouTube, LinkedIn Vídeo
+    ('pin', 'Pinterest Pin (Vertical)'),             # Serve para: Pinterest
+]
+
+# ==============================================================================
+# 2. CLIENTE E PROJETOS
+# ==============================================================================
+
 class Client(models.Model):
     name = models.CharField(max_length=255, verbose_name="Nome do Cliente")
     cnpj = models.CharField(max_length=18, verbose_name="CNPJ", blank=True, null=True)
@@ -46,6 +75,7 @@ class Client(models.Model):
     # Arquivos
     anexo_contrato = models.FileField(upload_to='contratos/', verbose_name="Anexo do Contrato", blank=True, null=True)
     manual_marca = models.FileField(upload_to='manual/', verbose_name="Anexo do Manual da Marca", blank=True, null=True)
+    
     # Logo para o mockup de aprovação
     logo = models.ImageField(upload_to='logos_clientes/', verbose_name="Logo do Cliente", blank=True, null=True)
     is_active = models.BooleanField(default=True, verbose_name="Cliente Ativo?")
@@ -53,8 +83,6 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-
-# --- 2. PROJETO ---
 class Project(models.Model):
     STATUS_CHOICES = [
         ('em_andamento', 'Em Andamento'),
@@ -75,11 +103,12 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
+# ==============================================================================
+# 3. REDES SOCIAIS (CONEXÕES / API)
+# ==============================================================================
 
-# --- 3. REDES SOCIAIS (CONTAS) ---
 class SocialAccount(models.Model):
     PLATFORM_CHOICES = [
-        # Redes Sociais
         ('facebook', 'Facebook'),
         ('instagram', 'Instagram'),
         ('linkedin', 'LinkedIn'),
@@ -88,21 +117,16 @@ class SocialAccount(models.Model):
         ('youtube', 'YouTube'),
         ('threads', 'Threads'),
         ('x', 'X (Twitter)'),
-        
-        # Ads / Tráfego Pago
         ('tiktok_ads', 'TikTok Ads'),
         ('linkedin_ads', 'LinkedIn Ads'),
         ('meta_ads', 'Meta Ads'),
         ('google_ads', 'Google Ads'),
-        
-        # Google Services
         ('google_my_business', 'Google Meu Negócio'),
         ('ga4', 'Google Analytics 4'),
     ]
     
-    # ... (o restante da classe continua igual: client, platform, tokens, etc.) ...
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="social_accounts", null=True, blank=True, verbose_name="Cliente Vinculado")
-    platform = models.CharField(max_length=50, choices=PLATFORM_CHOICES) # Aumentei para 50 por segurança
+    platform = models.CharField(max_length=50, choices=PLATFORM_CHOICES)
     account_name = models.CharField(max_length=255, verbose_name="Nome da Conta")
     account_id = models.CharField(max_length=255, verbose_name="ID na Rede Social")
     access_token = models.TextField()
@@ -114,129 +138,60 @@ class SocialAccount(models.Model):
     def __str__(self):
         return f"{self.get_platform_display()} - {self.account_name}"
 
+# ==============================================================================
+# 4. TAREFA (KANBAN GERAL E OPERACIONAL UNIFICADO)
+# ==============================================================================
 
-# --- 4. POSTAGEM SOCIAL (CONTEÚDO & APROVAÇÃO) ---
-class SocialPost(models.Model):
-    # Conteúdo Base
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="social_posts")
-    caption = models.TextField(verbose_name="Legenda/Copy", blank=True)
-    media_file = models.FileField(upload_to='social_posts/', verbose_name="Imagem/Vídeo", blank=True, null=True)
-    scheduled_for = models.DateTimeField(verbose_name="Agendamento", null=True, blank=True)
-    
-    # Destinos (M2M através de tabela intermediária)
-    accounts = models.ManyToManyField(
-        SocialAccount, 
-        through='SocialPostDestination', 
-        related_name="posts"
-    )
-
-    # Fluxo de Aprovação
-    approval_status = models.CharField(
-        max_length=30, 
-        choices=[
-            ('draft', 'Rascunho'), 
-            ('copy_review', 'Aprovação: Copy'), 
-            ('design_review', 'Aprovação: Design'), 
-            ('internal_approval', 'Aprovação Interna'), 
-            ('client_approval', 'Aprovação Cliente'), 
-            ('approved_to_schedule', 'Pronto para Agendar')
-        ],
-        default='draft',
-        verbose_name="Status de Aprovação"
-    )
-    
-    # Link Seguro (Token)
-    approval_token = models.CharField(max_length=64, unique=True, blank=True, null=True)
-    
-    # Feedback e Reprova
-    feedback_text = models.TextField(blank=True, null=True, verbose_name="Motivo Reprova (Texto)")
-    feedback_image_markup = models.TextField(blank=True, null=True, verbose_name="Rabisco na Imagem (Base64)")
-
-    # Métricas
-    likes_count = models.IntegerField(default=0)
-    comments_count = models.IntegerField(default=0)
-    shares_count = models.IntegerField(default=0)
-    views_count = models.IntegerField(default=0)
-    
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        # Gera token automaticamente se não existir
-        if not self.approval_token:
-            self.approval_token = secrets.token_urlsafe(32)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Post - {self.client.name} ({self.get_approval_status_display()})"
-
-
-# --- 5. DESTINOS DO POST (Intermediária) ---
-class SocialPostDestination(models.Model):
-    DESTINATION_CHOICES = [
-        # Meta
-        ('facebook_feed', 'Facebook - Feed'),
-        ('facebook_story', 'Facebook - Story'),
-        ('instagram_feed', 'Instagram - Feed'),
-        ('instagram_story', 'Instagram - Story'),
-        ('instagram_reel', 'Instagram - Reels'),
-        ('threads_post', 'Threads'),
-        
-        # Vídeo
-        ('youtube_video', 'YouTube - Vídeo Longo'),
-        ('youtube_short', 'YouTube - Shorts'),
-        ('tiktok_post', 'TikTok'),
-        
-        # Outros
-        ('linkedin_feed', 'LinkedIn'),
-        ('x_post', 'X (Twitter)'),
-        ('pinterest_pin', 'Pinterest'),
-    ]
-    
-    post = models.ForeignKey('SocialPost', on_delete=models.CASCADE)
-    account = models.ForeignKey('SocialAccount', on_delete=models.CASCADE)
-    format_type = models.CharField(max_length=50, choices=DESTINATION_CHOICES)
-    
-    def __str__(self):
-        return f"{self.account} - {self.get_format_type_display()}"
-
-
-# --- 6. TAREFA (KANBAN GERAL E OPERACIONAL) ---
 class Task(models.Model):
+    # --- Controle Geral ---
     kanban_type = models.CharField(max_length=20, choices=KANBAN_TYPES, default='general')
     status = models.CharField(max_length=50, choices=ALL_STATUS_CHOICES, default='todo')
     
-    social_post = models.ForeignKey('SocialPost', on_delete=models.SET_NULL, null=True, blank=True, related_name='task_link')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
     
-    # CORREÇÃO 1: Permite tarefas sem projeto (obrigatório para posts avulsos)
-    project = models.ForeignKey(
-        Project, 
-        on_delete=models.CASCADE, 
-        related_name='tasks',
-        null=True,  # <--- ESSENCIAL
-        blank=True  # <--- ESSENCIAL
-    )
+    # Se for operacional, vincula direto ao Cliente (além do projeto opcional)
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
 
     PRIORITY_CHOICES = [
         ('high', 'Alta'),
         ('medium', 'Média'),
         ('low', 'Baixa'),
     ]
-    priority = models.CharField(
-        max_length=10, 
-        choices=PRIORITY_CHOICES, 
-        default='low' # Importante ter um default para tarefas antigas
-    )
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='low')
     
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
+    title = models.CharField(max_length=255, verbose_name="Título / Tema")
+    description = models.TextField(blank=True, null=True, verbose_name="Descrição Geral")
     
-    # CAMPOS DE DATA E ORDENAÇÃO
+    # --- CAMPOS ESPECÍFICOS DO FLUXO OPERACIONAL (Briefing -> Agendamento) ---
+    
+    # Passo 1: Briefing
+    social_network = models.CharField(max_length=20, choices=SOCIAL_NETWORKS, blank=True, null=True, verbose_name="Rede Social")
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, blank=True, null=True, verbose_name="Formato")
+    
+    briefing_text = models.TextField(blank=True, null=True, verbose_name="Briefing Detalhado")
+    briefing_files = models.FileField(upload_to='briefings/', blank=True, null=True, verbose_name="Anexo Briefing")
+    
+    scheduled_date = models.DateTimeField(null=True, blank=True, verbose_name="Data Prevista Publicação")
+
+    # Passo 2: Copywriting
+    script_content = models.TextField(blank=True, verbose_name="Roteiro (Vídeo/Carrossel)")
+    copy_content = models.TextField(blank=True, verbose_name="Texto da Arte (Headline)")
+    caption_content = models.TextField(blank=True, verbose_name="Legenda do Post")
+
+    # Passo 3: Design
+    final_art = models.ImageField(upload_to='designs/', blank=True, null=True, verbose_name="Arte Final / Capa")
+    design_files = models.FileField(upload_to='designs_source/', blank=True, null=True, verbose_name="Editável (PSD/AI)")
+
+    # Passo 4 e 5: Aprovação
+    approval_token = models.CharField(max_length=64, unique=True, blank=True, null=True) # Link para cliente externo
+    last_feedback = models.TextField(blank=True, null=True, verbose_name="Motivo Reprova")
+    feedback_image_annotation = models.TextField(blank=True, null=True, verbose_name="Rabisco (Base64)")
+
+    # --- CAMPOS PADRÃO ---
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
+    updated_at = models.DateTimeField(auto_now=True)
     order = models.IntegerField(default=0) 
     
-    # CAMPOS DE USUÁRIO
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -244,66 +199,169 @@ class Task(models.Model):
         null=True, 
         blank=True,
         related_name="assigned_tasks",
-        verbose_name="Atribuído a"
+        verbose_name="Responsável Atual"
     )
 
     class Meta:
         ordering = ['order']
 
+    def save(self, *args, **kwargs):
+        # Gera token para aprovação externa se for operacional e ainda não tiver
+        if self.kanban_type == 'operational' and not self.approval_token:
+            self.approval_token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.title
+        return f"[{self.get_kanban_type_display()}] {self.title}"
         
+    def get_mockup_class(self):
+        """Retorna classe CSS para o mockup visual no frontend"""
+        if self.content_type in ['story', 'reel_short', 'pin']:
+            return 'format-vertical'
+        elif self.content_type == 'video_long':
+            return 'format-horizontal'
+        return 'format-square'
+
+    def can_edit(self, user):
+        """Regras de permissão baseadas no status"""
+        if user.is_superuser: return True
+        
+        # Adapte 'role' conforme seu modelo de User
+        role = getattr(user, 'role', 'guest') 
+
+        if self.status in ['briefing', 'copy']:
+            return role in ['admin', 'copywriter', 'social_media']
+        elif self.status == 'design':
+            return role in ['admin', 'designer', 'photographer', 'social_media']
+        elif self.status == 'review_internal':
+            return role in ['admin', 'manager']
+        elif self.status == 'review_client':
+            return role == 'client'
+        return False
+
     def to_dict(self):
-        """ Retorna dados para o Frontend (JSON) """
-        
+        """JSON para o Frontend do Kanban"""
         project_name = "Sem Projeto"
         initials = '--'
         
+        # Lógica de Iniciais
         if self.assigned_to:
-            # 1. Pega os campos diretamente, garantindo que não seja None
             first = (self.assigned_to.first_name or "").strip()
             last = (self.assigned_to.last_name or "").strip()
-            
-            # 2. Se tiver os dois nomes, pega a 1ª letra de cada
-            if first and last:
-                initials = f"{first[0]}{last[0]}"
-            
-            # 3. Se só tiver o primeiro nome (mas composto), tenta pegar do split
-            elif first:
-                names = first.split()
-                if len(names) >= 2:
-                     initials = f"{names[0][0]}{names[-1][0]}"
-                else:
-                    initials = first[:2]
-            
-            # 4. Fallback: Se não tiver nome nenhum, usa o username
-            else:
-                initials = self.assigned_to.username[:2]
-
+            if first and last: initials = f"{first[0]}{last[0]}"
+            elif first: initials = first[:2]
+            else: initials = self.assigned_to.username[:2]
+        
+        # Nome do Projeto ou Cliente
         if self.project:
             project_name = self.project.name
-        elif self.social_post and self.social_post.client:
-            # Se não tem projeto, mas tem post, usa o nome do cliente
-            project_name = f"Cliente: {self.social_post.client.name}"
+        elif self.client:
+            project_name = f"Cliente: {self.client.name}"
 
         return {
             'id': self.id,
             'title': self.title,
-            'description': self.description or "Nenhuma descrição.",
+            'description': self.description or "",
             'status': self.status,
+            'kanban_type': self.kanban_type,
             'priority': self.priority,
             'status_display': self.get_status_display(),    
             'project_name': project_name,
             'order': self.order,
             'created_at': self.created_at.strftime('%d/%m/%Y'),
-            'updated_at': self.updated_at.strftime('%d/%m/%Y') if self.updated_at else "", 
-            'assigned_to_username': self.assigned_to.username if self.assigned_to else None,
-            'assigned_to_initials': self.assigned_to.username[0].upper() if self.assigned_to and self.assigned_to.username else '?',
-            'social_post_id': self.social_post.id if self.social_post else None,
             'assigned_to_initials': initials.upper(),
+            # Campos extras para identificar se tem imagem de capa no kanban
+            'has_art': bool(self.final_art),
+            'art_url': self.final_art.url if self.final_art else None,
+            'social_network': self.get_social_network_display() if self.social_network else None,
         }
 
-# --- 7. EVENTOS DO CALENDÁRIO (SIMPLES) ---
+# ==============================================================================
+# 5. ARQUIVOS E MÍDIA (DRIVE / R2)
+# ==============================================================================
+
+def client_r2_path(instance, filename):
+    
+    # Opção B: Se você usa django-tenants e quer o nome do tenant atual:
+    from django.db import connection
+    try:
+        agency_name = slugify(connection.tenant.name)
+    except:
+        agency_name = 'public'
+
+    # 2. Pega o nome do Cliente e limpa (tira espaços e acentos)
+    # Ex: "McDonald's Brasil" vira "mcdonalds-brasil"
+    client_name = slugify(instance.folder.client.name)
+    
+    # 3. Pega o nome da Pasta
+    folder_name = slugify(instance.folder.name) if instance.folder else 'root'
+    
+    # 4. Mantém a extensão original do arquivo
+    name, ext = os.path.splitext(filename)
+    clean_filename = slugify(name) + ext
+    unique_suffix = str(uuid.uuid4())[:4]
+    final_filename = f"{clean_filename}_{unique_suffix}{ext}"
+
+    return f'{agency_name}/{client_name}/{folder_name}/{final_filename}'
+
+class MediaFolder(models.Model):
+    name = models.CharField("Nome da Pasta", max_length=255)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='folders')
+    
+    # Auto-relacionamento: Permite criar subpastas dentro de pastas
+    parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='subfolders'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['name']
+        # Evita criar duas pastas com mesmo nome no mesmo lugar
+        unique_together = ['parent', 'name', 'client'] 
+
+    def __str__(self):
+        return self.name
+
+class MediaFile(models.Model):
+    folder = models.ForeignKey(MediaFolder, on_delete=models.CASCADE, related_name='files')
+    # O upload_to chama a função acima para decidir o caminho no R2
+    file = models.FileField(upload_to=client_r2_path) 
+    filename = models.CharField(max_length=255, blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        # Salva metadados automaticamente antes de enviar
+        if self.file:
+            self.filename = os.path.basename(self.file.name)
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.filename
+    
+@receiver(post_delete, sender=MediaFile)
+def remove_file_from_storage(sender, instance, **kwargs):
+    """
+    Deleta o arquivo físico do storage (R2/S3) quando o objeto MediaFile 
+    é deletado do banco de dados via Django Admin ou Views.
+    """
+    if instance.file:
+        try:
+            # save=False impede que o Django tente salvar o model novamente após apagar
+            instance.file.delete(save=False) 
+            print(f"--> Arquivo deletado do R2: {instance.filename}")
+        except Exception as e:
+            print(f"--> ERRO ao deletar do R2: {e}")
+
+# ==============================================================================
+# 6. CALENDÁRIO (SIMPLES / LEGADO)
+# ==============================================================================
 class CalendarEvent(models.Model):
     PLATFORM_CHOICES = [
         ('instagram', 'Instagram'),
@@ -345,59 +403,3 @@ class CalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.client.name} - {self.date}"
-
-def client_r2_path(instance, filename):
-    
-    # Opção B: Se você usa django-tenants e quer o nome do tenant atual:
-    from django.db import connection
-    agency_name = slugify(connection.tenant.name)
-
-    # 2. Pega o nome do Cliente e limpa (tira espaços e acentos)
-    # Ex: "McDonald's Brasil" vira "mcdonalds-brasil"
-    client_name = slugify(instance.folder.client.name)
-    
-    # 3. Pega o nome da Pasta
-    folder_name = slugify(instance.folder.name) if instance.folder else 'root'
-    
-    # 4. Mantém a extensão original do arquivo
-    name, ext = os.path.splitext(filename)
-    clean_filename = slugify(name) + ext
-    unique_suffix = str(uuid.uuid4())[:4]
-    final_filename = f"{clean_filename}_{unique_suffix}{ext}"
-
-    return f'{agency_name}/{client_name}/{folder_name}/{final_filename}'
-
-class MediaFolder(models.Model):
-    name = models.CharField("Nome da Pasta", max_length=255)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='folders')
-    
-    # Auto-relacionamento: Permite criar subpastas dentro de pastas
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subfolders')
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['name']
-        # Evita criar duas pastas com mesmo nome no mesmo lugar
-        unique_together = ['parent', 'name', 'client'] 
-
-    def __str__(self):
-        return self.name
-
-class MediaFile(models.Model):
-    folder = models.ForeignKey(MediaFolder, on_delete=models.CASCADE, related_name='files')
-    # O upload_to chama a função acima para decidir o caminho no R2
-    file = models.FileField(upload_to=client_r2_path) 
-    filename = models.CharField(max_length=255, blank=True)
-    file_size = models.PositiveIntegerField(null=True, blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    
-    def save(self, *args, **kwargs):
-        # Salva metadados automaticamente antes de enviar
-        if self.file:
-            self.filename = os.path.basename(self.file.name)
-            self.file_size = self.file.size
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.filename

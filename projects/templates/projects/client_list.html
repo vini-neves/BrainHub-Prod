@@ -39,7 +39,11 @@
                 <td data-label="Cliente">
                     <div class="client-info">
                         <div class="client-avatar">
-                            {% with client.name|slice:":2" as initials %}{{ initials|upper }}{% endwith %}
+                            {% if agency.logo %}
+                                <img src="{{ agency.logo.url }}" class="agency-logo-thumb">
+                            {% else %}
+                                {% with client.name|slice:":2" as initials %}{{ initials|upper }}{% endwith %}
+                            {% endif %}
                         </div>
                         <span class="client-name">{{ client.name }}</span>
                     </div>

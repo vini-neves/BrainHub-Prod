@@ -1,0 +1,237 @@
+/* ============================================================
+   1. ESTRUTURA DO KANBAN (Board & Colunas)
+   ============================================================ */
+
+/* Container que segura as colunas (Rolagem Horizontal) */
+#kanban-board {
+    display: flex;
+    flex-wrap: nowrap; /* Garante que fiquem lado a lado */
+    gap: 15px;
+    overflow-x: auto; /* Habilita rolagem lateral */
+    padding-bottom: 15px; /* Espaço para a barra de rolagem não colar */
+    height: 100%;
+}
+
+/* Área interna da coluna (Rolagem Vertical dos Cards) */
+.kanban-column {
+    overflow-y: auto;
+    padding-right: 4px;
+    /* Altura dinâmica calculada: Tela total - (Header + Padding) */
+    max-height: calc(100vh - 180px); 
+    min-height: 200px;
+}
+
+/* Coluna (Wrapper do Bootstrap) */
+.col-kanban {
+    min-width: 300px; /* Largura mínima para não esmagar a coluna */
+    max-width: 350px;
+    flex: 0 0 auto; /* Impede que o flexbox encolha a coluna */
+}
+
+/* Estilo do Card da Tarefa */
+.kanban-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.kanban-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
+    border-color: #0d6efd; /* Highlight ao passar o mouse */
+    cursor: pointer;
+}
+
+/* ============================================================
+   2. MODAL: STEPPER (Indicador de Progresso)
+   ============================================================ */
+
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* Linha conectora (opcional, visual) */
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #e9ecef;
+    z-index: 0;
+    transform: translateY(-50%);
+}
+
+.step-badge {
+    position: relative;
+    z-index: 1; /* Fica acima da linha */
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+/* Estado Ativo (Etapa Atual) */
+.step-badge.active {
+    background-color: #0d6efd !important; /* Azul Principal */
+    color: #fff !important;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+}
+
+/* ============================================================
+   3. VISUALIZAÇÃO E APROVAÇÃO (MOCKUPS DINÂMICOS)
+   ============================================================ */
+
+/* Container Principal do Mockup */
+.mockup-wrapper {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin: 0 auto; /* Centraliza no modal */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s ease; /* Animação suave ao trocar formato */
+}
+
+/* --- FORMATOS (Classes injetadas via JS) --- */
+
+/* Feed (Instagram/Facebook/LinkedIn) - Quadrado ou Portrait */
+.format-square { 
+    width: 350px; 
+}
+
+/* Stories / Reels / TikTok (Vertical 9:16) */
+.format-vertical { 
+    width: 280px; 
+}
+
+/* YouTube / Vídeos Horizontais (16:9) */
+.format-horizontal { 
+    width: 450px; 
+}
+
+/* Área da Imagem (Tela do Celular) */
+.mockup-img-box {
+    position: relative; /* Pai relativo para o Canvas absoluto */
+    background-color: #000;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+/* A Imagem em si */
+#designImage {
+    width: 100%;
+    height: auto;
+    max-height: 550px; /* Limite de altura para não estourar a tela */
+    object-fit: contain; /* Garante que a imagem inteira apareça */
+}
+
+/* CANVAS DE RABISCO (Fica exatamente em cima da imagem) */
+#feedbackCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    cursor: crosshair; /* Cursor de mira */
+    touch-action: none; /* Impede rolagem ao desenhar no celular */
+}
+
+/* Header Fake do Mockup (Perfil) */
+.mockup-header {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+}
+
+/* Footer Fake do Mockup (Legenda) */
+.mockup-footer {
+    padding: 12px;
+    background: #fff;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    text-align: left;
+    border-top: 1px solid #eee;
+}
+
+/* ============================================================
+   4. SCROLLBARS FINAS (Estética)
+   ============================================================ */
+
+#kanban-board::-webkit-scrollbar,
+.kanban-column::-webkit-scrollbar {
+    height: 8px;
+    width: 6px;
+}
+
+#kanban-board::-webkit-scrollbar-thumb,
+.kanban-column::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 4px;
+}
+
+#kanban-board::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ============================================================
+   5. MOBILE RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+    /* No celular, os mockups ocupam 100% da largura do modal */
+    .format-square, 
+    .format-vertical, 
+    .format-horizontal {
+        width: 100% !important;
+    }
+    
+    /* Aumenta altura mínima do card para facilitar toque */
+    .kanban-card {
+        margin-bottom: 15px;
+    }
+}
+
+.modal {
+    z-index: 1055 !important; /* Bootstrap usa 1055, aumentamos para garantir */
+}
+
+/* Garante que o fundo escuro (backdrop) fique logo atrás da modal */
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+
+/* Se a modal estiver abrindo mas não permitindo scroll */
+.modal-open {
+    overflow: hidden;
+}
+
+header, .sidebar, .navbar {
+    z-index: 1000 !important; 
+}
+
+/* 4. Correção visual se o modal estiver "transparente" ou sem fundo */
+.modal-content {
+    background-color: #fff !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
+    border: none;
+}

@@ -31,26 +31,28 @@
 
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-    <button id="mobile-menu-btn" class="mobile-menu-btn">
+    <button id="mobile-menu-btn" class="mobile-menu-btn" onclick="toggleMenu()">
         <i class="fas fa-bars"></i>
     </button>
 
     {% if messages %}
     <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 350px;">
         {% for message in messages %}
-        <div style="padding: 15px; margin-bottom: 10px; border-radius: 5px; color: white; 
-                    background-color: {% if message.tags == 'error' %}#dc3545{% elif message.tags == 'warning' %}#ffc107{% else %}#28a745{% endif %};
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif; opacity: 0.95;">
-            {{ message }}
+        <div class="toast show align-items-center text-white bg-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <div class="app-container" style="display:flex; width:100%;">
+    <div class="app-container d-flex w-100">
         
         <aside class="sidebar" id="sidebar">
-            
             <div class="logo-container">
                 <button onclick="toggleMenu()" class="close-sidebar-btn d-md-none" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
                 
@@ -64,7 +66,6 @@
             <div class="nav-scroll-area">
                 <nav class="main-nav">
                     {% for item in sidebar_menu %}
-                        
                         {% if item.submenu %}
                             <div class="nav-group {% if item.is_active %} active open {% endif %}" id="group-{{ forloop.counter }}">
                                 <div class="nav-link-header" onclick="toggleSubmenu('group-{{ forloop.counter }}')">
@@ -78,7 +79,6 @@
                                     </div>
                                     <i data-feather="chevron-right" class="toggle-icon"></i>
                                 </div>
-
                                 <div class="submenu">
                                     {% for sub in item.submenu %}
                                         <a href="{{ sub.url }}" class="nav-item-sub {% if sub.is_active %}active{% endif %}">
@@ -87,7 +87,6 @@
                                     {% endfor %}
                                 </div>
                             </div>
-
                         {% else %}
                             <a href="{{ item.url }}" class="nav-link {% if item.is_active %}active{% endif %}">
                                 {% if "feather:" in item.icon %}
@@ -98,7 +97,6 @@
                                 <span>{{ item.label }}</span>
                             </a>
                         {% endif %}
-
                     {% endfor %}
 
                     <a href="#" class="nav-link" id="nav-metrics-btn">
@@ -119,24 +117,12 @@
             </div>
         </aside>
 
-        <main class="content" style="flex-grow:1; background-color:var(--bg-light); min-height:100vh; overflow-x:hidden;">
-            {% if messages %}
-                <div style="padding:20px 20px 0 20px;">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-                </div>
-            {% endif %}
-
+        <main class="content flex-grow-1" style="background-color:var(--bg-light); min-height:100vh; overflow-x:hidden;">
             {% block content %} {% endblock %}
         </main>
     </div>
 
-    <div id="metrics-client-modal" class="modal" style="display:none;">
-        </div>
+    {% block modals %}{% endblock %}
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -144,51 +130,41 @@
     <script src="https://unpkg.com/feather-icons"></script>
     
     <script>
+        // Inicializa ícones
         feather.replace();
 
-        // Toggle Submenu Accordion
+        // Menu Toggle
         function toggleSubmenu(id) {
             const group = document.getElementById(id);
-            const submenu = group.querySelector(".submenu");
-            const isOpen = group.classList.toggle("open");
-            submenu.style.maxHeight = isOpen ? submenu.scrollHeight + "px" : "0";
+            if(group) {
+                const submenu = group.querySelector(".submenu");
+                const isOpen = group.classList.toggle("open");
+                submenu.style.maxHeight = isOpen ? submenu.scrollHeight + "px" : "0";
+            }
         }
 
-        // Abre submenus ativos automaticamente
+        // Abre menus ativos ao carregar
         document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll(".nav-group.active .submenu").forEach(sub => {
                 sub.style.maxHeight = sub.scrollHeight + "px";
             });
         });
 
-        // Mobile Menu Toggle
+        // Mobile Menu
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const overlay = document.getElementById('sidebar-overlay');
+        const sidebar = document.getElementById('sidebar');
+
         function toggleMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
+            if(sidebar) sidebar.classList.toggle('active');
+            if(overlay) overlay.classList.toggle('active');
         }
 
-        // ===============================================
-            // [MOBILE] Lógica do Menu Lateral (Sidebar)
-            // ===============================================
-            const mobileBtn = document.getElementById('mobile-menu-btn');
-            const closeBtn = document.getElementById('close-sidebar-btn');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-
-            function toggleMenu() {
-                // Adiciona/Remove a classe 'active' definida no CSS
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-            }
-
-            if(mobileBtn) mobileBtn.addEventListener('click', toggleMenu);
-            if(closeBtn) closeBtn.addEventListener('click', toggleMenu);
-            if(overlay) overlay.addEventListener('click', toggleMenu);
-
+        if(mobileBtn) mobileBtn.addEventListener('click', toggleMenu);
+        if(overlay) overlay.addEventListener('click', toggleMenu);
     </script>
 
     {% block extra_js %} {% endblock %}
+
 </body>
 </html>
