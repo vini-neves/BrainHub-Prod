@@ -259,16 +259,18 @@ META_SCOPES = [
     # 'business_management' 
 ]
 
+SOCIAL_AUTH_BASE_URL = config('SOCIAL_AUTH_BASE_URL', default='http://localhost:8000')
+
 # LINKEDIN API
 LINKEDIN_CLIENT_ID = config('LINKEDIN_CLIENT_ID')
 LINKEDIN_CLIENT_SECRET = config('LINKEDIN_CLIENT_SECRET')
-LINKEDIN_REDIRECT_URI = config('LINKEDIN_REDIRECT_URI')
+LINKEDIN_REDIRECT_URI = f"{SOCIAL_AUTH_BASE_URL}/linkedin-callback/"
 LINKEDIN_SCOPES = ['openid', 'profile', 'email', 'w_member_social']
 
 # TIKTOK SETTINGS
 TIKTOK_CLIENT_KEY = config('TIKTOK_CLIENT_KEY')
 TIKTOK_CLIENT_SECRET = config('TIKTOK_CLIENT_SECRET')
-TIKTOK_REDIRECT_URI = config('TIKTOK_REDIRECT_URI')
+TIKTOK_REDIRECT_URI = f"{SOCIAL_AUTH_BASE_URL}/tiktok-callback/"
 
 
 # --- CONFIGURAÇÕES DE PROXY (Obrigatório para EasyPanel) ---
