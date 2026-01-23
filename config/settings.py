@@ -7,7 +7,9 @@ from django.core.cache import cache
 SECRET_KEY = config('SECRET_KEY')
 
 # 2. Lendo DEBUG do ambiente (convertendo para Boolean)
-DEBUG = config('DEBUG', default=False, cast=bool)
+# DEBUG = config('DEBUG', default=False, cast=bool)
+
+DebUG = config('DEBUG', default=True, cast=bool)
 
 # 3. Lógica Híbrida de ALLOWED_HOSTS (Ambiente + Banco de Dados)
 def get_allowed_hosts():
