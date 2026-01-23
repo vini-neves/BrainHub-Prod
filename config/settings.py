@@ -11,43 +11,27 @@ SECRET_KEY = config('SECRET_KEY')
 
 DebUG = config('DEBUG', default=True, cast=bool)
 
-# 3. Lógica Híbrida de ALLOWED_HOSTS (Ambiente + Banco de Dados)
 def get_allowed_hosts():
-    # Primeiro, pega a lista definida no EasyPanel (ex: "meusite.com,localhost")
-    # Se estiver "*", aceita tudo (cuidado em produção)
     env_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
     
-    # Converte para lista Python modificável
     hosts = list(env_hosts)
-
-    # Se DEBUG for False, tentamos buscar os domínios extras no banco (Lógica SaaS)
-    # Usamos cache para não matar o banco de dados
     cached_domains = cache.get('DYNAMIC_ALLOWED_HOSTS')
     
     if cached_domains:
         hosts.extend(cached_domains)
     else:
         try:
-            # Importação dentro da função para evitar erro de carregamento (AppRegistryNotReady)
             from accounts.models import Domain
-            
-            # Pega apenas os valores da coluna 'domain'
             db_domains = list(Domain.objects.values_list('domain', flat=True))
-            
-            # Adiciona na lista principal
             hosts.extend(db_domains)
-            
-            # Salva no cache por 5 minutos (300s)
             cache.set('DYNAMIC_ALLOWED_HOSTS', db_domains, 300)
             
         except Exception:
-            # Se der erro (ex: tabela não existe ainda na primeira migração), segue a vida
             pass
             
-    # Remove duplicatas mantendo a lista limpa
     return list(set(hosts))
 
-ALLOWED_HOSTS = get_allowed_hosts()
+ALLOWED_HOSTS = ["*"]
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
