@@ -202,7 +202,7 @@ class LinkedInService:
     TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
     USER_INFO_URL = "https://api.linkedin.com/v2/userinfo"
 
-    def get_auth_url(self, state_token):
+    def get_auth_url(self, state_token, redirect_uri):
         """ Gera a URL do botão 'Conectar LinkedIn' """
         scope_string = " ".join(settings.LINKEDIN_SCOPES) # LinkedIn usa espaço, não vírgula
         params = {
