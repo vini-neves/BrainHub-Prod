@@ -8,28 +8,27 @@ SECRET_KEY = config('SECRET_KEY')
 
 # 2. Lendo DEBUG do ambiente (convertendo para Boolean)
 # DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 
-DebUG = config('DEBUG', default=True, cast=bool)
-
-def get_allowed_hosts():
-    env_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+# def get_allowed_hosts():
+#     env_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
     
-    hosts = list(env_hosts)
-    cached_domains = cache.get('DYNAMIC_ALLOWED_HOSTS')
+#     hosts = list(env_hosts)
+#     cached_domains = cache.get('DYNAMIC_ALLOWED_HOSTS')
     
-    if cached_domains:
-        hosts.extend(cached_domains)
-    else:
-        try:
-            from accounts.models import Domain
-            db_domains = list(Domain.objects.values_list('domain', flat=True))
-            hosts.extend(db_domains)
-            cache.set('DYNAMIC_ALLOWED_HOSTS', db_domains, 300)
+#     if cached_domains:
+#         hosts.extend(cached_domains)
+#     else:
+#         try:
+#             from accounts.models import Domain
+#             db_domains = list(Domain.objects.values_list('domain', flat=True))
+#             hosts.extend(db_domains)
+#             cache.set('DYNAMIC_ALLOWED_HOSTS', db_domains, 300)
             
-        except Exception:
-            pass
+#         except Exception:
+#             pass
             
-    return list(set(hosts))
+#     return list(set(hosts))
 
 ALLOWED_HOSTS = ["*"]
 
