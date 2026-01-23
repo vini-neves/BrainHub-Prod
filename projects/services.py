@@ -205,21 +205,23 @@ class LinkedInService:
     def get_auth_url(self, state_token):
         """ Gera a URL do botão 'Conectar LinkedIn' """
         scope_string = " ".join(settings.LINKEDIN_SCOPES) # LinkedIn usa espaço, não vírgula
-        return (
-            f"{self.AUTH_URL}?"
-            f"response_type=code&"
-            f"client_id={settings.LINKEDIN_CLIENT_ID}&"
-            f"redirect_uri={settings.LINKEDIN_REDIRECT_URI}&"
-            f"state={state_token}&"
-            f"scope={scope_string}"
-        )
+        params = {
+            "response_type": "code",
+            "client_id": settings.LINKEDIN_CLIENT_ID,
+            "redirect_uri": redirect_uri, 
+            "state": state_token,
+            "scope": scope_string
+        }
+        
+        # Transforma o dicionário em string de URL
+        return f"{self.AUTH_URL}?{urllib.parse.urlencode(params)}"
 
-    def exchange_code_for_token(self, code):
+    def exchange_code_for_token(self, code, redirect_uri):
         """ Troca o código pelo Access Token """
         payload = {
             'grant_type': 'authorization_code',
             'code': code,
-            'redirect_uri': settings.LINKEDIN_REDIRECT_URI,
+            'redirect_uri': redirect_uri, # <--- USA A VARIÁVEL AQUI
             'client_id': settings.LINKEDIN_CLIENT_ID,
             'client_secret': settings.LINKEDIN_CLIENT_SECRET
         }
