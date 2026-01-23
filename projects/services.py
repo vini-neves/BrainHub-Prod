@@ -273,7 +273,7 @@ class TikTokService:
     TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/"
     USER_INFO_URL = "https://open.tiktokapis.com/v2/user/info/"
     
-    def get_auth_url(self, state_token):
+    def get_auth_url(self, state_token, redirect_uri):
         """
         Gera a URL para o usuário clicar e autorizar o app.
         """
@@ -289,7 +289,7 @@ class TikTokService:
             "client_key": settings.TIKTOK_CLIENT_KEY, 
             "response_type": "code",
             "scope": ",".join(scopes), # Separa os escopos por vírgula
-            "redirect_uri": settings.TIKTOK_REDIRECT_URI,
+            'redirect_uri': redirect_uri,
             "state": state_token,
         }
         
@@ -298,7 +298,7 @@ class TikTokService:
         
         return f"{self.AUTH_URL}?{url_params}"
 
-    def get_access_token(self, code):
+    def get_access_token(self, code, redirect_uri):
         """
         Troca o 'code' recebido no callback pelo 'access_token' definitivo.
         """
@@ -307,7 +307,7 @@ class TikTokService:
             "client_secret": settings.TIKTOK_CLIENT_SECRET,
             "code": code,
             "grant_type": "authorization_code",
-            "redirect_uri": settings.TIKTOK_REDIRECT_URI,
+            'redirect_uri': redirect_uri,
         }
         
         headers = {
