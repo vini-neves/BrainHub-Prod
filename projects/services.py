@@ -327,18 +327,10 @@ class TikTokService:
             return None
 
     def get_user_info(self, access_token):
-        """
-        (Opcional) Busca nome e foto do usuário para salvar no banco.
-        """
+        """ Busca dados básicos do usuário (Nome e Avatar) """
         fields = ["display_name", "avatar_url"]
-        
-        params = {
-            "fields": ",".join(fields)
-        }
-        
-        headers = {
-            "Authorization": f"Bearer {access_token}"
-        }
+        params = {"fields": ",".join(fields)}
+        headers = {"Authorization": f"Bearer {access_token}"}
 
         try:
             response = requests.get(self.USER_INFO_URL, params=params, headers=headers)
@@ -350,5 +342,37 @@ class TikTokService:
                 }
             return None
         except Exception as e:
-            print(f"Erro ao buscar info do usuário: {e}")
+            print(f"Erro User Info TikTok: {e}")
             return None
+    
+    def save_account(self, token_data, client_obj):
+        """ Salva/Atualiza a conta no banco de dados """
+        
+        # O TikTok retorna 'open_id' como identificador único do usuário
+        access_token = token_data.get('access_token')
+        open_id = token_data.get('open_id') 
+        
+        if not access_token or not open_id:
+            print(f"Dados incompletos do TikTok: {token_data}")
+            return None
+
+        # Tenta buscar o nome do usuário para salvar bonitinho
+        # (Certifique-se de ter o método get_user_info na classe também)
+        user_info = self.get_user_info(access_token)
+        name = user_info.get('name') if user_info else "TikTok User"
+
+        # Salva no banco (Tabela SocialAccount)
+        account, created = SocialAccount.objects.update_or_create(
+            account_id=open_id,
+            client=client_obj,
+            defaults={
+                'platform': 'tiktok',
+                'account_name': name,
+                'access_token': access_token,
+                'refresh_token': token_data.get('refresh_token', ''),
+                'is_active': True
+            }
+        )
+        return account
+
+    
