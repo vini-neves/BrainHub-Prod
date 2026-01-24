@@ -224,27 +224,25 @@ GOOGLE_OAUTH_SCOPES = [
 # Para desenvolvimento, imprime e-mails no console em vez de enviá-los.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+
+
+SOCIAL_AUTH_BASE_URL = config('SOCIAL_AUTH_BASE_URL', default='http://localhost:8000')
+
 # META API
 META_APP_ID = config('META_APP_ID')
 META_APP_SECRET = config('META_APP_SECRET')
-META_REDIRECT_URI = config('META_REDIRECT_URI')
+META_REDIRECT_URI = f"{SOCIAL_AUTH_BASE_URL}/meta-callback/"
 
-# Escopos (Permissões) que vamos pedir
-# Precisamos de permissão para ler páginas, publicar posts e ler insights
 META_SCOPES = [
     'email',
     'public_profile',
-    'pages_show_list',
-    'pages_read_engagement',
-    'pages_manage_posts',
-    'pages_read_user_content',
-    'instagram_basic',
-    'instagram_content_publish',
-    'instagram_manage_insights',
-    # 'business_management' 
+    'pages_show_list',       # Ver páginas
+    'pages_read_engagement', # Ler dados da página
+    'instagram_basic',       # Ler perfil do Insta
+    'instagram_manage_insights', # Ler métricas do Insta
+    'instagram_content_publish', # Postar no Insta (opcional)
+    # 'business_management'  # Às vezes necessário para contas Business
 ]
-
-SOCIAL_AUTH_BASE_URL = config('SOCIAL_AUTH_BASE_URL', default='http://localhost:8000')
 
 # LINKEDIN API
 LINKEDIN_CLIENT_ID = config('LINKEDIN_CLIENT_ID')
@@ -258,13 +256,7 @@ TIKTOK_CLIENT_SECRET = config('TIKTOK_CLIENT_SECRET')
 TIKTOK_REDIRECT_URI = f"{SOCIAL_AUTH_BASE_URL}/tiktok-callback/"
 
 
-# --- CONFIGURAÇÕES DE PROXY (Obrigatório para EasyPanel) ---
-# Diz ao Django para confiar no cabeçalho Host que o EasyPanel envia
 USE_X_FORWARDED_HOST = True
-# Diz ao Django que a conexão é segura (HTTPS)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# --- DEBUG DE TENANTS ---
-# Se o domínio não for encontrado, exibe o site público em vez de 404.
-# Isso vai nos provar se o erro é de domínio ou de rota.
 SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
