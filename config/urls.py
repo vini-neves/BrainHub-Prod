@@ -31,6 +31,10 @@ urlpatterns = [
     # TikTok
     path('tiktok/connect/<int:client_id>/', project_views.tiktok_auth_start, name='tiktok_auth_start'),
     path('tiktok-callback/', project_views.tiktok_auth_callback, name='tiktok_auth_callback'),
+
+    # PINTEREST
+    path('auth/pinterest/start/<int:client_id>/', project_views.pinterest_auth_start, name='pinterest_auth_start'),
+    path('pinterest-callback/', project_views.pinterest_auth_callback, name='pinterest_auth_callback'),
     
     # Rota raiz (geralmente fica por último)
     path('', include('projects.urls')),

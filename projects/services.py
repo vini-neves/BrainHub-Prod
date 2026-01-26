@@ -3,6 +3,7 @@ import requests
 from django.conf import settings
 from .models import SocialAccount
 import urllib.parse
+from requests.auth import HTTPBasicAuth
 
 class MetaService:
     BASE_URL = "https://graph.facebook.com/v19.0"
@@ -268,4 +269,89 @@ class TikTokService:
         )
         return account
 
-    
+class PinterestService:
+    # Endpoints da API V5
+    AUTH_URL = "https://www.pinterest.com/oauth/"
+    TOKEN_URL = "https://api.pinterest.com/v5/oauth/token"
+    USER_INFO_URL = "https://api.pinterest.com/v5/user_account"
+
+    def get_auth_url(self, state_token, redirect_uri):
+        """ Gera a URL de login """
+        params = {
+            "client_id": settings.PINTEREST_APP_ID,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": ",".join(settings.PINTEREST_SCOPES),
+            "state": state_token,
+        }
+        return f"{self.AUTH_URL}?{urllib.parse.urlencode(params)}"
+
+    def exchange_code_for_token(self, code, redirect_uri):
+        """ Troca o code pelo token usando Basic Auth """
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+        }
+        
+        # Pinterest exige autenticação Basic (ID:Secret em base64) no header
+        auth = HTTPBasicAuth(settings.PINTEREST_APP_ID, settings.PINTEREST_APP_SECRET)
+
+        try:
+            response = requests.post(self.TOKEN_URL, data=data, auth=auth)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Erro Pinterest Token: {e}")
+            if response: print(response.text)
+            return None
+
+    def get_user_info(self, access_token):
+        """ Busca dados do usuário (Nome e Foto) """
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            response = requests.get(self.USER_INFO_URL, headers=headers)
+            if response.status_code == 200:
+                return response.json() # Retorna {username, profile_image, etc}
+            return None
+        except Exception as e:
+            print(f"Erro User Info Pinterest: {e}")
+            return None
+
+    def save_account(self, token_data, client_obj):
+        """ Salva no Banco """
+        access_token = token_data.get('access_token')
+        refresh_token = token_data.get('refresh_token')
+        
+        if not access_token: return None
+
+        # Busca info do perfil
+        user_info = self.get_user_info(access_token)
+        if not user_info: return None
+
+        username = user_info.get('username')
+        # Tenta pegar a imagem de melhor qualidade (se disponível)
+        profile_image = user_info.get('profile_image')
+        
+        # O ID único do Pinterest geralmente é o username ou buscado em outro endpoint, 
+        # mas aqui usaremos o username como identificador principal se o ID não vier claro.
+        # Nota: A API v5 não retorna um ID numérico simples no endpoint /user_account por padrão,
+        # mas o username é único.
+        account_id = username 
+
+        account, created = SocialAccount.objects.update_or_create(
+            account_id=account_id, 
+            client=client_obj,
+            defaults={
+                'platform': 'pinterest',
+                'account_name': username,
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'is_active': True
+            }
+        )
+        return account

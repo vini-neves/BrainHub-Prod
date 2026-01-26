@@ -86,6 +86,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const pinSwitch = document.getElementById('togglePinterest');
+    if (pinSwitch) {
+        const newPinSwitch = pinSwitch.cloneNode(true);
+        pinSwitch.parentNode.replaceChild(newPinSwitch, pinSwitch);
+
+        newPinSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false; return;
+                }
+                window.location.href = `/auth/pinterest/start/${clientId}/`;
+            }
+        });
+    }
+
     // 1. Configuração do Modal
     const modalElement = document.getElementById('clientModal');
     if (modalElement) {

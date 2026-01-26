@@ -244,6 +244,18 @@ META_SCOPES = [
     # 'business_management'  # Às vezes necessário para contas Business
 ]
 
+# PINTEREST API V5
+PINTEREST_APP_ID = config('PINTEREST_APP_ID')
+PINTEREST_APP_SECRET = config('PINTEREST_APP_SECRET')
+PINTEREST_REDIRECT_URI = f"{SOCIAL_AUTH_BASE_URL}/pinterest-callback/"
+PINTEREST_SCOPES = [
+    'user_accounts:read',
+    'boards:read',
+    'boards:write',
+    'pins:read',
+    'pins:write'
+]
+
 # LINKEDIN API
 LINKEDIN_CLIENT_ID = config('LINKEDIN_CLIENT_ID')
 LINKEDIN_CLIENT_SECRET = config('LINKEDIN_CLIENT_SECRET')

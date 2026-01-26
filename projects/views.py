@@ -27,7 +27,7 @@ from .models import (
 )
 from .forms import ClientForm, TenantAuthenticationForm, ProjectForm, MediaFileForm, FolderForm
 from accounts.models import CustomUser
-from .services import MetaService, LinkedInService, TikTokService
+from .services import MetaService, LinkedInService, TikTokService, PinterestService
 
 # ==============================================================================
 # 1. DASHBOARDS E VISÕES GERAIS
@@ -870,6 +870,50 @@ def tiktok_auth_callback(request):
         messages.error(request, "Falha na comunicação com TikTok.")
 
     # 5. Redireciona de volta para o subdomínio do cliente
+    origin_url = request.session.get('social_auth_origin', '/social/')
+    return redirect(origin_url)
+
+# --- PINTEREST ---
+
+@login_required
+def pinterest_auth_start(request, client_id):
+    request.session['pinterest_client_id'] = client_id
+    state = secrets.token_urlsafe(16)
+    request.session['pinterest_oauth_state'] = state
+    
+    # Salva onde o usuário estava para voltar depois
+    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
+    
+    service = PinterestService()
+    # Usa URL centralizada
+    return redirect(service.get_auth_url(state, redirect_uri=settings.PINTEREST_REDIRECT_URI))
+
+@login_required
+def pinterest_auth_callback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    
+    if not state or state != request.session.get('pinterest_oauth_state'):
+        messages.error(request, "Erro CSRF Pinterest.")
+        return redirect('social_dashboard')
+
+    client_id = request.session.get('pinterest_client_id')
+    client = get_object_or_404(Client, pk=client_id)
+    
+    service = PinterestService()
+    # Troca token com URL centralizada
+    token_data = service.exchange_code_for_token(code, redirect_uri=settings.PINTEREST_REDIRECT_URI)
+
+    if token_data and 'access_token' in token_data:
+        account = service.save_account(token_data, client)
+        if account:
+            messages.success(request, f"Pinterest conectado: {account.account_name}")
+        else:
+            messages.error(request, "Erro ao salvar dados do Pinterest.")
+    else:
+        messages.error(request, "Falha na comunicação com Pinterest.")
+
+    # Retorna ao tenant
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 
