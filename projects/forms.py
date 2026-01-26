@@ -1,6 +1,6 @@
 # projects/forms.py
 from django import forms
-from .models import Client, Project, MediaFolder
+from .models import Client, MediaFolder
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
@@ -90,50 +90,6 @@ class TenantAuthenticationForm(AuthenticationForm):
             )
 
         return self.cleaned_data
-
-class ProjectForm(forms.ModelForm):
-
-    # Inputs de data para o navegador mostrar o calendário
-    start_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}), 
-        required=False,
-        label="Data de Início"
-    )
-    due_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}), 
-        required=False,
-        label="Data de Entrega"
-    )
-
-    # Força o campo 'client' a ser um dropdown
-    client = forms.ModelChoiceField(
-        queryset=Client.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-input'}),
-        label="Cliente"
-    )
-
-    class Meta:
-        model = Project
-        fields = ['name', 'client', 'start_date', 'due_date', 'description']
-
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Campanha de Lançamento'}),
-            'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Breve descrição do projeto'}),
-        }
-        labels = {
-            'name': 'Nome do Projeto',
-            'description': 'Descrição (Opcional)',
-        }
-
-    def __init__(self, *args, **kwargs):
-        # Pega o 'tenant' da view para filtrar o queryset de clientes
-        tenant = kwargs.pop('tenant', None)
-        super().__init__(*args, **kwargs)
-
-        if tenant:
-            # Filtra o dropdown de Clientes para mostrar APENAS
-            # os clientes da agência (tenant) atual.
-            self.fields['client'].queryset = Client.objects.filter()
 
 class FolderForm(forms.ModelForm):
     class Meta:

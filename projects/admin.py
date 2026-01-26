@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    Client, Project, Task, SocialAccount, 
+    Client, Task, SocialAccount, 
     CalendarEvent, MediaFolder, MediaFile
 )
 
@@ -20,13 +20,6 @@ class ClientAdmin(admin.ModelAdmin):
         return "-"
     get_logo.short_description = "Logo"
 
-# --- PROJETO ---
-@admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'client', 'status', 'due_date', 'created_at')
-    search_fields = ('name', 'client__name')
-    list_filter = ('status', 'client')
-    date_hierarchy = 'created_at'
 
 # --- TAREFA (KANBAN UNIFICADO) ---
 @admin.register(Task)
@@ -58,7 +51,7 @@ class TaskAdmin(admin.ModelAdmin):
     # Organização do Formulário de Edição (Abas/Seções)
     fieldsets = (
         ('Dados Gerais', {
-            'fields': ('title', 'description', 'project', 'client', 'kanban_type', 'status', 'priority', 'assigned_to', 'order')
+            'fields': ('title', 'description', 'client', 'kanban_type', 'status', 'priority', 'assigned_to', 'order')
         }),
         ('Fluxo Operacional (Briefing)', {
             'classes': ('collapse',), # Começa fechado se não quiser poluir
