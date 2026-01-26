@@ -75,13 +75,19 @@ urlpatterns = [
     # --- SOCIAL DASHBOARD & AUTH ---
     path('social/', views.social_dashboard, name='social_dashboard'),
     
-    # Autenticação (OAuth)
-    path('auth/meta/start/<int:client_id>/', views.meta_auth_start, name='meta_auth_start'),
-    path('meta-callback/', views.meta_auth_callback, name='meta_auth_callback'),
+    # --- META (FACEBOOK & INSTAGRAM) ---
+    # Início Separado (Novas Funções)
+    path('auth/facebook/start/<int:client_id>/', views.facebook_auth_start, name='facebook_auth_start'),
+    path('auth/instagram/start/<int:client_id>/', views.instagram_auth_start, name='instagram_auth_start'),
     
+    # Callback Único (Obrigatório ser na raiz ou bater com o painel da Meta)
+    path('meta-callback/', views.meta_auth_callback, name='meta_auth_callback'),
+
+    # --- LINKEDIN ---
     path('auth/linkedin/start/<int:client_id>/', views.linkedin_auth_start, name='linkedin_auth_start'),
     path('linkedin-callback/', views.linkedin_auth_callback, name='linkedin_auth_callback'),
-    
+
+    # --- TIKTOK ---
     path('auth/tiktok/start/<int:client_id>/', views.tiktok_auth_start, name='tiktok_auth_start'),
     path('tiktok-callback/', views.tiktok_auth_callback, name='tiktok_auth_callback'),
 
