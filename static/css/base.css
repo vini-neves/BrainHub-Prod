@@ -234,7 +234,7 @@ body {
 
 .close-button {
     color: #aaa;
-    font-size: 28px;
+    /* font-size: 28px; */
     font-weight: bold;
     position: absolute;
     top: 15px;

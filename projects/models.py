@@ -83,6 +83,26 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
+class Project(models.Model):
+    STATUS_CHOICES = [
+        ('em_andamento', 'Em Andamento'),
+        ('finalizado', 'Finalizado'),
+        ('pausado', 'Pausado'),
+    ]
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="projects", null=True, blank=True)
+    name = models.CharField(max_length=255, verbose_name="Nome do Projeto")
+    description = models.TextField(blank=True, null=True, verbose_name="Descrição")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='em_andamento', verbose_name="Status")
+    
+    start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
+    due_date = models.DateField(verbose_name="Data de Entrega", null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
 # ==============================================================================
 # 3. REDES SOCIAIS (CONEXÕES / API)
 # ==============================================================================
@@ -127,6 +147,8 @@ class Task(models.Model):
     kanban_type = models.CharField(max_length=20, choices=KANBAN_TYPES, default='general')
     status = models.CharField(max_length=50, choices=ALL_STATUS_CHOICES, default='todo')
     
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+    
     # Se for operacional, vincula direto ao Cliente (além do projeto opcional)
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
 
@@ -169,15 +191,14 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     order = models.IntegerField(default=0) 
-    
+    deadline = models.DateField(null=True, blank=False, verbose_name="Prazo de Entrega")
+    tags = models.CharField(max_length=255, blank=True, null=True, verbose_name="Tags")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    assigned_to = models.ForeignKey(
+    assigned_to = models.ManyToManyField(
         settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True,
+        blank=True, 
         related_name="assigned_tasks",
-        verbose_name="Responsável Atual"
+        verbose_name="Responsáveis"
     )
 
     class Meta:
@@ -218,23 +239,53 @@ class Task(models.Model):
         return False
 
     def to_dict(self):
-        """JSON para o Frontend do Kanban"""
+        """JSON para o Frontend do Kanban (Versão Blindada contra Erros de Data)"""
         project_name = "Sem Projeto"
         initials = '--'
         
         # Lógica de Iniciais
-        if self.assigned_to:
-            first = (self.assigned_to.first_name or "").strip()
-            last = (self.assigned_to.last_name or "").strip()
+        assignees_list = []
+        for user in self.assigned_to.all():
+            first = (user.first_name or "").strip()
+            last = (user.last_name or "").strip()
+            initials = user.username[:2]
             if first and last: initials = f"{first[0]}{last[0]}"
             elif first: initials = first[:2]
-            else: initials = self.assigned_to.username[:2]
+            
+            assignees_list.append({
+                'id': user.id,
+                'username': user.username,
+                'initials': initials.upper(),
+                'full_name': user.get_full_name() or user.username
+            })
         
         # Nome do Projeto ou Cliente
         if self.project:
             project_name = self.project.name
         elif self.client:
             project_name = f"Cliente: {self.client.name}"
+
+        tags_list = []
+        if self.tags:
+            tags_list = self.tags.split(',')
+        
+        deadline_formatted = ""
+        if self.deadline:
+            
+            if hasattr(self.deadline, 'strftime'):
+                deadline_formatted = self.deadline.strftime('%d/%m/%Y')
+            
+            else:
+                try:
+                    
+                    data_str = str(self.deadline)
+                    if '-' in data_str:
+                        ano, mes, dia = data_str.split('-')[:3]
+                        deadline_formatted = f"{dia}/{mes}/{ano}"
+                    else:
+                        deadline_formatted = data_str
+                except:
+                    deadline_formatted = str(self.deadline)
 
         return {
             'id': self.id,
@@ -247,8 +298,9 @@ class Task(models.Model):
             'project_name': project_name,
             'order': self.order,
             'created_at': self.created_at.strftime('%d/%m/%Y'),
-            'assigned_to_initials': initials.upper(),
-            # Campos extras para identificar se tem imagem de capa no kanban
+            'assignees': assignees_list,
+            'deadline': deadline_formatted,
+            'tags': tags_list,
             'has_art': bool(self.final_art),
             'art_url': self.final_art.url if self.final_art else None,
             'social_network': self.get_social_network_display() if self.social_network else None,

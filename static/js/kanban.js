@@ -1,16 +1,16 @@
 /* static/js/kanban.js */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Kanban JS iniciado'); // Debug
+    console.log('Kanban JS iniciado'); 
 
-    // 1. Inicializa o Quadro (Lendo do window)
+    // 1. Inicializa o Quadro
     if (window.KANBAN_INITIAL_DATA) {
         renderBoard(window.KANBAN_INITIAL_DATA);
     } else {
         console.error('Dados iniciais (KANBAN_INITIAL_DATA) não encontrados.');
     }
 
-    // 2. Configura Eventos Globais (Botão Nova Tarefa está aqui dentro)
+    // 2. Configura Eventos Globais
     setupGlobalEventListeners();
 
     // 3. Inicializa Drag and Drop
@@ -26,18 +26,13 @@ document.addEventListener('DOMContentLoaded', function() {
  * Renderiza todas as colunas e cards
  */
 function renderBoard(data) {
-    // Limpa visualmente as colunas
     document.querySelectorAll('.column-cards').forEach(el => el.innerHTML = '');
 
-    // --- CORREÇÃO DO ERRO ---
-    // Cria uma lista única de tarefas, não importa se veio como Objeto ou Array
     let allTasks = [];
 
     if (Array.isArray(data)) {
-        // Se já for array, usa direto
         allTasks = data;
     } else if (typeof data === 'object' && data !== null) {
-        // Se for objeto (ex: {'todo': [t1], 'done': [t2]}), junta tudo numa lista só
         Object.values(data).forEach(columnTasks => {
             if (Array.isArray(columnTasks)) {
                 allTasks = allTasks.concat(columnTasks);
@@ -45,7 +40,6 @@ function renderBoard(data) {
         });
     }
 
-    // Agora 'allTasks' é garantidamente um Array, então o forEach funciona
     allTasks.forEach(task => {
         const column = document.getElementById(`column-${task.status}`);
         if (column) {
@@ -69,33 +63,70 @@ function renderBoard(data) {
 /**
  * GERA O HTML DO CARD
  */
+/**
+ * GERA O HTML DO CARD
+ */
 function createCardHTML(task) {
     let priorityClass = 'priority-low';
     let priorityLabel = 'Baixa';
 
-    // Lógica corrigida para suportar as 3 cores
+    // 1. Lógica de Cores da Prioridade
     if (task.priority === 'high') {
         priorityClass = 'priority-high';
         priorityLabel = 'Alta';
     } else if (task.priority === 'medium') {
         priorityClass = 'priority-medium';
         priorityLabel = 'Média';
-    } else {
-        priorityClass = 'priority-low';
-        priorityLabel = 'Baixa';
-    }
+    } 
     
-    let tagsHTML = '';
-    if (task.tags && Array.isArray(task.tags)) {
-        task.tags.forEach(tag => {
-            tagsHTML += `<span class="context-tag">${tag}</span>`;
+    // 2. Lógica das Tags (Corrigida para evitar redeclaração)
+    let tagsHTML = ''; 
+    let tagsList = [];
+
+    // Verifica se veio como array ou string e converte
+    if (Array.isArray(task.tags)) {
+        tagsList = task.tags;
+    } else if (typeof task.tags === 'string' && task.tags.trim() !== '') {
+        tagsList = task.tags.split(',');
+    }
+
+    // Gera o HTML das tags
+    if (tagsList.length > 0) {
+        tagsList.forEach(tag => {
+            const cleanTag = tag.trim();
+            if(cleanTag) {
+                tagsHTML += `<span class="context-tag">${cleanTag}</span>`;
+            }
         });
     }
 
-    const userInitials = task.assigned_to_username 
-        ? task.assigned_to_username.substring(0, 2).toUpperCase() 
-        : '--';
+    // 3. Lógica das Iniciais do Usuário
+    let userInitials = '--';
+    if (task.assigned_to_initials) {
+        userInitials = task.assigned_to_initials;
+    } else if (task.assigned_to_username) {
+        userInitials = task.assigned_to_username.substring(0, 2).toUpperCase();
+    }
 
+    let avatarsHTML = '';
+    
+    if (task.assignees && task.assignees.length > 0) {
+        // Cria uma bolinha para cada responsável
+        task.assignees.forEach((user, index) => {
+            // Um pequeno ajuste de margem negativa para sobrepor (efeito visual legal)
+            
+            avatarsHTML += `
+                <div class="card-assignee-avatar" title="${user.full_name}">
+                    ${user.initials}
+                </div>
+            `;
+        });
+    } else {
+        // Se não tiver ninguém
+        avatarsHTML = '<div class="card-assignee-avatar" style="background:#eee; color:#ccc;">--</div>';
+    }
+
+    // 4. Retorno do HTML
     return `
     <div class="kanban-card" draggable="true" data-id="${task.id}" data-priority="${task.priority}">
         <div class="card-header">
@@ -104,7 +135,7 @@ function createCardHTML(task) {
             </span>
             
             <div class="card-actions" style="position: absolute; top: 15px; right: 15px;">
-                <button type="button" class="btn-delete-task" data-id="${task.id}" title="Excluir">
+                <button type="button" id="btn-delete-task" class="btn-delete-task" data-id="${task.id}" title="Excluir">
                     <i data-feather="trash-2" style="width: 16px; height: 16px;"></i>
                 </button>
             </div>
@@ -113,26 +144,28 @@ function createCardHTML(task) {
         <h4 class="kanban-card-title">${task.title}</h4>
         
         <div class="card-footer">
-            <div class="tags-container">
+            <div class="tags-container-wrapper">
                 ${tagsHTML}
+                ${task.deadline ? `<span class="task-date"><i data-feather="calendar" style="width:10px;"></i> ${task.deadline}</span>` : ''}
             </div>
-            <div class="card-assignee-avatar" title="${task.assigned_to_username || 'Sem responsável'}">
-            ${userInitials}
+
+            <div style="display:flex; align-items:center;">
+                ${avatarsHTML}
             </div>
         </div>
     </div>
     `;
 }
-
 /**
- * Event Listeners Globais (Incluindo o BOTÃO NOVA TAREFA)
+ * Event Listeners Globais
  */
 function setupGlobalEventListeners() {
     const board = document.querySelector('.kanban-board');
 
-    // A. Cliques no Board (Lixeira e Detalhes)
+    // A. Cliques no Board
     if (board) {
         board.addEventListener('click', function(e) {
+            // 1. Botão Excluir (Dentro do Card)
             const deleteBtn = e.target.closest('.btn-delete-task');
             if (deleteBtn) {
                 e.stopPropagation(); 
@@ -141,36 +174,42 @@ function setupGlobalEventListeners() {
                 return;
             }
 
+            // 2. Clique no Card -> ABRE EDIÇÃO (Mudança aqui!)
             const card = e.target.closest('.kanban-card');
             if (card) {
                 const taskId = card.dataset.id;
-                openTaskDetails(taskId);
+                openEditModal(taskId); // Chama a nova função de edição
             }
         });
     }
 
-    // B. Botão "Nova Tarefa" (Abre Modal)
+    // B. Botão "Nova Tarefa" (Abre Modal Limpo)
     const addTaskBtn = document.getElementById('add-task-btn');
     if(addTaskBtn) {
-        // Remove listener antigo clonando (segurança contra múltiplos eventos)
         const newBtn = addTaskBtn.cloneNode(true);
         addTaskBtn.parentNode.replaceChild(newBtn, addTaskBtn);
 
         newBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('Botão Nova Tarefa clicado!'); // LOG PARA DEBUG
+            
+            // Reseta para o estado "Novo"
+            const form = document.getElementById('add-task-form');
+            if(form) form.reset();
+            
+            document.getElementById('task-id').value = ""; // Limpa ID
+            
+            const titleEl = document.getElementById('modal-title');
+            if(titleEl) titleEl.innerText = "Nova Tarefa";
+
             const modal = document.getElementById('add-task-modal');
-            if(modal) {
-                modal.style.display = 'flex';
-            } else {
-                console.error('Erro: Modal #add-task-modal não encontrado no HTML.');
-            }
+            if(modal) modal.style.display = 'flex';
+            
+            form.reset();
+            document.querySelectorAll('.assignee-option').forEach(el => el.classList.remove('selected'));
         });
-    } else {
-        console.error('Erro: Botão #add-task-btn não encontrado no HTML.');
     }
 
-    // C. Form "Nova Tarefa" (Salvar)
+    // C. Form "Salvar/Editar Tarefa"
     const addForm = document.getElementById('add-task-form');
     if(addForm) {
         const newForm = addForm.cloneNode(true);
@@ -193,6 +232,177 @@ function setupGlobalEventListeners() {
             event.target.style.display = "none";
         }
     }
+}
+
+/**
+ * ABRE O MODAL EM MODO DE EDIÇÃO
+ */
+function openEditModal(taskId) {
+    const modal = document.getElementById('add-task-modal');
+    const form = document.getElementById('add-task-form');
+    const modalTitle = document.getElementById('modal-title');
+
+    // 1. Limpa o formulário e reseta visuais para evitar dados antigos
+    form.reset();
+    document.querySelectorAll('.assignee-option').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('input[name="tags"]').forEach(cb => cb.checked = false);
+    
+    // 2. Define o ID no input hidden e muda o título
+    document.getElementById('task-id').value = taskId;
+    if(modalTitle) modalTitle.innerText = "Editar Tarefa";
+
+    // 3. Busca os dados atuais da tarefa
+    // Usa a variável global dinâmica definida no HTML
+    const url = window.GET_TASK_DETAILS_URL_BASE + taskId + '/';
+
+    fetch(url)
+        .then(res => res.json())
+        .then(task => {
+            // --- A. CAMPOS DE TEXTO ---
+            if(document.getElementById('task-title')) {
+                document.getElementById('task-title').value = task.title;
+            }
+            if(document.getElementById('task-description')) {
+                document.getElementById('task-description').value = task.description || '';
+            }
+
+            // --- B. PRIORIDADE (RADIO BUTTONS) ---
+            if(task.priority) {
+                const radio = form.querySelector(`input[name="priority"][value="${task.priority}"]`);
+                if(radio) radio.checked = true;
+            }
+
+            // --- C. DATA DE ENTREGA (DATE INPUT) ---
+            const dateInput = document.getElementById('task-deadline');
+            if (dateInput && task.deadline) {
+                // O input date exige formato YYYY-MM-DD
+                // O Django geralmente manda DD/MM/YYYY no to_dict
+                if (task.deadline.includes('/')) {
+                    const [dia, mes, ano] = task.deadline.split('/');
+                    dateInput.value = `${ano}-${mes}-${dia}`;
+                } else {
+                    dateInput.value = task.deadline;
+                }
+            }
+
+            // --- D. TAGS (CHECKBOXES) ---
+            if (task.tags && Array.isArray(task.tags)) {
+                task.tags.forEach(tagValue => {
+                    // Procura o checkbox com esse value e marca
+                    // Usamos CSS selector com aspas para garantir que values com espaço funcionem
+                    const checkbox = document.querySelector(`input[name="tags"][value="${tagValue}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            // --- E. RESPONSÁVEIS (VISUAL GRID + SELECT HIDDEN) ---
+            const selectAssignee = document.getElementById('task-assigned-to');
+            
+            // E1. Limpa o select hidden
+            if (selectAssignee) {
+                Array.from(selectAssignee.options).forEach(opt => opt.selected = false);
+            }
+
+            // E2. Marca os que vieram do banco
+            if (task.assignees && Array.isArray(task.assignees) && task.assignees.length > 0) {
+                task.assignees.forEach(user => {
+                    // 1. Marca no Select Escondido (para o envio do form funcionar)
+                    if (selectAssignee) {
+                        const option = Array.from(selectAssignee.options).find(opt => opt.value == user.id);
+                        if (option) option.selected = true;
+                    }
+
+                    // 2. Marca no Grid Visual (para o usuário ver)
+                    // Busca pelo atributo onclick que contém o ID do usuário
+                    const visualItem = document.querySelector(`.assignee-option[onclick*="'${user.id}'"]`);
+                    if (visualItem) {
+                        visualItem.classList.add('selected');
+                    }
+                });
+            }
+
+            // 4. Finalmente, exibe o modal
+            modal.style.display = 'flex';
+        })
+        .catch(err => {
+            console.error("Erro ao carregar tarefa para edição:", err);
+            
+            // Tratamento de erro amigável
+            if (err.message && err.message.includes('<!DOCTYPE html>')) {
+                 alert("Erro de conexão ou servidor (404/500). Verifique o console.");
+            } else {
+                 alert("Não foi possível carregar os dados da tarefa.");
+            }
+        });
+}
+
+/**
+ * SUBMIT DO FORMULÁRIO (CRIA OU EDITA)
+ */
+function handleAddTaskSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const taskId = document.getElementById('task-id').value; // Verifica se tem ID
+
+    // Feedback visual
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Salvando...';
+    submitBtn.disabled = true;
+
+    const formData = new FormData(form);
+
+    // DECIDE A URL
+    let url = window.ADD_TASK_API_URL;
+    
+    if (taskId) {
+        // --- CORREÇÃO DA URL DE EDIÇÃO ---
+        // Usa a variável global vinda do Django + ID + Barra final
+        url = window.EDIT_TASK_URL_BASE + taskId + '/'; 
+    }
+
+    console.log("Enviando para URL:", url); // Debug: Veja no console se a URL está certa
+
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': window.CSRF_TOKEN
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('add-task-modal').style.display = 'none';
+            window.location.reload(); 
+        } else {
+            alert('Erro: ' + (data.message || JSON.stringify(data.errors)));
+        }
+    })
+    .catch(error => {
+        console.error('ERRO:', error);
+        
+        // Melhora a mensagem de erro para o usuário
+        if (error.message.includes('<!DOCTYPE html>')) {
+             if (error.message.includes('Page not found')) {
+                 alert('Erro 404: A URL de edição está incorreta. Verifique o console.');
+             } else {
+                 alert('Erro 500: Erro interno no servidor.');
+             }
+        } else {
+             alert('Erro ao salvar: ' + error.message);
+        }
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
 
 /**
@@ -262,7 +472,6 @@ function getDragAfterElement(container, y) {
  * Atualiza status (Backend)
  */
 function updateTaskStatus(taskId, newStatus) {
-    // Usa window.URL e window.CSRF
     const url = window.KANBAN_UPDATE_URL;
     const csrf = window.CSRF_TOKEN;
 
@@ -289,112 +498,6 @@ function updateTaskStatus(taskId, newStatus) {
 }
 
 /**
- * Salvar Nova Tarefa
- */
-function handleAddTaskSubmit(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = 'Salvando...';
-    submitBtn.disabled = true;
-
-    const formData = new FormData(form);
-
-    fetch(window.ADD_TASK_API_URL, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': window.CSRF_TOKEN
-        }
-    })
-    .then(response => {
-        // Se a resposta não for OK (ex: 500 ou 404), pegamos o texto (HTML) para ver o erro
-        if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error(`Erro do Servidor (${response.status}): \n${text}`);
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === 'success') {
-            const column = document.getElementById(`column-${data.task.status}`);
-            if (column) {
-                const container = column.querySelector('.column-cards');
-                const cardHTML = createCardHTML(data.task);
-                container.insertAdjacentHTML('beforeend', cardHTML);
-                updateTaskCounts();
-                if (typeof feather !== 'undefined') feather.replace();
-            }
-            form.reset();
-            document.getElementById('add-task-modal').style.display = 'none';
-        } else {
-            alert('Erro de validação: ' + JSON.stringify(data.errors));
-        }
-    })
-    .catch(error => {
-        console.error('ERRO DETALHADO:', error);
-        
-        // Se o erro for HTML, tenta mostrar só a mensagem principal no alert
-        if (error.message.includes('<!DOCTYPE html>')) {
-             alert('Erro Interno no Servidor (500). Verifique o terminal do Django ou o Console do navegador para detalhes.');
-        } else {
-             alert('Erro ao salvar: ' + error.message);
-        }
-    })
-    .finally(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    });
-}
-
-/**
- * Abre Detalhes da Tarefa
- */
-function openTaskDetails(taskId) {
-    const modal = document.getElementById('task-details-modal');
-    const contentDiv = document.getElementById('task-details-content');
-    const url = window.GET_TASK_DETAILS_URL_BASE + taskId + '/';
-    
-    contentDiv.innerHTML = '<div style="padding:20px; text-align:center;">Carregando...</div>';
-    modal.style.display = 'flex';
-
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            if(data.error) throw new Error(data.error);
-
-            contentDiv.innerHTML = `
-                <h2>${data.title}</h2>
-                <div class="detail-grid">
-                    <div class="detail-item"><strong>Status:</strong> ${data.status_display}</div>
-                    <div class="detail-item"><strong>Prioridade:</strong> ${data.priority_display}</div>
-                    <div class="detail-description">
-                        <strong>Descrição:</strong>
-                        <p>${data.description || 'Nenhuma descrição.'}</p>
-                    </div>
-                    <div class="detail-item"><strong>Responsável:</strong> ${data.assigned_to_username || 'Ninguém'}</div>
-                </div>
-                
-                <div style="margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 15px;">
-                     <button id="btn-modal-delete" style="background:none; border:none; color: #EF4444; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; margin-left:auto;">
-                        <i data-feather="trash-2" style="width:16px;"></i> Excluir Tarefa
-                     </button>
-                </div>
-            `;
-            
-            document.getElementById('btn-modal-delete').onclick = () => confirmDeleteTask(taskId);
-            if (typeof feather !== 'undefined') feather.replace();
-        })
-        .catch(err => {
-            contentDiv.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar detalhes.</p>`;
-        });
-}
-
-/**
  * Excluir Tarefa
  */
 function confirmDeleteTask(taskId) {
@@ -412,7 +515,6 @@ function confirmDeleteTask(taskId) {
             if(res.ok) {
                 const card = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
                 if(card) card.remove();
-                document.getElementById('task-details-modal').style.display = 'none';
                 updateTaskCounts();
             } else {
                 alert('Erro ao excluir tarefa.');
@@ -428,4 +530,17 @@ function updateTaskCounts() {
         const badge = col.querySelector('.task-count');
         if(badge) badge.textContent = count;
     });
+}
+
+function toggleAssigneeVisual(userId, element) {
+    // 1. Alterna classe visual
+    element.classList.toggle('selected');
+    
+    // 2. Sincroniza com o Select Escondido
+    const select = document.getElementById('task-assigned-to');
+    const option = Array.from(select.options).find(opt => opt.value == userId);
+    
+    if (option) {
+        option.selected = !option.selected; // Inverte o estado
+    }
 }

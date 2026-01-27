@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    Client, Task, SocialAccount, 
+    Client, Project, Task, SocialAccount, 
     CalendarEvent, MediaFolder, MediaFile
 )
 
@@ -20,11 +20,18 @@ class ClientAdmin(admin.ModelAdmin):
         return "-"
     get_logo.short_description = "Logo"
 
+# --- PROJETO ---
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ('name', 'client', 'status', 'due_date', 'created_at')
+    search_fields = ('name', 'client__name')
+    list_filter = ('status', 'client')
+    date_hierarchy = 'created_at'
 
 # --- TAREFA (KANBAN UNIFICADO) ---
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    # Colunas da Tabela
+    # 1. MUDANÇA AQUI: Trocamos 'assigned_to' por 'get_assigned_to'
     list_display = (
         'title', 
         'kanban_type', 
@@ -32,10 +39,10 @@ class TaskAdmin(admin.ModelAdmin):
         'client', 
         'social_network', 
         'scheduled_date', 
-        'assigned_to'
+        'get_assigned_to' 
     )
     
-    # Filtros laterais
+    # Filtros laterais (ManyToManyField funciona nativamente aqui, pode manter)
     list_filter = (
         'kanban_type', 
         'status', 
@@ -48,13 +55,16 @@ class TaskAdmin(admin.ModelAdmin):
     # Barra de busca
     search_fields = ('title', 'description', 'client__name', 'copy_content')
     
+    # 2. MUDANÇA AQUI: Melhor interface para selecionar múltiplos usuários
+    filter_horizontal = ('assigned_to',)
+
     # Organização do Formulário de Edição (Abas/Seções)
     fieldsets = (
         ('Dados Gerais', {
-            'fields': ('title', 'description', 'client', 'kanban_type', 'status', 'priority', 'assigned_to', 'order')
+            'fields': ('title', 'description', 'project', 'client', 'kanban_type', 'status', 'priority', 'assigned_to', 'order')
         }),
         ('Fluxo Operacional (Briefing)', {
-            'classes': ('collapse',), # Começa fechado se não quiser poluir
+            'classes': ('collapse',), 
             'description': 'Preencha apenas se for uma tarefa de Social Media',
             'fields': ('social_network', 'content_type', 'briefing_text', 'briefing_files', 'scheduled_date')
         }),
@@ -86,32 +96,8 @@ class TaskAdmin(admin.ModelAdmin):
         return format_html('<span style="color: {}; font-weight: bold;">{}</span>', color, obj.get_status_display())
     status_colored.short_description = 'Status'
 
-# --- CONTAS SOCIAIS ---
-@admin.register(SocialAccount)
-class SocialAccountAdmin(admin.ModelAdmin):
-    list_display = ('account_name', 'platform', 'client', 'is_active', 'token_expires_at')
-    list_filter = ('platform', 'is_active', 'client')
-    search_fields = ('account_name', 'account_id')
-
-# --- ARQUIVOS (DRIVE / R2) ---
-@admin.register(MediaFolder)
-class MediaFolderAdmin(admin.ModelAdmin):
-    list_display = ('name', 'client', 'parent', 'created_at')
-    list_filter = ('client',)
-    search_fields = ('name', 'client__name')
-
-@admin.register(MediaFile)
-class MediaFileAdmin(admin.ModelAdmin):
-    list_display = ('filename', 'folder', 'file_size', 'uploaded_at')
-    search_fields = ('filename', 'folder__name')
-    readonly_fields = ('uploaded_at',)
-
-# --- CALENDÁRIO (LEGADO) ---
-@admin.register(CalendarEvent)
-class CalendarEventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'client', 'date', 'platform', 'status')
-    list_filter = ('status', 'platform', 'date')
-    date_hierarchy = 'date'
-
-# OBS: SocialPost e SocialPostDestination foram removidos pois 
-# a funcionalidade foi absorvida pela Task (Kanban Operacional).
+    # 3. NOVA FUNÇÃO: Formata a lista de responsáveis para exibir na tabela
+    def get_assigned_to(self, obj):
+        # Pega todos os usuários e junta os nomes com vírgula
+        return ", ".join([user.username for user in obj.assigned_to.all()])
+    get_assigned_to.short_description = 'Responsáveis'

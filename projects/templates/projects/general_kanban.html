@@ -18,10 +18,6 @@
         </div>
     
         <div style="display: flex; gap: 12px;">
-            <a href="{% url 'kanban_view' 'operational' %}" class="toggle-button">
-                <i data-feather="repeat"></i> <span>Fluxo Operacional</span>
-            </a>
-            
             <button id="add-task-btn" class="add-task-button">
                 <i data-feather="plus"></i> Nova Tarefa
             </button>
@@ -42,17 +38,21 @@
         {% endfor %}
     </div>
 
-    {# --- MODAL DE ADICIONAR TAREFA (GERAL) --- #}
+    {# --- MODAL DE ADICIONAR/EDITAR TAREFA (GERAL) --- #}
     <div id="add-task-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin:0;">Detalhes da Tarefa</h2>
+                {# Adicionei o ID modal-title aqui para o JS mudar para 'Editar Tarefa' #}
+                <h2 id="modal-title" style="margin:0;">Detalhes da Tarefa</h2>
                 <span class="close-button" data-modal-id="add-task-modal" style="cursor: pointer; font-size: 1.5rem;">&times;</span>
             </div>
 
             <form id="add-task-form">
                 {% csrf_token %}
                 <input type="hidden" name="kanban_type" value="general"> 
+
+                {# --- CORREÇÃO: O INPUT ID AGORA ESTÁ AQUI DENTRO --- #}
+                <input type="hidden" id="task-id" name="task_id" value=""> 
 
                 <div class="form-group">
                     <label for="task-title">Título</label>
@@ -87,26 +87,52 @@
                 <div class="form-group">
                     <label>Tags</label>
                     <div class="tags-selector">
+                         <input type="checkbox" id="tag-dev" name="tags" value="Dev" class="tag-checkbox">
+                         <label for="tag-dev" class="tag-check-label">Dev</label>
+
+                         <input type="checkbox" id="tag-pav" name="tags" value="Prod. Audio e Visual" class="tag-checkbox">
+                         <label for="tag-pav" class="tag-check-label">Prod. Audio e Visual</label>
+
                          <input type="checkbox" id="tag-fin" name="tags" value="Financeiro" class="tag-checkbox">
                          <label for="tag-fin" class="tag-check-label">Financeiro</label>
 
-                         <input type="checkbox" id="tag-rh" name="tags" value="RH" class="tag-checkbox">
-                         <label for="tag-rh" class="tag-check-label">RH</label>
+                         <input type="checkbox" id="tag-reu" name="tags" value="Reuniões" class="tag-checkbox">
+                         <label for="tag-reu" class="tag-check-label">Reuniões</label>
 
-                         <input type="checkbox" id="tag-esc" name="tags" value="Escritório" class="tag-checkbox">
-                         <label for="tag-esc" class="tag-check-label">Escritório</label>
+                         <input type="checkbox" id="tag-ads" name="tags" value="Gestão Ads" class="tag-checkbox">
+                         <label for="tag-ads" class="tag-check-label">Gestão Ads</label>
+
+                         <input type="checkbox" id="tag-pros" name="tags" value="Prospecção" class="tag-checkbox">
+                         <label for="tag-pros" class="tag-check-label">Prospecção</label>
                     </div>
-                    <select name="project" style="display:none;"><option value="">Default</option></select>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="task-assigned-to">Responsáveis</label>
-                    <select id="task-assigned-to" name="assigned_to" class="form-input">
-                        <option value="">Selecione...</option>
-                        {% for u in agency_users %}
+                    <label for="task-deadline">Prazo de Entrega</label>
+                    <input type="date" id="task-deadline" name="deadline" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Responsáveis</label>
+                    
+                    <select id="task-assigned-to" name="assigned_to" multiple style="display: none;">
+                        {% for u in users %}
                             <option value="{{ u.id }}">{{ u.username }}</option>
                         {% endfor %}
                     </select>
+                
+                    <div class="assignee-grid">
+                        {% for u in users %}
+                            <div class="assignee-option" onclick="toggleAssigneeVisual('{{ u.id }}', this)">
+                                <div class="avatar-circle">
+                                    {{ u.first_name|slice:":1" }}{{ u.last_name|slice:":1" }}
+                                    {% if not u.first_name %}{{ u.username|slice:":2" }}{% endif %}
+                                </div>
+                                <span class="user-name">{{ u.get_full_name|default:u.username }}</span>
+                                <i data-feather="check" class="check-icon"></i>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 
                 <div class="modal-footer">
@@ -117,13 +143,7 @@
         </div>
     </div>
     
-    {# --- MODAL DE DETALHES --- #}
-    <div id="task-details-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close-button" data-modal-id="task-details-modal" style="float: right; cursor: pointer;">&times;</span>
-            <div id="task-details-content"></div>
-        </div>  
-    </div>
+    {# --- REMOVI O FORMULÁRIO DUPLICADO QUE ESTAVA AQUI EMBAIXO --- #}
 
     <script>
         const KANBAN_INITIAL_DATA = {{ kanban_data|safe }};
@@ -146,8 +166,9 @@
         window.ADD_TASK_API_URL = "{% url 'add_task_api' %}"; 
         
         // URLs Dinâmicas (Correção das barras)
-        // O replace agora troca '0/' por vazio. Isso evita o erro da barra dupla (//).
+        // Note o '0/' dentro do replace. Isso remove o zero E a barra extra.
         window.GET_TASK_DETAILS_URL_BASE = "{% url 'get_task_details_api' 0 %}".replace('0/', '');
+        window.EDIT_TASK_URL_BASE = "{% url 'edit_task_api' 0 %}".replace('0/', '');
         window.DELETE_TASK_URL_BASE = "{% url 'delete_task_api' 0 %}".replace('0/', '');
     </script>
 

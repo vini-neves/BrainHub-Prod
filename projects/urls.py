@@ -32,7 +32,8 @@ urlpatterns = [
     # APIs de Manipulação (Drag&Drop, CRUD)
     path('api/task/add-general/', views.AddTaskAPI.as_view(), name='add_task_api'),
     path('api/task/add-operational/', views.AddOperationalTaskAPI.as_view(), name='add_operational_task'),
-    path('api/task/update-drag/', views.KanbanUpdateTask.as_view(), name='kanban_update_drag'), # JSON Drag&Drop
+    path('api/task/update-drag/', views.KanbanUpdateTask.as_view(), name='kanban_update_task'),
+    path('api/task/edit/<int:pk>/', views.EditTaskAPI.as_view(), name='edit_task_api'),
     path('api/task/delete/<int:pk>/', views.DeleteTaskAPI.as_view(), name='delete_task_api'),
     path('api/task/details/<int:pk>/', views.get_task_details_api, name='get_task_details_api'),
 
@@ -51,6 +52,9 @@ urlpatterns = [
     path('api/clients/<int:pk>/details/', views.client_detail_api, name='client_detail_api'),
     path('api/clients/<int:pk>/update/', views.update_client_api, name='update_client_api'),
     path('api/clients/<int:pk>/delete/', views.delete_client_api, name='delete_client_api'),
+
+    # API de Projeto
+    path('api/projects/add/', views.AddProjectAPI.as_view(), name='add_project_api'),
 
     # --- APROVAÇÃO EXTERNA (CLIENTE) ---
     # 1. Gerar Link (Botão na Agência)
@@ -72,19 +76,13 @@ urlpatterns = [
     # --- SOCIAL DASHBOARD & AUTH ---
     path('social/', views.social_dashboard, name='social_dashboard'),
     
-    # --- META (FACEBOOK & INSTAGRAM) ---
-    # Início Separado (Novas Funções)
-    path('auth/facebook/start/<int:client_id>/', views.facebook_auth_start, name='facebook_auth_start'),
-    path('auth/instagram/start/<int:client_id>/', views.instagram_auth_start, name='instagram_auth_start'),
-    
-    # Callback Único (Obrigatório ser na raiz ou bater com o painel da Meta)
+    # Autenticação (OAuth)
+    path('auth/meta/start/<int:client_id>/', views.meta_auth_start, name='meta_auth_start'),
     path('meta-callback/', views.meta_auth_callback, name='meta_auth_callback'),
-
-    # --- LINKEDIN ---
+    
     path('auth/linkedin/start/<int:client_id>/', views.linkedin_auth_start, name='linkedin_auth_start'),
     path('linkedin-callback/', views.linkedin_auth_callback, name='linkedin_auth_callback'),
-
-    # --- TIKTOK ---
+    
     path('auth/tiktok/start/<int:client_id>/', views.tiktok_auth_start, name='tiktok_auth_start'),
     path('tiktok-callback/', views.tiktok_auth_callback, name='tiktok_auth_callback'),
 

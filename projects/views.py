@@ -22,12 +22,12 @@ from django.core.files.base import ContentFile
 
 # --- IMPORTS LOCAIS ---
 from .models import (
-    Task, CalendarEvent, Client, SocialAccount, 
+    Task, CalendarEvent, Project, Client, SocialAccount, 
     MediaFolder, MediaFile, SOCIAL_NETWORKS, CONTENT_TYPES
 )
-from .forms import ClientForm, TenantAuthenticationForm, MediaFileForm, FolderForm
+from .forms import ClientForm, TenantAuthenticationForm, ProjectForm, MediaFileForm, FolderForm
 from accounts.models import CustomUser
-from .services import MetaService, LinkedInService, TikTokService, PinterestService
+from .services import MetaService, LinkedInService, TikTokService
 
 # ==============================================================================
 # 1. DASHBOARDS E VISÕES GERAIS
@@ -40,6 +40,7 @@ class TenantLoginView(auth_views.LoginView):
 @login_required
 def dashboard(request):
     """Dashboard Principal (Visão Geral da Agência)"""
+    project_count = Project.objects.count()
     
     # Tarefas Gerais (Kanban Padrão)
     pending_tasks = Task.objects.filter(status__in=['todo', 'doing'], kanban_type='general')
@@ -58,6 +59,7 @@ def dashboard(request):
     chart_status_data = {item['status']: item['count'] for item in status_counts}
 
     context = {
+        'project_count': project_count,
         'pending_tasks_count': pending_tasks.count(),
         'completed_tasks_count': completed_tasks.count(),
         'total_tasks': pending_tasks.count() + completed_tasks.count(),
@@ -94,24 +96,30 @@ def social_dashboard(request):
 def client_list_create(request):
     clients = Client.objects.all()
     add_client_form = ClientForm()
+    project_form = ProjectForm(tenant=request.tenant) 
     return render(request, 'projects/client_list.html', {
-        'clients': clients, 'add_client_form': add_client_form
+        'clients': clients, 'add_client_form': add_client_form, 'project_form': project_form
     })
 
 @login_required
 def client_detail(request, pk):
     client = get_object_or_404(Client, pk=pk)
+    all_projects = client.projects.all()
     return render(request, 'projects/client_detail.html', {
         'client': client,
+        'projects_andamento': all_projects.filter(status='em_andamento'),
+        'projects_finalizados': all_projects.filter(status='finalizado'),
     })
 
 @login_required
 def client_detail_api(request, pk):
     """HTML do modal de detalhes."""
     client = get_object_or_404(Client, pk=pk)
-    
+    all_projects = client.projects.all()
     return render(request, 'projects/client_detail_modal.html', {
         'client': client,
+        'projects_andamento': all_projects.filter(status='em_andamento'),
+        'projects_finalizados': all_projects.filter(status='finalizado'),
     })
 
 @login_required
@@ -173,6 +181,7 @@ def client_metrics_dashboard(request, pk):
         'client': client,
         'task_chart_data': json.dumps(task_chart_data),
         'post_chart_data': json.dumps(post_chart_data),
+        'total_projects': client.projects.count(),
         'total_tasks': general_tasks.count(),
         'total_posts': total_posts_created,
         'posts_scheduled': total_posts_scheduled,
@@ -207,6 +216,15 @@ def delete_client_api(request, pk):
     client.delete()
     return JsonResponse({'status': 'success', 'message': 'Cliente removido.'})
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AddProjectAPI(View):
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        form = ProjectForm(request.POST, tenant=request.tenant) 
+        if form.is_valid():
+            project = form.save()
+            return JsonResponse({'status': 'success', 'message': 'Projeto criado!', 'project': {'id': project.id, 'name': project.name}}, status=201)
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
 # ==============================================================================
 # 3. KANBAN E TAREFAS (CORE DO SISTEMA)
@@ -248,6 +266,7 @@ def kanban_view(request, kanban_type='general'):
         'kanban_data': kanban_data,
         'kanban_data_json': json.dumps(kanban_data),
         'stages': stages,
+        'projects': Project.objects.all(),
         'clients': Client.objects.all(),
         'users': CustomUser.objects.filter(agency=request.tenant),
         'kanban_type': kanban_type,
@@ -336,32 +355,103 @@ def get_task_details_api(request, pk):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AddTaskAPI(View):
-    """Cria tarefa Geral"""
+    """Cria tarefa Geral e Salva TODOS os campos"""
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         try:
+            # 1. Captura os dados básicos
             title = request.POST.get('title')
             kanban_type = request.POST.get('kanban_type', 'general')
-            assigned_id = request.POST.get('assigned_to')
             priority = request.POST.get('priority', 'low')
             
-            if not title: return JsonResponse({'status':'error', 'message':'Título obrigatório'}, status=400)
+            # 2. Captura os dados que estavam falhando
+            description = request.POST.get('description', '')  # Descrição
+            assigned_id = request.POST.get('assigned_to')      # ID do Usuário
+            deadline = request.POST.get('deadline')            # Data (YYYY-MM-DD)
+            tags_list = request.POST.getlist('tags')
+            tags_str = ",".join(tags_list) if tags_list else None
+
+            # Validação básica
+            if not title:
+                return JsonResponse({'status':'error', 'message':'Título é obrigatório'}, status=400)
             
+            # Calcula a ordem (para ficar no final da lista)
             max_order = Task.objects.filter(kanban_type=kanban_type, status='todo').aggregate(models.Max('order'))['order__max']
             new_order = (max_order or 0) + 1
             
+            # 3. Tratamento de IDs vazios (para não dar erro no banco)
+            assigned_ids = request.POST.getlist('assigned_to')
+            if deadline == '': deadline = None
+
+            # 4. Criação
             task = Task.objects.create(
                 title=title,
                 kanban_type=kanban_type,
                 status='todo',
                 priority=priority,
-                assigned_to_id=assigned_id or None,
+                description=description,        
+                assigned_to_id=assigned_id,     
+                deadline=deadline,
+                tags=tags_str,            
                 created_by=request.user,
                 order=new_order
             )
+            
+            if assigned_ids:
+                # Filtra ids vazios e converte para int
+                clean_ids = [int(x) for x in assigned_ids if x]
+                task.assigned_to.set(clean_ids)
+
             return JsonResponse({'status':'success', 'task': task.to_dict()})
+
+        except Exception as e:
+            print(f"Erro ao criar tarefa: {e}") # Log no terminal para debug
+            return JsonResponse({'status':'error', 'message': str(e)}, status=500)
+            
+@method_decorator(csrf_exempt, name='dispatch')
+class EditTaskAPI(View):
+    """Edita os dados da tarefa (Título, Desc, Data, Resp) via JSON"""
+    @method_decorator(login_required)
+    def post(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        
+        try:
+            # Captura dados do Form (FormData envia como POST padrão, não JSON body puro)
+            task.title = request.POST.get('title', task.title)
+            task.description = request.POST.get('description', task.description)
+            task.priority = request.POST.get('priority', task.priority)
+            
+            # Tratamento de Data
+            deadline = request.POST.get('deadline')
+            if deadline: 
+                task.deadline = deadline
+            if 'tags' in request.POST or len(request.POST.getlist('tags')) > 0:
+                tags_list = request.POST.getlist('tags')
+                task.tags = ",".join(tags_list)
+            else:
+                task.tags = ""
+            # Tratamento de Responsável
+            if 'assigned_to' in request.POST:
+                assigned_ids = request.POST.getlist('assigned_to')
+                clean_ids = [int(x) for x in assigned_ids if x]
+                task.assigned_to.set(clean_ids)
+            else:
+                task.assigned_to.clear()
+
+            task.save()
+            return JsonResponse({'status':'success', 'task': task.to_dict()})
+            
         except Exception as e:
             return JsonResponse({'status':'error', 'message': str(e)}, status=500)
+
+@login_required
+def get_task_details_api(request, pk):
+    """API Leve apenas para buscar dados para o Modal de Edição"""
+    task = get_object_or_404(Task, pk=pk)
+    try:
+        return JsonResponse(task.to_dict())
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AddOperationalTaskAPI(View):
@@ -371,10 +461,15 @@ class AddOperationalTaskAPI(View):
         try:
             title = request.POST.get('title')
             client_id = request.POST.get('client')
+            project_id = request.POST.get('project')
             desc = request.POST.get('description', '')
             assigned_id = request.POST.get('assigned_to')
             
             if not title: return JsonResponse({'status':'error', 'message':'Título obrigatório'}, status=400)
+            
+            if not client_id and project_id:
+                project = get_object_or_404(Project, pk=project_id)
+                client_id = project.client.id
             
             if not client_id:
                  return JsonResponse({'status':'error', 'message':'Selecione um Cliente ou Projeto.'}, status=400)
@@ -388,6 +483,7 @@ class AddOperationalTaskAPI(View):
                 kanban_type='operational',
                 status='briefing',
                 client_id=client_id,
+                project_id=project_id or None,
                 created_by=request.user,
                 assigned_to_id=assigned_id or None,
                 order=new_order
@@ -668,43 +764,23 @@ def download_batch(request):
 # 6. AUTH SOCIAL (OAUTH)
 # ==============================================================================
 
-# --- FACEBOOK (Início) ---
 @login_required
-def facebook_auth_start(request, client_id):
+def meta_auth_start(request, client_id):
     request.session['meta_client_id'] = client_id
     state = secrets.token_urlsafe(16)
     request.session['meta_oauth_state'] = state
     
-    # DEFINIMOS A INTENÇÃO AQUI
-    request.session['meta_intent'] = 'facebook_only' 
+    # Salva origem
     request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
     
     service = MetaService()
-    # Redireciona para o login da Meta
     return redirect(service.get_auth_url(state, redirect_uri=settings.META_REDIRECT_URI))
 
-# --- INSTAGRAM (Início) ---
-@login_required
-def instagram_auth_start(request, client_id):
-    request.session['meta_client_id'] = client_id
-    state = secrets.token_urlsafe(16)
-    request.session['meta_oauth_state'] = state
-    
-    # DEFINIMOS A INTENÇÃO AQUI
-    request.session['meta_intent'] = 'instagram_only'
-    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
-    
-    service = MetaService()
-    # Redireciona para o mesmo login da Meta
-    return redirect(service.get_auth_url(state, redirect_uri=settings.META_REDIRECT_URI))
-
-# --- CALLBACK ÚNICO (Recebe a resposta e decide o que fazer) ---
 @login_required
 def meta_auth_callback(request):
     code = request.GET.get('code')
     state = request.GET.get('state')
     
-    # ... (Validações de segurança CSRF iguais) ...
     if not state or state != request.session.get('meta_oauth_state'):
         messages.error(request, "Erro CSRF Meta.")
         return redirect('social_dashboard')
@@ -712,40 +788,16 @@ def meta_auth_callback(request):
     client_id = request.session.get('meta_client_id')
     client = get_object_or_404(Client, pk=client_id)
     
-    # Recupera qual era a intenção do usuário
-    intent = request.session.get('meta_intent', 'both') 
-
     service = MetaService()
     token_data = service.exchange_code_for_token(code, redirect_uri=settings.META_REDIRECT_URI)
     
     if 'access_token' in token_data:
-        access_token = token_data['access_token']
-        count = 0
-        
-        # DECIDE QUAL FUNÇÃO CHAMAR
-        if intent == 'instagram_only':
-            count = service.save_only_instagram_accounts(access_token, client)
-            tipo = "Instagram"
-        elif intent == 'facebook_only':
-            count = service.save_only_facebook_pages(access_token, client)
-            tipo = "Facebook"
-        else:
-            # Caso antigo (salva tudo)
-            c1 = service.save_only_facebook_pages(access_token, client)
-            c2 = service.save_only_instagram_accounts(access_token, client)
-            count = c1 + c2
-            tipo = "Meta"
-
-        if count > 0:
-            messages.success(request, f"{count} conta(s) de {tipo} conectada(s) com sucesso!")
-        else:
-            if intent == 'instagram_only':
-                messages.warning(request, "Nenhuma conta de Instagram vinculada encontrada. Verifique se sua Página do Facebook tem um Instagram conectado.")
-            else:
-                messages.warning(request, f"Nenhuma conta de {tipo} encontrada.")
+        service.get_user_pages(token_data['access_token'], client)
+        messages.success(request, "Contas Meta conectadas!")
     else:
-        messages.error(request, "Erro ao conectar com a Meta.")
+        messages.error(request, "Erro ao conectar Meta.")
 
+    # Retorna para o tenant correto
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 
@@ -843,50 +895,6 @@ def tiktok_auth_callback(request):
         messages.error(request, "Falha na comunicação com TikTok.")
 
     # 5. Redireciona de volta para o subdomínio do cliente
-    origin_url = request.session.get('social_auth_origin', '/social/')
-    return redirect(origin_url)
-
-# --- PINTEREST ---
-
-@login_required
-def pinterest_auth_start(request, client_id):
-    request.session['pinterest_client_id'] = client_id
-    state = secrets.token_urlsafe(16)
-    request.session['pinterest_oauth_state'] = state
-    
-    # Salva onde o usuário estava para voltar depois
-    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
-    
-    service = PinterestService()
-    # Usa URL centralizada
-    return redirect(service.get_auth_url(state, redirect_uri=settings.PINTEREST_REDIRECT_URI))
-
-@login_required
-def pinterest_auth_callback(request):
-    code = request.GET.get('code')
-    state = request.GET.get('state')
-    
-    if not state or state != request.session.get('pinterest_oauth_state'):
-        messages.error(request, "Erro CSRF Pinterest.")
-        return redirect('social_dashboard')
-
-    client_id = request.session.get('pinterest_client_id')
-    client = get_object_or_404(Client, pk=client_id)
-    
-    service = PinterestService()
-    # Troca token com URL centralizada
-    token_data = service.exchange_code_for_token(code, redirect_uri=settings.PINTEREST_REDIRECT_URI)
-
-    if token_data and 'access_token' in token_data:
-        account = service.save_account(token_data, client)
-        if account:
-            messages.success(request, f"Pinterest conectado: {account.account_name}")
-        else:
-            messages.error(request, "Erro ao salvar dados do Pinterest.")
-    else:
-        messages.error(request, "Falha na comunicação com Pinterest.")
-
-    # Retorna ao tenant
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 
