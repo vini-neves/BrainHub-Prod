@@ -53,9 +53,6 @@ urlpatterns = [
     path('api/clients/<int:pk>/update/', views.update_client_api, name='update_client_api'),
     path('api/clients/<int:pk>/delete/', views.delete_client_api, name='delete_client_api'),
 
-    # API de Projeto
-    path('api/projects/add/', views.AddProjectAPI.as_view(), name='add_project_api'),
-
     # --- APROVAÇÃO EXTERNA (CLIENTE) ---
     # 1. Gerar Link (Botão na Agência)
     path('api/approval/generate-link/<int:task_id>/', views.send_approval_link, name='send_approval_link'),

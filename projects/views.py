@@ -22,10 +22,10 @@ from django.core.files.base import ContentFile
 
 # --- IMPORTS LOCAIS ---
 from .models import (
-    Task, CalendarEvent, Project, Client, SocialAccount, 
+    Task, CalendarEvent, Client, SocialAccount, 
     MediaFolder, MediaFile, SOCIAL_NETWORKS, CONTENT_TYPES
 )
-from .forms import ClientForm, TenantAuthenticationForm, ProjectForm, MediaFileForm, FolderForm
+from .forms import ClientForm, TenantAuthenticationForm, MediaFileForm, FolderForm
 from accounts.models import CustomUser
 from .services import MetaService, LinkedInService, TikTokService
 
@@ -40,7 +40,6 @@ class TenantLoginView(auth_views.LoginView):
 @login_required
 def dashboard(request):
     """Dashboard Principal (Visão Geral da Agência)"""
-    project_count = Project.objects.count()
     
     # Tarefas Gerais (Kanban Padrão)
     pending_tasks = Task.objects.filter(status__in=['todo', 'doing'], kanban_type='general')
@@ -59,7 +58,6 @@ def dashboard(request):
     chart_status_data = {item['status']: item['count'] for item in status_counts}
 
     context = {
-        'project_count': project_count,
         'pending_tasks_count': pending_tasks.count(),
         'completed_tasks_count': completed_tasks.count(),
         'total_tasks': pending_tasks.count() + completed_tasks.count(),
@@ -96,30 +94,24 @@ def social_dashboard(request):
 def client_list_create(request):
     clients = Client.objects.all()
     add_client_form = ClientForm()
-    project_form = ProjectForm(tenant=request.tenant) 
     return render(request, 'projects/client_list.html', {
-        'clients': clients, 'add_client_form': add_client_form, 'project_form': project_form
+        'clients': clients, 'add_client_form': add_client_form
     })
 
 @login_required
 def client_detail(request, pk):
     client = get_object_or_404(Client, pk=pk)
-    all_projects = client.projects.all()
     return render(request, 'projects/client_detail.html', {
-        'client': client,
-        'projects_andamento': all_projects.filter(status='em_andamento'),
-        'projects_finalizados': all_projects.filter(status='finalizado'),
+        'client': client
     })
 
 @login_required
 def client_detail_api(request, pk):
     """HTML do modal de detalhes."""
     client = get_object_or_404(Client, pk=pk)
-    all_projects = client.projects.all()
+    
     return render(request, 'projects/client_detail_modal.html', {
-        'client': client,
-        'projects_andamento': all_projects.filter(status='em_andamento'),
-        'projects_finalizados': all_projects.filter(status='finalizado'),
+        'client': client
     })
 
 @login_required
@@ -216,15 +208,6 @@ def delete_client_api(request, pk):
     client.delete()
     return JsonResponse({'status': 'success', 'message': 'Cliente removido.'})
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AddProjectAPI(View):
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        form = ProjectForm(request.POST, tenant=request.tenant) 
-        if form.is_valid():
-            project = form.save()
-            return JsonResponse({'status': 'success', 'message': 'Projeto criado!', 'project': {'id': project.id, 'name': project.name}}, status=201)
-        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
 # ==============================================================================
 # 3. KANBAN E TAREFAS (CORE DO SISTEMA)
@@ -266,7 +249,6 @@ def kanban_view(request, kanban_type='general'):
         'kanban_data': kanban_data,
         'kanban_data_json': json.dumps(kanban_data),
         'stages': stages,
-        'projects': Project.objects.all(),
         'clients': Client.objects.all(),
         'users': CustomUser.objects.filter(agency=request.tenant),
         'kanban_type': kanban_type,
@@ -461,15 +443,10 @@ class AddOperationalTaskAPI(View):
         try:
             title = request.POST.get('title')
             client_id = request.POST.get('client')
-            project_id = request.POST.get('project')
             desc = request.POST.get('description', '')
             assigned_id = request.POST.get('assigned_to')
             
             if not title: return JsonResponse({'status':'error', 'message':'Título obrigatório'}, status=400)
-            
-            if not client_id and project_id:
-                project = get_object_or_404(Project, pk=project_id)
-                client_id = project.client.id
             
             if not client_id:
                  return JsonResponse({'status':'error', 'message':'Selecione um Cliente ou Projeto.'}, status=400)
@@ -483,7 +460,6 @@ class AddOperationalTaskAPI(View):
                 kanban_type='operational',
                 status='briefing',
                 client_id=client_id,
-                project_id=project_id or None,
                 created_by=request.user,
                 assigned_to_id=assigned_id or None,
                 order=new_order

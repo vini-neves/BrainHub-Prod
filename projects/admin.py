@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    Client, Project, Task, SocialAccount, 
+    Client, Task, SocialAccount, 
     CalendarEvent, MediaFolder, MediaFile
 )
 
@@ -20,13 +20,6 @@ class ClientAdmin(admin.ModelAdmin):
         return "-"
     get_logo.short_description = "Logo"
 
-# --- PROJETO ---
-@admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'client', 'status', 'due_date', 'created_at')
-    search_fields = ('name', 'client__name')
-    list_filter = ('status', 'client')
-    date_hierarchy = 'created_at'
 
 # --- TAREFA (KANBAN UNIFICADO) ---
 @admin.register(Task)
@@ -101,3 +94,33 @@ class TaskAdmin(admin.ModelAdmin):
         # Pega todos os usuários e junta os nomes com vírgula
         return ", ".join([user.username for user in obj.assigned_to.all()])
     get_assigned_to.short_description = 'Responsáveis'
+
+# --- CONTAS SOCIAIS ---
+@admin.register(SocialAccount)
+class SocialAccountAdmin(admin.ModelAdmin):
+    list_display = ('account_name', 'platform', 'client', 'is_active', 'token_expires_at')
+    list_filter = ('platform', 'is_active', 'client')
+    search_fields = ('account_name', 'account_id')
+
+# --- ARQUIVOS (DRIVE / R2) ---
+@admin.register(MediaFolder)
+class MediaFolderAdmin(admin.ModelAdmin):
+    list_display = ('name', 'client', 'parent', 'created_at')
+    list_filter = ('client',)
+    search_fields = ('name', 'client__name')
+
+@admin.register(MediaFile)
+class MediaFileAdmin(admin.ModelAdmin):
+    list_display = ('filename', 'folder', 'file_size', 'uploaded_at')
+    search_fields = ('filename', 'folder__name')
+    readonly_fields = ('uploaded_at',)
+
+# --- CALENDÁRIO (LEGADO) ---
+@admin.register(CalendarEvent)
+class CalendarEventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'client', 'date', 'platform', 'status')
+    list_filter = ('status', 'platform', 'date')
+    date_hierarchy = 'date'
+
+# OBS: SocialPost e SocialPostDestination foram removidos pois 
+# a funcionalidade foi absorvida pela Task (Kanban Operacional).

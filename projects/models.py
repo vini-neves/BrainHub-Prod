@@ -83,26 +83,6 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-class Project(models.Model):
-    STATUS_CHOICES = [
-        ('em_andamento', 'Em Andamento'),
-        ('finalizado', 'Finalizado'),
-        ('pausado', 'Pausado'),
-    ]
-
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="projects", null=True, blank=True)
-    name = models.CharField(max_length=255, verbose_name="Nome do Projeto")
-    description = models.TextField(blank=True, null=True, verbose_name="Descrição")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='em_andamento', verbose_name="Status")
-    
-    start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
-    due_date = models.DateField(verbose_name="Data de Entrega", null=True, blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
 # ==============================================================================
 # 3. REDES SOCIAIS (CONEXÕES / API)
 # ==============================================================================
@@ -146,8 +126,6 @@ class Task(models.Model):
     # --- Controle Geral ---
     kanban_type = models.CharField(max_length=20, choices=KANBAN_TYPES, default='general')
     status = models.CharField(max_length=50, choices=ALL_STATUS_CHOICES, default='todo')
-    
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
     
     # Se for operacional, vincula direto ao Cliente (além do projeto opcional)
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
