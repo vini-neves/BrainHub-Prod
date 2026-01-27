@@ -107,6 +107,8 @@
 .bg-fb { background: #1877f2; }
 .bg-in { background: #0077b5; }
 .bg-tik { background: #000; }
+.bg-pinterest { background: #bd081c; }
+.bg-threads { background: #000; }
 .bg-yt { background: #ff0000; }
 .bg-x { background: #000; }
 
@@ -260,7 +262,7 @@
     border-radius: 10px; background: #fff; width: 100%; box-sizing: border-box;
 }
 
-.toggle-info { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.9rem; }
+.toggle-info { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.9rem; color: black;}
 
 /* Switch iOS Style */
 .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }

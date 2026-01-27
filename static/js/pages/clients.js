@@ -49,17 +49,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const metaSwitch = document.getElementById('toggleFacebook'); // Ou toggleInstagram
-    if (metaSwitch) {
-        metaSwitch.addEventListener('change', function() {
+    const instaSwitch = document.getElementById('toggleInstagram');
+    if (instaSwitch) {
+        // Clone para limpar listeners antigos
+        const newInstaSwitch = instaSwitch.cloneNode(true);
+        instaSwitch.parentNode.replaceChild(newInstaSwitch, instaSwitch);
+
+        newInstaSwitch.addEventListener('change', function() {
             if (this.checked) {
                 const clientId = document.getElementById('clientId').value;
                 if (!clientId) {
                     Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
-                    this.checked = false;
-                    return;
+                    this.checked = false; return;
                 }
-                window.location.href = `/auth/meta/start/${clientId}/`; // Ajuste conforme sua URL da Meta
+                // Chama a rota específica de Instagram
+                window.location.href = `/auth/instagram/start/${clientId}/`;
+            }
+        });
+    }
+
+    const fbSwitch = document.getElementById('toggleFacebook');
+    if (fbSwitch) {
+        const newFbSwitch = fbSwitch.cloneNode(true);
+        fbSwitch.parentNode.replaceChild(newFbSwitch, fbSwitch);
+
+        newFbSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false; return;
+                }
+                // Chama a rota específica de Facebook
+                window.location.href = `/auth/facebook/start/${clientId}/`;
+            }
+        });
+    }
+
+    const pinSwitch = document.getElementById('togglePinterest');
+    if (pinSwitch) {
+        const newPinSwitch = pinSwitch.cloneNode(true);
+        pinSwitch.parentNode.replaceChild(newPinSwitch, pinSwitch);
+
+        newPinSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false; return;
+                }
+                window.location.href = `/auth/pinterest/start/${clientId}/`;
             }
         });
     }

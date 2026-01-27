@@ -27,7 +27,7 @@ from .models import (
 )
 from .forms import ClientForm, TenantAuthenticationForm, MediaFileForm, FolderForm
 from accounts.models import CustomUser
-from .services import MetaService, LinkedInService, TikTokService
+from .services import MetaService, LinkedInService, TikTokService, PinterestService
 
 # ==============================================================================
 # 1. DASHBOARDS E VISÕES GERAIS
@@ -102,7 +102,7 @@ def client_list_create(request):
 def client_detail(request, pk):
     client = get_object_or_404(Client, pk=pk)
     return render(request, 'projects/client_detail.html', {
-        'client': client
+        'client': client,
     })
 
 @login_required
@@ -111,7 +111,7 @@ def client_detail_api(request, pk):
     client = get_object_or_404(Client, pk=pk)
     
     return render(request, 'projects/client_detail_modal.html', {
-        'client': client
+        'client': client,
     })
 
 @login_required
@@ -173,7 +173,6 @@ def client_metrics_dashboard(request, pk):
         'client': client,
         'task_chart_data': json.dumps(task_chart_data),
         'post_chart_data': json.dumps(post_chart_data),
-        'total_projects': client.projects.count(),
         'total_tasks': general_tasks.count(),
         'total_posts': total_posts_created,
         'posts_scheduled': total_posts_scheduled,
@@ -337,103 +336,32 @@ def get_task_details_api(request, pk):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AddTaskAPI(View):
-    """Cria tarefa Geral e Salva TODOS os campos"""
+    """Cria tarefa Geral"""
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         try:
-            # 1. Captura os dados básicos
             title = request.POST.get('title')
             kanban_type = request.POST.get('kanban_type', 'general')
+            assigned_id = request.POST.get('assigned_to')
             priority = request.POST.get('priority', 'low')
             
-            # 2. Captura os dados que estavam falhando
-            description = request.POST.get('description', '')  # Descrição
-            assigned_id = request.POST.get('assigned_to')      # ID do Usuário
-            deadline = request.POST.get('deadline')            # Data (YYYY-MM-DD)
-            tags_list = request.POST.getlist('tags')
-            tags_str = ",".join(tags_list) if tags_list else None
-
-            # Validação básica
-            if not title:
-                return JsonResponse({'status':'error', 'message':'Título é obrigatório'}, status=400)
+            if not title: return JsonResponse({'status':'error', 'message':'Título obrigatório'}, status=400)
             
-            # Calcula a ordem (para ficar no final da lista)
             max_order = Task.objects.filter(kanban_type=kanban_type, status='todo').aggregate(models.Max('order'))['order__max']
             new_order = (max_order or 0) + 1
             
-            # 3. Tratamento de IDs vazios (para não dar erro no banco)
-            assigned_ids = request.POST.getlist('assigned_to')
-            if deadline == '': deadline = None
-
-            # 4. Criação
             task = Task.objects.create(
                 title=title,
                 kanban_type=kanban_type,
                 status='todo',
                 priority=priority,
-                description=description,        
-                assigned_to_id=assigned_id,     
-                deadline=deadline,
-                tags=tags_str,            
+                assigned_to_id=assigned_id or None,
                 created_by=request.user,
                 order=new_order
             )
-            
-            if assigned_ids:
-                # Filtra ids vazios e converte para int
-                clean_ids = [int(x) for x in assigned_ids if x]
-                task.assigned_to.set(clean_ids)
-
             return JsonResponse({'status':'success', 'task': task.to_dict()})
-
-        except Exception as e:
-            print(f"Erro ao criar tarefa: {e}") # Log no terminal para debug
-            return JsonResponse({'status':'error', 'message': str(e)}, status=500)
-            
-@method_decorator(csrf_exempt, name='dispatch')
-class EditTaskAPI(View):
-    """Edita os dados da tarefa (Título, Desc, Data, Resp) via JSON"""
-    @method_decorator(login_required)
-    def post(self, request, pk):
-        task = get_object_or_404(Task, pk=pk)
-        
-        try:
-            # Captura dados do Form (FormData envia como POST padrão, não JSON body puro)
-            task.title = request.POST.get('title', task.title)
-            task.description = request.POST.get('description', task.description)
-            task.priority = request.POST.get('priority', task.priority)
-            
-            # Tratamento de Data
-            deadline = request.POST.get('deadline')
-            if deadline: 
-                task.deadline = deadline
-            if 'tags' in request.POST or len(request.POST.getlist('tags')) > 0:
-                tags_list = request.POST.getlist('tags')
-                task.tags = ",".join(tags_list)
-            else:
-                task.tags = ""
-            # Tratamento de Responsável
-            if 'assigned_to' in request.POST:
-                assigned_ids = request.POST.getlist('assigned_to')
-                clean_ids = [int(x) for x in assigned_ids if x]
-                task.assigned_to.set(clean_ids)
-            else:
-                task.assigned_to.clear()
-
-            task.save()
-            return JsonResponse({'status':'success', 'task': task.to_dict()})
-            
         except Exception as e:
             return JsonResponse({'status':'error', 'message': str(e)}, status=500)
-
-@login_required
-def get_task_details_api(request, pk):
-    """API Leve apenas para buscar dados para o Modal de Edição"""
-    task = get_object_or_404(Task, pk=pk)
-    try:
-        return JsonResponse(task.to_dict())
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AddOperationalTaskAPI(View):
@@ -740,6 +668,7 @@ def download_batch(request):
 # 6. AUTH SOCIAL (OAUTH)
 # ==============================================================================
 
+# --- FACEBOOK (Início) ---
 @login_required
 def facebook_auth_start(request, client_id):
     request.session['meta_client_id'] = client_id
@@ -820,7 +749,6 @@ def meta_auth_callback(request):
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 
-    
 @login_required
 def linkedin_auth_start(request, client_id):
     # 1. Salva dados na sessão
@@ -915,6 +843,50 @@ def tiktok_auth_callback(request):
         messages.error(request, "Falha na comunicação com TikTok.")
 
     # 5. Redireciona de volta para o subdomínio do cliente
+    origin_url = request.session.get('social_auth_origin', '/social/')
+    return redirect(origin_url)
+
+# --- PINTEREST ---
+
+@login_required
+def pinterest_auth_start(request, client_id):
+    request.session['pinterest_client_id'] = client_id
+    state = secrets.token_urlsafe(16)
+    request.session['pinterest_oauth_state'] = state
+    
+    # Salva onde o usuário estava para voltar depois
+    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
+    
+    service = PinterestService()
+    # Usa URL centralizada
+    return redirect(service.get_auth_url(state, redirect_uri=settings.PINTEREST_REDIRECT_URI))
+
+@login_required
+def pinterest_auth_callback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    
+    if not state or state != request.session.get('pinterest_oauth_state'):
+        messages.error(request, "Erro CSRF Pinterest.")
+        return redirect('social_dashboard')
+
+    client_id = request.session.get('pinterest_client_id')
+    client = get_object_or_404(Client, pk=client_id)
+    
+    service = PinterestService()
+    # Troca token com URL centralizada
+    token_data = service.exchange_code_for_token(code, redirect_uri=settings.PINTEREST_REDIRECT_URI)
+
+    if token_data and 'access_token' in token_data:
+        account = service.save_account(token_data, client)
+        if account:
+            messages.success(request, f"Pinterest conectado: {account.account_name}")
+        else:
+            messages.error(request, "Erro ao salvar dados do Pinterest.")
+    else:
+        messages.error(request, "Falha na comunicação com Pinterest.")
+
+    # Retorna ao tenant
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 
