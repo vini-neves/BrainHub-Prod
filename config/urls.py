@@ -20,8 +20,8 @@ urlpatterns = [
     path('google-auth-callback/', accounts_views.google_auth_callback, name='google_auth_callback'),
 
     # Meta / Facebook / Instagram
-    path('auth/facebook/start/<int:client_id>/', project_views.meta_auth_start, name='facebook_auth_start'),
-    path('auth/instagram/start/<int:client_id>/', project_views.meta_auth_start, name='instagram_auth_start'),
+    path('auth/facebook/start/<int:client_id>/', project_views.facebook_auth_start, name='facebook_auth_start'),
+    path('auth/instagram/start/<int:client_id>/', project_views.instagram_auth_start, name='instagram_auth_start'),
     path('meta-callback/', project_views.meta_auth_callback, name='meta_auth_callback'),
 
     # LinkedIn
