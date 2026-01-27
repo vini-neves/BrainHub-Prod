@@ -741,22 +741,41 @@ def download_batch(request):
 # ==============================================================================
 
 @login_required
-def meta_auth_start(request, client_id):
+def facebook_auth_start(request, client_id):
     request.session['meta_client_id'] = client_id
     state = secrets.token_urlsafe(16)
     request.session['meta_oauth_state'] = state
     
-    # Salva origem
+    # DEFINIMOS A INTENÇÃO AQUI
+    request.session['meta_intent'] = 'facebook_only' 
     request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
     
     service = MetaService()
+    # Redireciona para o login da Meta
     return redirect(service.get_auth_url(state, redirect_uri=settings.META_REDIRECT_URI))
 
+# --- INSTAGRAM (Início) ---
+@login_required
+def instagram_auth_start(request, client_id):
+    request.session['meta_client_id'] = client_id
+    state = secrets.token_urlsafe(16)
+    request.session['meta_oauth_state'] = state
+    
+    # DEFINIMOS A INTENÇÃO AQUI
+    request.session['meta_intent'] = 'instagram_only'
+    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
+    
+    service = MetaService()
+    # Redireciona para o mesmo login da Meta
+    return redirect(service.get_auth_url(state, redirect_uri=settings.META_REDIRECT_URI))
+
+# --- CALLBACK ÚNICO (Recebe a resposta e decide o que fazer) ---
 @login_required
 def meta_auth_callback(request):
     code = request.GET.get('code')
     state = request.GET.get('state')
     
+    # ... (Validações de segurança CSRF iguais) ...
     if not state or state != request.session.get('meta_oauth_state'):
         messages.error(request, "Erro CSRF Meta.")
         return redirect('social_dashboard')
@@ -764,19 +783,44 @@ def meta_auth_callback(request):
     client_id = request.session.get('meta_client_id')
     client = get_object_or_404(Client, pk=client_id)
     
+    # Recupera qual era a intenção do usuário
+    intent = request.session.get('meta_intent', 'both') 
+
     service = MetaService()
     token_data = service.exchange_code_for_token(code, redirect_uri=settings.META_REDIRECT_URI)
     
     if 'access_token' in token_data:
-        service.get_user_pages(token_data['access_token'], client)
-        messages.success(request, "Contas Meta conectadas!")
-    else:
-        messages.error(request, "Erro ao conectar Meta.")
+        access_token = token_data['access_token']
+        count = 0
+        
+        # DECIDE QUAL FUNÇÃO CHAMAR
+        if intent == 'instagram_only':
+            count = service.save_only_instagram_accounts(access_token, client)
+            tipo = "Instagram"
+        elif intent == 'facebook_only':
+            count = service.save_only_facebook_pages(access_token, client)
+            tipo = "Facebook"
+        else:
+            # Caso antigo (salva tudo)
+            c1 = service.save_only_facebook_pages(access_token, client)
+            c2 = service.save_only_instagram_accounts(access_token, client)
+            count = c1 + c2
+            tipo = "Meta"
 
-    # Retorna para o tenant correto
+        if count > 0:
+            messages.success(request, f"{count} conta(s) de {tipo} conectada(s) com sucesso!")
+        else:
+            if intent == 'instagram_only':
+                messages.warning(request, "Nenhuma conta de Instagram vinculada encontrada. Verifique se sua Página do Facebook tem um Instagram conectado.")
+            else:
+                messages.warning(request, f"Nenhuma conta de {tipo} encontrada.")
+    else:
+        messages.error(request, "Erro ao conectar com a Meta.")
+
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 
+    
 @login_required
 def linkedin_auth_start(request, client_id):
     # 1. Salva dados na sessão
