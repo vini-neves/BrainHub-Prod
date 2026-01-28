@@ -399,34 +399,44 @@ class EditTaskAPI(View):
         task = get_object_or_404(Task, pk=pk)
         
         try:
-            # Captura dados do Form (FormData envia como POST padrão, não JSON body puro)
-            task.title = request.POST.get('title', task.title)
-            task.description = request.POST.get('description', task.description)
-            task.priority = request.POST.get('priority', task.priority)
+            # Atualiza campos simples apenas se eles forem enviados
+            if 'title' in request.POST:
+                task.title = request.POST.get('title')
+            
+            if 'description' in request.POST:
+                task.description = request.POST.get('description')
+                
+            if 'priority' in request.POST:
+                task.priority = request.POST.get('priority')
             
             # Tratamento de Data
-            deadline = request.POST.get('deadline')
-            if deadline: 
-                task.deadline = deadline
-            if 'tags' in request.POST or len(request.POST.getlist('tags')) > 0:
+            if 'deadline' in request.POST:
+                deadline = request.POST.get('deadline')
+                if deadline: 
+                    task.deadline = deadline
+                else:
+                    task.deadline = None # Permite limpar a data
+
+            # Tratamento de Tags
+            # getlist retorna lista vazia se não tiver nada, então verificamos se a chave existe
+            if 'tags' in request.POST:
                 tags_list = request.POST.getlist('tags')
                 task.tags = ",".join(tags_list)
-            else:
-                task.tags = ""
-            # Tratamento de Responsável
+            
+            # Tratamento de Responsáveis (ManyToMany)
             if 'assigned_to' in request.POST:
                 assigned_ids = request.POST.getlist('assigned_to')
                 clean_ids = [int(x) for x in assigned_ids if x]
                 task.assigned_to.set(clean_ids)
-            else:
-                task.assigned_to.clear()
+            # Nota: Se o campo 'assigned_to' não vier no POST, mantemos os atuais.
+            # Se vier vazio (lista vazia), o .set([]) vai limpar. Isso é o correto.
 
             task.save()
             return JsonResponse({'status':'success', 'task': task.to_dict()})
             
         except Exception as e:
             return JsonResponse({'status':'error', 'message': str(e)}, status=500)
-
+            
 @login_required
 def get_task_details_api(request, pk):
     """API Leve apenas para buscar dados para o Modal de Edição"""

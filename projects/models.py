@@ -217,18 +217,21 @@ class Task(models.Model):
         return False
 
     def to_dict(self):
-        """JSON para o Frontend do Kanban (Versão Blindada contra Erros de Data)"""
-        project_name = "Sem Projeto"
-        initials = '--'
+        """JSON para o Frontend do Kanban"""
         
-        # Lógica de Iniciais
+        # Lógica de Iniciais dos Responsáveis
         assignees_list = []
         for user in self.assigned_to.all():
             first = (user.first_name or "").strip()
             last = (user.last_name or "").strip()
-            initials = user.username[:2]
-            if first and last: initials = f"{first[0]}{last[0]}"
-            elif first: initials = first[:2]
+            
+            # Tenta pegar iniciais (Primeira letra do Nome + Primeira do Sobrenome)
+            if first and last: 
+                initials = f"{first[0]}{last[0]}"
+            elif first: 
+                initials = first[:2]
+            else: 
+                initials = user.username[:2]
             
             assignees_list.append({
                 'id': user.id,
@@ -237,33 +240,23 @@ class Task(models.Model):
                 'full_name': user.get_full_name() or user.username
             })
         
-        # Nome do Projeto ou Cliente
-        if self.project:
-            project_name = self.project.name
-        elif self.client:
-            project_name = f"Cliente: {self.client.name}"
+        # Nome do Cliente (REMOVIDO A LÓGICA DE PROJETO AQUI)
+        client_name = "Sem Cliente"
+        if self.client:
+            client_name = self.client.name
 
+        # Tags
         tags_list = []
         if self.tags:
             tags_list = self.tags.split(',')
         
+        # Formatação de Data Segura
         deadline_formatted = ""
         if self.deadline:
-            
             if hasattr(self.deadline, 'strftime'):
                 deadline_formatted = self.deadline.strftime('%d/%m/%Y')
-            
             else:
-                try:
-                    
-                    data_str = str(self.deadline)
-                    if '-' in data_str:
-                        ano, mes, dia = data_str.split('-')[:3]
-                        deadline_formatted = f"{dia}/{mes}/{ano}"
-                    else:
-                        deadline_formatted = data_str
-                except:
-                    deadline_formatted = str(self.deadline)
+                deadline_formatted = str(self.deadline)
 
         return {
             'id': self.id,
@@ -273,9 +266,9 @@ class Task(models.Model):
             'kanban_type': self.kanban_type,
             'priority': self.priority,
             'status_display': self.get_status_display(),    
-            'project_name': project_name,
+            'client_name': client_name, # Apenas Cliente agora
             'order': self.order,
-            'created_at': self.created_at.strftime('%d/%m/%Y'),
+            'created_at': self.created_at.strftime('%d/%m/%Y') if self.created_at else "",
             'assignees': assignees_list,
             'deadline': deadline_formatted,
             'tags': tags_list,
