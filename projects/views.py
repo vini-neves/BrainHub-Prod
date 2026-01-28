@@ -345,50 +345,52 @@ class AddTaskAPI(View):
             kanban_type = request.POST.get('kanban_type', 'general')
             priority = request.POST.get('priority', 'low')
             
-            # 2. Captura os dados que estavam falhando
-            description = request.POST.get('description', '')  # Descrição
-            assigned_id = request.POST.get('assigned_to')      # ID do Usuário
-            deadline = request.POST.get('deadline')            # Data (YYYY-MM-DD)
-            tags_list = request.POST.getlist('tags')
-            tags_str = ",".join(tags_list) if tags_list else None
+            description = request.POST.get('description', '')
+            deadline = request.POST.get('deadline')
+            
+            # --- MUDANÇA 1: PEGA LISTA DE TAGS ---
+            tags_list = request.POST.getlist('tags') 
+            tags_str = ",".join(tags_list) if tags_list else ""
+
+            # --- MUDANÇA 2: PEGA LISTA DE RESPONSÁVEIS ---
+            assigned_ids = request.POST.getlist('assigned_to')
 
             # Validação básica
             if not title:
                 return JsonResponse({'status':'error', 'message':'Título é obrigatório'}, status=400)
             
-            # Calcula a ordem (para ficar no final da lista)
+            # Tratamento de Data vazia
+            if deadline == '': deadline = None
+
+            # Calcula a ordem
             max_order = Task.objects.filter(kanban_type=kanban_type, status='todo').aggregate(models.Max('order'))['order__max']
             new_order = (max_order or 0) + 1
             
-            # 3. Tratamento de IDs vazios (para não dar erro no banco)
-            assigned_ids = request.POST.getlist('assigned_to')
-            if deadline == '': deadline = None
-
-            # 4. Criação
+            # --- MUDANÇA 3: CRIA A TAREFA SEM O CAMPO assigned_to ---
             task = Task.objects.create(
                 title=title,
                 kanban_type=kanban_type,
                 status='todo',
                 priority=priority,
-                description=description,        
-                assigned_to_id=assigned_id,     
+                description=description,      
                 deadline=deadline,
-                tags=tags_str,            
+                tags=tags_str,
                 created_by=request.user,
                 order=new_order
+                # REMOVIDO: assigned_to_id=... (Isso causava o erro)
             )
             
+            # --- MUDANÇA 4: ADICIONA OS RESPONSÁVEIS DEPOIS DE CRIAR ---
             if assigned_ids:
-                # Filtra ids vazios e converte para int
+                # Limpa IDs vazios e converte para inteiro
                 clean_ids = [int(x) for x in assigned_ids if x]
                 task.assigned_to.set(clean_ids)
-
+            
             return JsonResponse({'status':'success', 'task': task.to_dict()})
 
         except Exception as e:
-            print(f"Erro ao criar tarefa: {e}") # Log no terminal para debug
-            return JsonResponse({'status':'error', 'message': str(e)}, status=500)
-            
+            print(f"Erro ao criar tarefa: {e}")
+            return JsonResponse({'status':'error', 'message': str(e)}, status=500)            
 @method_decorator(csrf_exempt, name='dispatch')
 class EditTaskAPI(View):
     """Edita os dados da tarefa (Título, Desc, Data, Resp) via JSON"""
