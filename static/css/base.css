@@ -339,6 +339,11 @@ button {
         color: white;
     }
 
+button:hover{
+    background-color: var(--secondary-color);; /* Azul mais escuro ao passar o mouse */
+        color: white;
+}
+
 
 .modal-content .form-button {
     width: 100%;
