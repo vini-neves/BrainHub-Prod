@@ -56,12 +56,12 @@ body {
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     flex-shrink: 0;
     transition: width 0.3s ease;
-    z-index: 1000;
+    z-index: 100;
     justify-content: space-between; /* Garante distribuição */
     top: 0;
     left: 0;
     height: 100vh; 
-    overflow: hidden;
+    overflow: auto;
     position: sticky;
 }
 
@@ -529,17 +529,16 @@ button:hover{
 /* --- MEDIA QUERY: Celulares e Tablets (até 768px) --- */
 @media (max-width: 768px) {
 
-    /* 1. Ajuste da Sidebar (Off-Canvas) */
-    .sidebar {
-        position: fixed; /* Fixa na tela */
+        .sidebar {
+        position: fixed;
         top: 0;
-        left: -280px; /* Esconde totalmente à esquerda (largura + sombra) */
+        left: -280px; 
         height: 100vh;
-        z-index: 1050; /* Fica acima de tudo */
-        transition: left 0.3s ease-in-out; /* Animação suave */
+        z-index: 1050;
+        transition: left 0.3s ease-in-out;
         width: 250px; 
-        /* transform: translateX(-100%); Esconde por padrão no mobile */
-        /* transition: transform 0.3s ease; */
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
     }
     .sidebar.active {
         left: 0;
