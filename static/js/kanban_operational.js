@@ -1,9 +1,28 @@
 document.addEventListener("DOMContentLoaded", function() {
+    const CONFIG = window.KANBAN_CONFIG || {};
     
-    // Acessa as configs vindas do HTML
-    const CONFIG = window.KANBAN_CONFIG;
+    // Recebe o JSON que o Django montou: { 1: ['instagram', 'facebook'], ... }
+    const CLIENT_NETWORKS = window.CLIENT_NETWORKS || {}; 
 
-    // --- 1. REGRAS DE NEGÓCIO (REDES SOCIAIS) ---
+    // Mapeamento visual baseado no seu PLATFORM_CHOICES do models.py
+    const NETWORK_LABELS = {
+        'facebook': 'Facebook',
+        'instagram': 'Instagram',
+        'linkedin': 'LinkedIn',
+        'tiktok': 'TikTok',
+        'pinterest': 'Pinterest',
+        'youtube': 'YouTube',
+        'threads': 'Threads',
+        'x': 'X (Twitter)',
+        'tiktok_ads': 'TikTok Ads',
+        'linkedin_ads': 'LinkedIn Ads',
+        'meta_ads': 'Meta Ads',
+        'google_ads': 'Google Ads',
+        'google_my_business': 'Google Meu Negócio',
+        'ga4': 'Google Analytics 4'
+    };
+
+    // Regras de Formatos (Mantida para as principais redes de conteúdo)
     const networkRules = {
         'instagram': [{val: 'feed', text: 'Feed (Quadrado)'}, {val: 'story', text: 'Story'}, {val: 'reel_short', text: 'Reels'}],
         'facebook': [{val: 'feed', text: 'Feed'}, {val: 'story', text: 'Story'}],
@@ -12,18 +31,76 @@ document.addEventListener("DOMContentLoaded", function() {
         'linkedin': [{val: 'feed', text: 'Post'}, {val: 'video_long', text: 'Vídeo'}],
         'x': [{val: 'feed', text: 'Post'}],
         'pinterest': [{val: 'pin', text: 'Pin'}],
-        'threads': [{val: 'feed', text: 'Post'}]
+        'threads': [{val: 'feed', text: 'Post'}],
+        'google_my_business': [{val: 'feed', text: 'Novidade/Oferta'}]
     };
 
-    // Torna a função global para o onchange do HTML poder acessar
+    // --- FUNÇÃO PRINCIPAL: Atualiza o Select de Redes ---
+    window.updateSocialNetworks = function(clientId, selectedNetwork = null) {
+        const netSelect = document.getElementById('networkSelect');
+        const formatSelect = document.getElementById('formatSelect');
+        
+        // 1. Limpa e trava o campo
+        netSelect.innerHTML = '<option value="">Selecione...</option>';
+        if(formatSelect) formatSelect.innerHTML = '<option value="">Selecione a rede...</option>';
+        
+        if (!clientId) {
+            netSelect.disabled = true;
+            return;
+        }
+
+        // 2. Pega as redes desse cliente do JSON
+        const networks = CLIENT_NETWORKS[clientId] || [];
+
+        // 3. Verifica se tem redes
+        if (networks.length === 0) {
+            const option = document.createElement('option');
+            option.text = "Nenhuma rede conectada";
+            netSelect.add(option);
+            netSelect.disabled = true;
+            return;
+        }
+
+        // 4. Preenche o Select
+        netSelect.disabled = false;
+        networks.forEach(netCode => {
+            // Usa o Label bonito ou o próprio código se não achar
+            const label = NETWORK_LABELS[netCode] || netCode;
+            
+            const option = document.createElement('option');
+            option.value = netCode;
+            option.text = label;
+            
+            // Se estiver editando e essa for a rede salva, seleciona ela
+            if (selectedNetwork && selectedNetwork === netCode) {
+                option.selected = true;
+            }
+            netSelect.appendChild(option);
+        });
+
+        // 5. Se já selecionou uma rede (edição), carrega os formatos dela
+        if(selectedNetwork) {
+            window.filterFormats();
+        }
+    };
+
+    // --- LISTENER: Quando mudar o cliente no Modal ---
+    const clientSelect = document.getElementById('clientSelect');
+    if(clientSelect) {
+        clientSelect.addEventListener('change', function() {
+            // Pega o ID do cliente selecionado e roda a função
+            window.updateSocialNetworks(this.value);
+        });
+    }
+
+    // --- FORMATOS (Mantido igual) ---
     window.filterFormats = function() {
         const networkEl = document.getElementById('networkSelect');
         const formatSelect = document.getElementById('formatSelect');
-        
         if (!networkEl || !formatSelect) return; 
 
         const network = networkEl.value;
-        const currentVal = formatSelect.value;
+        const currentVal = formatSelect.dataset.value || formatSelect.value;
         
         formatSelect.innerHTML = '<option value="">Selecione...</option>';
         
@@ -38,205 +115,243 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     };
 
-    function getMockupClass(contentType) {
-        if (['story', 'reel_short', 'pin'].includes(contentType)) return 'format-vertical';
-        if (contentType === 'video_long') return 'format-horizontal';
-        return 'format-square';
-    }
-
-    // --- 2. MODAIS (CRIAR E EDITAR) ---
-    
-    // Abrir modal de criação simples
+    // --- ABRIR MODAL PARA NOVA TAREFA ---
     window.openNewTaskModal = function() {
-        const el = document.getElementById('newTaskModal');
-        if(el) {
-            const bsModal = bootstrap.Modal.getOrCreateInstance(el);
-            bsModal.show();
-        } else {
-            console.error("Modal newTaskModal não encontrado no DOM");
-        }
+        const modalEl = document.getElementById('taskModal');
+        const form = document.getElementById('kanbanTaskForm');
+        
+        // 1. Limpa tudo
+        form.reset();
+        document.getElementById('task-id').value = ""; // ID vazio = Criação
+        
+        // 2. Ajusta UI para Criação
+        document.getElementById('modalKanbanType').innerText = "Briefing";
+        
+        // Reseta o preview de imagem
+        const previewImg = document.getElementById('previewArtImg');
+        const noArtText = document.getElementById('noArtText');
+        if(previewImg) previewImg.style.display = 'none';
+        if(noArtText) noArtText.style.display = 'block';
+        if(document.getElementById('designImage')) document.getElementById('designImage').src = "";
+        if(document.getElementById('currentFileLink')) document.getElementById('currentFileLink').innerHTML = "";
+
+        // Mostra a aba Briefing
+        const triggerEl = document.querySelector('#taskTabs button[data-bs-target="#tab-briefing"]');
+        bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+
+        // Abre o modal
+        const bsModal = new bootstrap.Modal(modalEl);
+        bsModal.show();
     };
 
-    // Listener seguro para o formulário de nova tarefa
-    const newTaskForm = document.getElementById('newTaskForm');
-    if (newTaskForm) {
-        newTaskForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            // USA A URL VINDA DA CONFIGURAÇÃO
-            fetch(CONFIG.urls.addTask, {
-                method: 'POST',
-                body: formData,
-                headers: {'X-CSRFToken': CONFIG.csrfToken} // USA O TOKEN DA CONFIGURAÇÃO
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(err => console.error(err));
-        });
-    }
-
-    // Abrir modal de edição (Card Click)
+    // --- ABRIR MODAL PARA EDIÇÃO ---
     window.openEditModal = function(taskId) {
         const modalEl = document.getElementById('taskModal');
-        if (!modalEl) return;
-
         const form = document.getElementById('kanbanTaskForm');
-        if(form) {
-            // Monta a URL usando o prefixo da config + ID
-            form.action = `${CONFIG.urls.taskUpdate}${taskId}/`; 
-            form.reset();
-        }
-
-        const titleEl = document.getElementById('modalTitle');
-        if(titleEl) titleEl.innerText = "Carregando...";
         
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        form.reset();
+        document.getElementById('task-id').value = taskId; // ID preenchido = Edição
+        
+        const bsModal = new bootstrap.Modal(modalEl);
         bsModal.show();
 
-        // Monta a URL de detalhes
+        // Busca dados
         fetch(`${CONFIG.urls.taskDetails}${taskId}/`)
             .then(res => res.json())
             .then(data => {
-                if(titleEl) titleEl.innerText = data.title;
-
-                // Selects
-                const netSelect = document.getElementById('networkSelect');
-                if(netSelect) {
-                    netSelect.value = data.social_network || '';
-                    window.filterFormats(); // Chama a função global
-                }
+                // Preenche campos
+                document.getElementById('modalTitleInput').value = data.title;
+                document.getElementById('modalKanbanType').innerText = `Editando #${data.id}`;
                 
+                // Seleciona Cliente
+                const clientSelect = document.getElementById('clientSelect');
+                if(clientSelect) clientSelect.value = data.client_id || "";
+
+                // Aba Briefing
+                setVal('networkSelect', data.social_network);
                 const fmtSelect = document.getElementById('formatSelect');
-                if(fmtSelect) fmtSelect.value = data.content_type || '';
-
-                // Campos com verificação de existência
-                const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+                if(fmtSelect) fmtSelect.dataset.value = data.content_type;
+                window.filterFormats(); 
+                if(data.scheduled_date) setVal('scheduled_date', data.scheduled_date.slice(0, 10));
+                setVal('briefing_text', data.briefing_text);
                 
-                if(data.scheduled_date) setVal('scheduled_date', data.scheduled_date.slice(0, 16));
-                setVal('briefing_text', data.briefing_text || '');
-                setVal('script_content', data.script_content || '');
-                setVal('copy_content', data.copy_content || '');
-                setVal('inputCaption', data.caption_content || '');
+                // Link arquivo
+                const fileLink = document.getElementById('currentFileLink');
+                if(fileLink) fileLink.innerHTML = data.briefing_files ? `<a href="${data.briefing_files}" target="_blank" class="small"><i class="fa-solid fa-paperclip"></i> Ver anexo</a>` : "";
 
-                // Link Arquivo
-                const fileLink = document.getElementById('currentBriefingFileLink');
-                if(fileLink) {
-                    fileLink.innerHTML = data.briefing_files ? `<a href="${data.briefing_files}" target="_blank" class="text-decoration-none"><i class="fa-solid fa-paperclip"></i> Ver anexo atual</a>` : '';
+                // Copy e Design
+                setVal('copy_content', data.copy_content);
+                setVal('inputCaption', data.caption_content);
+                setVal('script_content', data.script_content);
+
+                // Imagens
+                const previewImg = document.getElementById('previewArtImg');
+                const noArtText = document.getElementById('noArtText');
+                if(data.art_url) {
+                    previewImg.src = data.art_url;
+                    previewImg.style.display = 'block';
+                    noArtText.style.display = 'none';
+                    document.getElementById('designImage').src = data.art_url;
+                } else {
+                    previewImg.style.display = 'none';
+                    noArtText.style.display = 'block';
+                    document.getElementById('designImage').src = "";
                 }
 
-                // Mockup Logic
-                const approvalSection = document.getElementById('approvalSection');
-                const img = document.getElementById('designImage');
-                const wrapper = document.getElementById('mockupWrapper');
-                const captionPrev = document.getElementById('previewCaption');
-                const clientName = document.getElementById('mockupClientName');
-                const clientFooter = document.getElementById('mockupClientNameFooter');
+                // Aba Inteligente
+                const statusMap = {
+                    'briefing': '#tab-briefing',
+                    'copy': '#tab-copy',
+                    'design': '#tab-design',
+                    'review_internal': '#tab-approval',
+                    'review_client': '#tab-approval',
+                    'done': '#tab-approval'
+                };
+                let targetTabId = statusMap[data.status] || '#tab-briefing';
+                const tabBtn = document.querySelector(`#taskTabs button[data-bs-target="${targetTabId}"]`);
+                bootstrap.Tab.getOrCreateInstance(tabBtn).show();
 
-                if (data.art_url && approvalSection && img) {
-                    approvalSection.style.display = 'block';
-                    img.src = data.art_url;
-                    if(wrapper) wrapper.className = 'mockup-wrapper mx-auto position-relative bg-white border shadow-sm ' + getMockupClass(data.content_type);
-                    if(captionPrev) captionPrev.innerText = data.caption_content || '';
-                    if(clientName) clientName.innerText = data.client_name || 'Cliente';
-                    if(clientFooter) clientFooter.innerText = data.client_name || 'Cliente';
-                    
-                    const btns = document.getElementById('approvalButtons');
-                    if(btns) {
-                        if(['review_internal', 'review_client'].includes(data.status)) {
-                            btns.style.display = 'flex';
-                        } else {
-                            btns.style.display = 'none';
-                        }
-                    }
-                } else if (approvalSection) {
-                    approvalSection.style.display = 'none';
+            })
+            .catch(err => console.error(err));
+    };
+
+    function setVal(id, val) {
+        const el = document.getElementById(id);
+        if(el) el.value = val || '';
+    }
+
+    // --- SUBMISSÃO DO FORMULÁRIO (CRIAR OU EDITAR) ---
+    const form = document.getElementById('kanbanTaskForm');
+    
+    // DEBUG: Verifica se achou o formulário
+    if (!form) {
+        console.error("ERRO CRÍTICO: O JavaScript não encontrou o <form id='kanbanTaskForm'> no HTML.");
+    } else {
+        console.log("SUCESSO: Formulário encontrado. Adicionando evento de Submit.");
+        
+        form.addEventListener('submit', function(e) {
+            // 1. A LINHA MAIS IMPORTANTE
+            e.preventDefault();
+            console.log("INTERCEPTADO: O JavaScript bloqueou o envio padrão. Iniciando Fetch...");
+
+            const taskId = document.getElementById('task-id').value;
+            
+            // 2. Cria o pacote
+            const formData = new FormData(this);
+            
+            // 3. Adiciona o Título manualmente
+            const titleInput = document.getElementById('modalTitleInput');
+            if (titleInput) {
+                console.log("Título capturado:", titleInput.value);
+                formData.set('title', titleInput.value);
+            } else {
+                console.error("ERRO: Não achei o campo de título #modalTitleInput");
+            }
+
+            // 4. Decide URL
+            let url = CONFIG.urls.addTask; 
+            if(taskId) {
+                url = `${CONFIG.urls.taskUpdate}${taskId}/`; 
+                formData.append('action', 'save');
+            }
+
+            const btn = document.getElementById('btnSaveTask');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "A guardar...";
+
+            // 5. Envia
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-CSRFToken': CONFIG.csrfToken}
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("Resposta do Servidor:", data);
+                if(data.status === 'success') {
+                    window.location.href = window.location.href;
+                } else {
+                    alert(data.message || "Erro ao guardar");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
                 }
-
-                // Stepper
-                document.querySelectorAll('.step-badge').forEach(b => {
-                    b.classList.remove('active');
-                    if(data.status && data.status.includes(b.dataset.step)) b.classList.add('active');
-                });
             })
             .catch(err => {
-                console.error(err);
-                alert("Erro ao carregar tarefa");
+                console.error("Erro no Fetch:", err);
+                alert("Erro de conexão");
+                btn.disabled = false;
+                btn.innerText = originalText;
             });
-    };
-
-    // --- 3. FUNCIONALIDADES VISUAIS ---
-    
-    const inputCap = document.getElementById('inputCaption');
-    if(inputCap) {
-        inputCap.addEventListener('input', function() {
-            const prev = document.getElementById('previewCaption');
-            if(prev) prev.innerText = this.value;
         });
-    }
-
-    // 4. CANVAS DE RABISCO
-    let canvas, ctx, isDrawing = false;
+    } document.getElementById('kanbanTaskForm');
     
-    window.enableDrawingMode = function() {
-        const img = document.getElementById('designImage');
-        canvas = document.getElementById('feedbackCanvas');
+    // DEBUG: Verifica se achou o formulário
+    if (!form) {
+        console.error("ERRO CRÍTICO: O JavaScript não encontrou o <form id='kanbanTaskForm'> no HTML.");
+    } else {
+        console.log("SUCESSO: Formulário encontrado. Adicionando evento de Submit.");
         
-        if(!img || !img.src || !canvas) return;
+        form.addEventListener('submit', function(e) {
+            // 1. A LINHA MAIS IMPORTANTE
+            e.preventDefault();
+            console.log("INTERCEPTADO: O JavaScript bloqueou o envio padrão. Iniciando Fetch...");
 
-        canvas.width = img.clientWidth;
-        canvas.height = img.clientHeight;
-        canvas.style.pointerEvents = 'auto';
-        canvas.style.border = '3px solid #dc3545';
-        
-        ctx = canvas.getContext('2d');
-        ctx.strokeStyle = '#dc3545';
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-
-        canvas.onmousedown = (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
-        canvas.onmousemove = (e) => { if(isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } };
-        canvas.onmouseup = () => { isDrawing = false; saveCanvas(); };
-        
-        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Modo Desenho Ativado!', timer: 3000 });
-    };
-
-    function saveCanvas() {
-        const hiddenInput = document.getElementById('feedback_image_annotation');
-        if(hiddenInput && canvas) {
-            hiddenInput.value = canvas.toDataURL();
-        }
-    }
-
-    window.submitRejection = function() {
-        Swal.fire({
-            title: 'Reprovar Post?',
-            input: 'textarea',
-            inputPlaceholder: 'Descreva o que precisa ser alterado...',
-            showCancelButton: true,
-            confirmButtonText: 'Enviar para Correção',
-            confirmButtonColor: '#d33'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const form = document.getElementById('kanbanTaskForm');
-                if(!form) return;
-                
-                let reason = document.createElement('input');
-                reason.type = 'hidden'; reason.name = 'rejection_reason'; reason.value = result.value;
-                form.appendChild(reason);
-
-                let action = document.createElement('input');
-                action.type = 'hidden'; action.name = 'action'; action.value = 'reject';
-                form.appendChild(action);
-                
-                form.submit();
+            const taskId = document.getElementById('task-id').value;
+            
+            // 2. Cria o pacote
+            const formData = new FormData(this);
+            
+            // 3. Adiciona o Título manualmente
+            const titleInput = document.getElementById('modalTitleInput');
+            if (titleInput) {
+                console.log("Título capturado:", titleInput.value);
+                formData.set('title', titleInput.value);
+            } else {
+                console.error("ERRO: Não achei o campo de título #modalTitleInput");
             }
+
+            // 4. Decide URL
+            let url = CONFIG.urls.addTask; 
+            if(taskId) {
+                url = `${CONFIG.urls.taskUpdate}${taskId}/`; 
+                formData.append('action', 'save');
+            }
+
+            const btn = document.getElementById('btnSaveTask');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "A guardar...";
+
+            // 5. Envia
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-CSRFToken': CONFIG.csrfToken}
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("Resposta do Servidor:", data);
+                if(data.status === 'success') {
+                    window.location.href = window.location.href;
+                } else {
+                    alert(data.message || "Erro ao guardar");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            })
+            .catch(err => {
+                console.error("Erro no Fetch:", err);
+                alert("Erro de conexão");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            });
         });
+    }
+    // (Pode manter as funções submitApproval, submitRejection, toggleRejectMode, enableDrawingMode aqui...)
+    // Elas funcionam normalmente pois usam o mesmo ID de form.
+    window.toggleRejectMode = function() {
+        const tools = document.getElementById('rejectTools');
+        tools.style.display = tools.style.display === 'none' ? 'block' : 'none';
     };
 });

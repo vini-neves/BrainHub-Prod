@@ -53,22 +53,11 @@ def sidebar_menu(request):
             "perms": None, 
         },
         {
-            "label": "Gestão",
+            "label": "Clientes",
             "icon": "fa-solid fa-briefcase",
-            "module_id": "gestao", 
+            "url_name": "client_list",
+            "module_id": None, 
             "perms": None,
-            "submenu": [
-                {
-                    "label": "Clientes",
-                    "url_name": "client_list",
-                    "perms": None
-                },
-                {
-                    "label": "Projetos",
-                    "url_name": "project_list",
-                    "perms": None
-                },
-            ]
         },
         {
             "label": "Produção",

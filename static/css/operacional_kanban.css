@@ -1,237 +1,200 @@
-/* ============================================================
-   1. ESTRUTURA DO KANBAN (Board & Colunas)
-   ============================================================ */
-
-/* Container que segura as colunas (Rolagem Horizontal) */
-#kanban-board {
-    display: flex;
-    flex-wrap: nowrap; /* Garante que fiquem lado a lado */
-    gap: 15px;
-    overflow-x: auto; /* Habilita rolagem lateral */
-    padding-bottom: 15px; /* Espaço para a barra de rolagem não colar */
-    height: 100%;
-}
-
-/* Área interna da coluna (Rolagem Vertical dos Cards) */
-.kanban-column {
-    overflow-y: auto;
-    padding-right: 4px;
-    /* Altura dinâmica calculada: Tela total - (Header + Padding) */
-    max-height: calc(100vh - 180px); 
-    min-height: 200px;
-}
-
-/* Coluna (Wrapper do Bootstrap) */
-.col-kanban {
-    min-width: 300px; /* Largura mínima para não esmagar a coluna */
-    max-width: 350px;
-    flex: 0 0 auto; /* Impede que o flexbox encolha a coluna */
-}
-
-/* Estilo do Card da Tarefa */
-.kanban-card {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    position: relative;
-}
-
-.kanban-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
-    border-color: #0d6efd; /* Highlight ao passar o mouse */
-    cursor: pointer;
-}
-
-/* ============================================================
-   2. MODAL: STEPPER (Indicador de Progresso)
-   ============================================================ */
-
-.step-indicator {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-/* Linha conectora (opcional, visual) */
-.step-indicator::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: #e9ecef;
-    z-index: 0;
-    transform: translateY(-50%);
-}
-
-.step-badge {
-    position: relative;
-    z-index: 1; /* Fica acima da linha */
-    padding: 6px 15px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #6c757d;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    transition: all 0.3s ease;
-}
-
-/* Estado Ativo (Etapa Atual) */
-.step-badge.active {
-    background-color: #0d6efd !important; /* Azul Principal */
-    color: #fff !important;
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
-}
-
-/* ============================================================
-   3. VISUALIZAÇÃO E APROVAÇÃO (MOCKUPS DINÂMICOS)
-   ============================================================ */
-
-/* Container Principal do Mockup */
-.mockup-wrapper {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    margin: 0 auto; /* Centraliza no modal */
+/* Garante que o container ocupe a altura exata da tela menos o menu */
+.kanban-wrapper {
+    height: calc(100vh - 60px); /* Ajuste os 60px conforme altura do seu navbar principal */
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    transition: width 0.3s ease; /* Animação suave ao trocar formato */
+    background-color: var(--kanban-bg);
+    overflow: hidden; /* O body não rola, só o conteúdo interno */
 }
 
-/* --- FORMATOS (Classes injetadas via JS) --- */
-
-/* Feed (Instagram/Facebook/LinkedIn) - Quadrado ou Portrait */
-.format-square { 
-    width: 350px; 
-}
-
-/* Stories / Reels / TikTok (Vertical 9:16) */
-.format-vertical { 
-    width: 280px; 
-}
-
-/* YouTube / Vídeos Horizontais (16:9) */
-.format-horizontal { 
-    width: 450px; 
-}
-
-/* Área da Imagem (Tela do Celular) */
-.mockup-img-box {
-    position: relative; /* Pai relativo para o Canvas absoluto */
-    background-color: #000;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-}
-
-/* A Imagem em si */
-#designImage {
-    width: 100%;
-    height: auto;
-    max-height: 550px; /* Limite de altura para não estourar a tela */
-    object-fit: contain; /* Garante que a imagem inteira apareça */
-}
-
-/* CANVAS DE RABISCO (Fica exatamente em cima da imagem) */
-#feedbackCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+/* Cabeçalho Fixo */
+.kanban-header {
+    flex: 0 0 auto;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
     z-index: 10;
-    cursor: crosshair; /* Cursor de mira */
-    touch-action: none; /* Impede rolagem ao desenhar no celular */
 }
 
-/* Header Fake do Mockup (Perfil) */
-.mockup-header {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+/* Área das Colunas (Scrool Horizontal) */
+.kanban-board {
+    flex: 1 1 auto;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #fff;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 1rem;
+    gap: 1rem;
+    align-items: flex-start; /* Alinha colunas ao topo */
 }
 
-/* Footer Fake do Mockup (Legenda) */
-.mockup-footer {
-    padding: 12px;
-    background: #fff;
+/* --- COLUNAS --- */
+.col-kanban {
+    flex: 0 0 320px; /* Largura fixa da coluna */
+    width: 320px;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--column-bg);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.col-kanban-header {
+    padding: 0.75rem 0.5rem;
+    font-weight: 600;
+    color: #5e6c84;
     font-size: 0.85rem;
-    line-height: 1.4;
-    text-align: left;
-    border-top: 1px solid #eee;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* ============================================================
-   4. SCROLLBARS FINAS (Estética)
-   ============================================================ */
+/* Área de Cards (Scroll Vertical dentro da coluna) */
+.kanban-tasks-list {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    padding: 0 4px;
+    min-height: 50px; /* Área para soltar items vazios */
+}
 
-#kanban-board::-webkit-scrollbar,
-.kanban-column::-webkit-scrollbar {
+/* --- ESTILIZAÇÃO DA SCROLLBAR --- */
+.kanban-board::-webkit-scrollbar,
+.kanban-tasks-list::-webkit-scrollbar {
     height: 8px;
     width: 6px;
 }
-
-#kanban-board::-webkit-scrollbar-thumb,
-.kanban-column::-webkit-scrollbar-thumb {
-    background: #ced4da;
+.kanban-board::-webkit-scrollbar-thumb,
+.kanban-tasks-list::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
-#kanban-board::-webkit-scrollbar-track {
-    background: transparent;
+/* --- CARTÕES --- */
+.kanban-card {
+    background: var(--card-bg);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(9, 30, 66, 0.15);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent; /* Para evitar pulo no hover */
 }
 
-/* ============================================================
-   5. MOBILE RESPONSIVE
-   ============================================================ */
-@media (max-width: 768px) {
-    /* No celular, os mockups ocupam 100% da largura do modal */
-    .format-square, 
-    .format-vertical, 
-    .format-horizontal {
-        width: 100% !important;
-    }
-    
-    /* Aumenta altura mínima do card para facilitar toque */
-    .kanban-card {
-        margin-bottom: 15px;
-    }
+.kanban-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(9, 30, 66, 0.15);
 }
 
+/* Bordas de Prioridade */
+.priority-high { border-left: 4px solid #dc3545 !important; }
+.priority-medium { border-left: 4px solid #ffc107 !important; }
+.priority-low { border-left: 4px solid #0dcaf0 !important; }
+
+/* Imagem de Capa do Card */
+.card-cover {
+    height: 140px;
+    width: 100%;
+    object-fit: cover;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Tags e Redes Sociais */
+.social-badge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.social-instagram { background: #fceceb; color: #c13584; }
+.social-linkedin { background: #eef3f8; color: #0077b5; }
+.social-tiktok { background: #e0f2f1; color: #000; }
+
+/* Avatares Empilhados */
+.avatars-stack {
+    display: flex;
+    padding-left: 10px;
+}
+.avatars-stack .avatar-circle {
+    margin-left: -10px;
+    border: 2px solid white;
+    font-size: 10px;
+    width: 26px;
+    height: 26px;
+}
+
+/* --- MODAL COM ABAS --- */
+.nav-pills .nav-link {
+    color: #5e6c84;
+    font-weight: 500;
+    cursor: pointer;
+}
+.nav-pills .nav-link.active {
+    background-color: var(--secondary-color); /* Cor primária fixa ou use var(--primary-color) */
+    color: white;
+    font-weight: 600;
+}
+
+.tab-content {
+    padding: 1.5rem;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    background: white;
+    border-bottom-left-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+.tab-content > .tab-pane {
+    display: none !important; /* Esconde todas as abas por padrão */
+}
+.tab-content > .active {
+    display: block !important; /* Mostra apenas a aba ativa */
+}
+
+.modal-content {
+    background-color: #ffffff !important; /* Garante branco */
+    opacity: 1 !important;                /* Sem transparência */
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important; /* Sombra forte para destacar do fundo */
+}
+
+/* 2. Garante que o modal fique ACIMA de tudo (Cabeçalho e Menu) */
 .modal {
-    z-index: 1055 !important; /* Bootstrap usa 1055, aumentamos para garantir */
+    display: none; /* Essencial: Se tirar isso, ele bloqueia a tela invisivelmente */
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro */
+    z-index: 1055 !important; /* Fica acima de tudo */
 }
 
-/* Garante que o fundo escuro (backdrop) fique logo atrás da modal */
+/* 2. Estado Visível: O Bootstrap adiciona a classe .show */
+.modal.show {
+    display: block; /* Agora sim ele aparece */
+}
+
+/* 3. Aparência do Modal (Branco e Opaco) */
+.modal-content {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+}
+
+/* 4. Ajustes de Header e Footer para não ficarem transparentes */
+.modal-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6;
+}
+.modal-footer {
+    background-color: #f8f9fa !important;
+    border-top: 1px solid #dee2e6;
+}
+
+/* 5. Correção do Backdrop (O fundo preto) */
 .modal-backdrop {
     z-index: 1050 !important;
-}
-
-/* Se a modal estiver abrindo mas não permitindo scroll */
-.modal-open {
-    overflow: hidden;
-}
-
-header, .sidebar, .navbar {
-    z-index: 1000 !important; 
-}
-
-/* 4. Correção visual se o modal estiver "transparente" ou sem fundo */
-.modal-content {
-    background-color: #fff !important;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
-    border: none;
+    opacity: 0.5 !important;
 }

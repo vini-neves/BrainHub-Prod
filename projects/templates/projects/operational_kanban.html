@@ -2,118 +2,132 @@
 {% load static %}
 
 {% block title %}{{ page_title }}{% endblock %}
-
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/operacional_kanban.css' %}">
+{% endblock %}
 {% block content %}
-<div class="container-fluid h-100 d-flex flex-column p-3">
+<div class="kanban-wrapper">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="kanban-header d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="m-0 fw-bold text-dark">{{ page_title }}</h3>
-            <p class="text-muted small m-0">Gerencie o fluxo de produção de conteúdo</p>
+            <h4 class="m-0 fw-bold text-dark">{{ page_title }}</h4>
+            <span class="text-muted small">Fluxo de Produção Social Media</span>
         </div>
         
-        <button class="btn btn-primary" onclick="openNewTaskModal()">
-            <i class="fa-solid fa-plus"></i> Novo Post
-        </button>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-filter"></i> Filtrar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Minhas Tarefas</a></li>
+                    <li><a class="dropdown-item" href="#">Alta Prioridade</a></li>
+                </ul>
+            </div>
+
+            <button onclick="openNewTaskModal()">
+                <i class="fa-solid fa-plus me-1"></i> Novo Post
+            </button>
+        </div>
     </div>
 
-    <div class="row flex-nowrap overflow-auto h-100 pb-3" id="kanban-board">
+    <div class="kanban-board" id="kanban-board">
         
         {% for stage_key, stage_info in kanban_data.items %}
-        <div class="col-kanban px-2">
-            <div class="card h-100 bg-light shadow-sm border-0">
+        <div class="col-kanban">
+            <div class="col-kanban-header">
+                <span>{{ stage_info.label }}</span>
+                <span class="badge bg-white text-dark border">{{ stage_info.tasks|length }}</span>
+            </div>
+            
+            <div class="kanban-tasks-list" data-status="{{ stage_key }}">
                 
-                <div class="card-header bg-transparent border-bottom fw-bold text-uppercase small text-muted d-flex justify-content-between align-items-center py-3">
-                    <span>{{ stage_info.label }}</span>
-                    <span class="badge bg-white text-dark shadow-sm rounded-pill border">{{ stage_info.tasks|length }}</span>
-                </div>
-                
-                <div class="card-body p-2 kanban-column" data-status="{{ stage_key }}">
+                {% for task in stage_info.tasks %}
+                <div class="kanban-card {% if task.priority == 'high' %}priority-high{% elif task.priority == 'medium' %}priority-medium{% else %}priority-low{% endif %}"
+                     draggable="true"
+                     data-id="{{ task.id }}"
+                     onclick="openEditModal({{ task.id }})">
                     
-                    {% for task in stage_info.tasks %}
-                    <div class="card mb-2 shadow-sm kanban-card border-start border-4 
-                         {% if task.priority == 'high' %}border-danger{% elif task.priority == 'medium' %}border-warning{% else %}border-info{% endif %}" 
-                         draggable="true"
-                         data-id="{{ task.id }}"
-                         onclick="openEditModal({{ task.id }})">
-                        
-                        {% if task.art_url %}
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center overflow-hidden" style="height: 140px;">
-                            <img src="{{ task.art_url }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
-                        {% endif %}
-                        
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                {% if task.social_network %}
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10" style="font-size: 0.7em;">
-                                        {{ task.social_network }}
-                                    </span>
-                                {% else %}
-                                    <span></span>
-                                {% endif %}
-                                <small class="text-muted fw-bold" style="font-size: 0.7em;">#{{ task.id }}</small>
-                            </div>
-
-                            <h6 class="card-title mb-1 text-dark fw-bold text-truncate" title="{{ task.title }}">{{ task.title }}</h6>
-                            <p class="card-text small text-muted mb-3 text-truncate">
-                                {{ task.project_name }}
-                            </p>
-                            
-                            <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
-                                <div class="avatar-circle bg-secondary text-white small" 
-                                     style="width: 24px; height: 24px; border-radius: 50%; display:flex; align-items:center; justify-content:center;" 
-                                     title="{{ task.assigned_to_username }}">
-                                    {{ task.assigned_to_initials }}
+                    {% if task.art_url %}
+                        <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
+                    {% endif %}
+                    
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            {% if task.social_network %}
+                                <div class="social-badge social-{{ task.social_network|lower }}">
+                                    {% if task.social_network == 'INSTAGRAM' %}<i class="fa-brands fa-instagram"></i>
+                                    {% elif task.social_network == 'LINKEDIN' %}<i class="fa-brands fa-linkedin"></i>
+                                    {% elif task.social_network == 'TIKTOK' %}<i class="fa-brands fa-tiktok"></i>
+                                    {% else %}<i class="fa-solid fa-share-nodes"></i>{% endif %}
+                                    <span class="ms-1">{{ task.social_network }}</span>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.7em;">
-                                    <i class="fa-regular fa-clock me-1"></i> {{ task.created_at }}
-                                </small>
-                            </div>
+                            {% else %}
+                                <span></span>
+                            {% endif %}
+                            
+                            <small class="text-muted opacity-50">#{{ task.id }}</small>
+                        </div>
+
+                        <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                            {{ task.title }}
+                        </h6>
+                        
+                        <p class="small text-muted mb-3 text-truncate">
+                            <i class="fa-regular fa-folder me-1"></i> {{ task.client_name|default:task.project_name }}
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-1">
+                            
+                            <small class="text-secondary" style="font-size: 0.75rem;">
+                                {% if task.deadline %}
+                                    <i class="fa-regular fa-calendar me-1 {% if task.is_late %}text-danger{% endif %}"></i> 
+                                    <span class="{% if task.is_late %}text-danger fw-bold{% endif %}">{{ task.deadline }}</span>
+                                {% else %}
+                                    <span class="text-muted">Sem data</span>
+                                {% endif %}
+                            </small>
+
+                            
                         </div>
                     </div>
-                    {% endfor %}
-
                 </div>
+                {% endfor %}
+
             </div>
         </div>
         {% endfor %}
-
+        
     </div>
 </div>
 {% endblock %}
 
+
 {% block modals %}
 
-<div class="modal fade" id="newTaskModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="newTaskModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Novo Post (Briefing)</h5>
+                <h5 class="modal-title fw-bold">Novo Post</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="newTaskForm">
                     <div class="mb-3">
-                        <label class="form-label">Título do Post <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" required placeholder="Ex: Promoção Dia das Mães">
+                        <label class="form-label">Título <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" required>
                     </div>
-                    
                     <div class="mb-3">
-                        <label class="form-label">Cliente / Projeto <span class="text-danger">*</span></label>
-                        <select name="project" class="form-select" required>
+                        <label class="form-label">Cliente <span class="text-danger">*</span></label>
+                        <select name="client" class="form-select" required>
                             <option value="">Selecione...</option>
-                            {% for project in projects %}
-                                <option value="{{ project.id }}">{{ project.name }} ({{ project.client.name }})</option>
+                            {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Descrição Inicial</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Ideia geral do post..."></textarea>
-                    </div>
-                    
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Criar Tarefa</button>
                     </div>
@@ -123,164 +137,176 @@
     </div>
 </div>
 
-<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0">
             
-            <div class="modal-header bg-light border-bottom-0">
-                <h5 class="modal-title fw-bold" id="modalTitle">Carregando...</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <form id="kanbanTaskForm" method="POST" enctype="multipart/form-data" action="">
-                {% csrf_token %}
-                <input type="hidden" name="feedback_image_annotation" id="feedback_image_annotation">
-                
-                <div class="modal-body bg-white p-4">
-                    
-                    <div class="d-flex justify-content-between mb-4 position-relative px-2">
-                        <span class="badge bg-light text-dark border step-badge" data-step="briefing">1. Briefing</span>
-                        <span class="badge bg-light text-dark border step-badge" data-step="copy">2. Copy</span>
-                        <span class="badge bg-light text-dark border step-badge" data-step="design">3. Design</span>
-                        <span class="badge bg-light text-dark border step-badge" data-step="review_internal">4. Aprovação</span>
+            <div class="modal-header bg-white pb-2 border-bottom-0 align-items-center">
+                <div class="w-100">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="w-100 me-3">
+                            <small class="text-muted text-uppercase fw-bold mb-1 d-block" id="modalKanbanType">
+                                Briefing
+                            </small>
+                            
+                            <input type="text" name="title" id="modalTitleInput" 
+                                   class="form-control form-control-lg fw-bold border-0 px-0 fs-4" 
+                                   placeholder="Digite o Título do Post aqui..." 
+                                   style="background: transparent; box-shadow: none;" required>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
-                    <div class="card mb-4 border shadow-sm">
-                        <div class="card-header bg-white fw-bold py-3 text-primary border-bottom-0">
-                            <i class="fa-regular fa-calendar-check me-2"></i> 1. Briefing & Agendamento
-                        </div>
-                        <div class="card-body bg-light bg-opacity-25">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Rede Social</label>
-                                    <select name="social_network" id="networkSelect" class="form-select" onchange="filterFormats()">
+                    <ul class="nav nav-pills" id="taskTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-briefing" type="button">
+                                1. Briefing
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-copy" type="button">
+                                2. Copy
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-design" type="button">
+                                3. Design
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-approval" type="button">
+                                4. Aprovação
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal-body bg-light">
+                <form id="kanbanTaskForm" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="task_id" id="task-id">
+                    
+                    <div class="tab-content shadow-sm rounded">
+                        
+                        <div class="tab-pane fade show active" id="tab-briefing">
+                            <div class="row g-3">
+                                
+                                <div class="col-12" id="clientSelectContainer">
+                                    <label class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
+                                    <select name="client" id="clientSelect" class="form-select" required>
+                                        <option value="">Selecione o Cliente...</option>
+                                        {% for client in clients %}
+                                            <option value="{{ client.id }}">{{ client.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Rede Social</label>
+                                    <select name="social_network" id="networkSelect" class="form-select" onchange="window.filterFormats()">
                                         <option value="">Selecione...</option>
                                         {% for code, label in social_networks %}
                                             <option value="{{ code }}">{{ label }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Formato</label>
-                                    <select name="content_type" id="formatSelect" class="form-select"></select>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Formato</label>
+                                    <select name="content_type" id="formatSelect" class="form-select">
+                                        <option value="">Selecione a rede primeiro...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Data Prevista</label>
+                                    <input type="date" name="scheduled_date" id="scheduled_date" class="form-control">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Briefing / Ideia do Post</label>
+                                    <textarea name="briefing_text" id="briefing_text" class="form-control" rows="5" placeholder="Descreva o que precisa ser feito..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Anexos de Referência</label>
+                                    <input type="file" name="briefing_files" class="form-control">
+                                    <div id="currentFileLink" class="mt-2"></div>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Data Prevista</label>
-                                    <input type="datetime-local" name="scheduled_date" id="scheduled_date" class="form-control">
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-copy">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Headline (Texto da imagem)</label>
+                                    <input type="text" name="copy_content" id="copy_content" class="form-control">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Legenda</label>
+                                    <textarea name="caption_content" id="inputCaption" class="form-control" rows="8"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Roteiro</label>
+                                    <textarea name="script_content" id="script_content" class="form-control" rows="4"></textarea>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">Instruções</label>
-                                <textarea name="briefing_text" id="briefing_text" class="form-control" rows="3"></textarea>
-                            </div>
-                            <div>
-                                <label class="form-label small fw-bold text-muted">Anexo</label>
-                                <input type="file" name="briefing_files" class="form-control form-control-sm">
-                                <div id="currentBriefingFileLink" class="mt-1 small"></div>
-                            </div>
                         </div>
-                    </div>
 
-                    <div class="card mb-4 border shadow-sm">
-                        <div class="card-header bg-white fw-bold py-3 text-primary border-bottom-0">
-                            <i class="fa-solid fa-pen-nib me-2"></i> 2. Conteúdo (Copy)
-                        </div>
-                        <div class="card-body bg-light bg-opacity-25">
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">Roteiro (Vídeo/Carrossel)</label>
-                                <textarea name="script_content" id="script_content" class="form-control" rows="2"></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">Headline (Texto da Imagem)</label>
-                                <textarea name="copy_content" id="copy_content" class="form-control" rows="2"></textarea>
-                            </div>
-                            <div>
-                                <label class="form-label small fw-bold text-muted">Legenda do Post</label>
-                                <textarea name="caption_content" id="inputCaption" class="form-control" rows="4"></textarea>
+                        <div class="tab-pane fade" id="tab-design">
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <label class="form-label fw-bold">Arte Final</label>
+                                    <input type="file" name="final_art" class="form-control mb-2" accept="image/*">
+                                    <div class="mt-3 p-2 border rounded bg-light text-center">
+                                        <img id="previewArtImg" src="" style="max-width: 100%; max-height: 250px; display:none;">
+                                        <span id="noArtText" class="text-muted small">Nenhuma arte carregada</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Arquivo Editável</label>
+                                    <input type="file" name="design_files" class="form-control mb-3">
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="card mb-4 border shadow-sm">
-                        <div class="card-header bg-white fw-bold py-3 text-primary border-bottom-0">
-                            <i class="fa-solid fa-palette me-2"></i> 3. Design
-                        </div>
-                        <div class="card-body bg-light bg-opacity-25">
+                        <div class="tab-pane fade" id="tab-approval">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Arte Final (JPG/PNG)</label>
-                                    <input type="file" name="final_art" class="form-control" accept="image/*">
+                                <div class="col-lg-8">
+                                    <div class="border rounded bg-white p-3 text-center position-relative">
+                                        <div class="position-relative d-inline-block" style="max-width: 100%;">
+                                            <img id="designImage" src="" class="img-fluid border" style="max-height: 500px;">
+                                            <canvas id="feedbackCanvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Arquivo Editável (PSD/AI)</label>
-                                    <input type="file" name="design_files" class="form-control">
+                                <div class="col-lg-4">
+                                    <div class="d-grid gap-2 mb-4" id="approvalActions">
+                                        <button type="button" class="btn btn-success" onclick="submitApproval('approve')">Aprovar Arte</button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="toggleRejectMode()">Solicitar Ajuste</button>
+                                    </div>
+                                    
+                                    <div id="rejectTools" style="display:none;">
+                                        <button type="button" class="btn btn-sm btn-outline-dark w-100 mb-2" onclick="enableDrawingMode()">
+                                            <i class="fa-solid fa-pencil"></i> Riscar Imagem
+                                        </button>
+                                        <textarea name="last_feedback" class="form-control mb-3" rows="3" placeholder="Motivo do ajuste..."></textarea>
+                                        <button type="button" class="btn btn-danger w-100" onclick="submitRejection()">Enviar Solicitação</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
-                    <div class="card mb-3 border-warning" id="approvalSection" style="display:none;">
-                        <div class="card-header bg-warning text-dark fw-bold">
-                            <i class="fa-regular fa-eye me-2"></i> 4. Visualização & Aprovação
-                        </div>
-                        <div class="card-body bg-light text-center p-4">
-                            
-                            <div id="mockupWrapper" class="mockup-wrapper mx-auto position-relative bg-white border shadow-sm mb-3">
-                                <div class="p-2 border-bottom d-flex align-items-center gap-2 bg-white">
-                                    <div style="width: 30px; height: 30px; background: #ddd; border-radius: 50%;"></div>
-                                    <span class="fw-bold small text-dark" id="mockupClientName">Cliente</span>
-                                </div>
-                                <div class="position-relative bg-black d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                                    <canvas id="feedbackCanvas" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10; pointer-events: none;"></canvas>
-                                    <img src="" id="designImage" style="max-width: 100%; max-height: 500px; object-fit: contain;">
-                                </div>
-                                <div class="p-3 text-start small bg-white border-top">
-                                    <strong id="mockupClientNameFooter" class="d-block mb-1">Cliente</strong>
-                                    <span id="previewCaption" class="text-muted"></span>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-center gap-2" id="approvalButtons">
-                                <button type="button" class="btn btn-outline-danger" onclick="enableDrawingMode()">
-                                    <i class="fa-solid fa-pencil"></i> Riscar
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="submitRejection()">
-                                    <i class="fa-solid fa-thumbs-down"></i> Reprovar
-                                </button>
-                                <button type="submit" name="action" value="approve" class="btn btn-success px-4">
-                                    <i class="fa-solid fa-check me-1"></i> Aprovar
-                                </button>
-                            </div>
-                        </div>
+                    <div class="modal-footer bg-white border-top-0 mt-3">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4" id="btnSaveTask">Salvar Tarefa</button>
                     </div>
 
-                </div>
-                <div class="modal-footer bg-light border-top-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" name="action" value="save" class="btn btn-primary px-4">Salvar Alterações</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_css %}
-<style>
-    /* Estilos do Mockup e Kanban */
-    .format-square { width: 350px; }
-    .format-vertical { width: 280px; }
-    .format-horizontal { width: 400px; }
-
-    .kanban-column::-webkit-scrollbar { width: 4px; }
-    .kanban-column::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-
-    .col-kanban { min-width: 320px; max-width: 350px; }
-    .step-badge { cursor: default; transition: all 0.3s ease; opacity: 0.6; }
-    .step-badge.active { opacity: 1; transform: scale(1.05); background-color: var(--primary-color, #0d6efd) !important; color: white !important; font-weight: bold; }
-</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -290,9 +316,32 @@
     window.KANBAN_CONFIG = {
         urls: {
             addTask: "{% url 'add_operational_task' %}",
-            taskDetails: "/api/task/details/", // Prefixo da URL
-            taskUpdate: "/task/update/"        // Prefixo da URL
+            taskDetails: "/api/task/details/", 
+            taskUpdate: "/task/update/" 
         },
+        csrfToken: "{{ csrf_token }}"
+    };
+    
+    // Pequeno ajuste para garantir que as abas do Bootstrap funcionem se o JS padrão não estiver carregado
+    document.addEventListener("DOMContentLoaded", function(){
+        var triggerTabList = [].slice.call(document.querySelectorAll('#taskTabs button'))
+        triggerTabList.forEach(function (triggerEl) {
+            var tabTrigger = new bootstrap.Tab(triggerEl)
+            triggerEl.addEventListener('click', function (event) {
+                event.preventDefault()
+                tabTrigger.show()
+            })
+        })
+    });
+</script>
+
+<script>
+    // JSON vindo do Django
+    window.CLIENT_NETWORKS = {{ client_networks_json|safe }};
+    
+    // Configurações de URL
+    window.KANBAN_CONFIG = {
+        urls: { addTask: "{% url 'add_operational_task' %}", taskDetails: "/api/task/details/", taskUpdate: "/task/update/" },
         csrfToken: "{{ csrf_token }}"
     };
 </script>

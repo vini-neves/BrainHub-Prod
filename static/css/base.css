@@ -333,9 +333,47 @@ button {
         transition: background-color 0.2s;
         cursor: pointer;
     }
-    
+
+    .btn-outline-secondary {
+        --bs-btn-color: var(--secondary-color);
+        --bs-btn-border-color: var(--secondary-color);
+        --bs-btn-hover-color: #fff;
+        --bs-btn-hover-bg: var(--secondary-color);
+        --bs-btn-hover-border-color: var(--secondary-color);
+        --bs-btn-focus-shadow-rgb: 108,117,125;
+        --bs-btn-active-color: #fff;
+        --bs-btn-active-bg: var(--secondary-color);
+        --bs-btn-active-border-color: var(--secondary-color);
+        --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+        --bs-btn-disabled-color: var(--secondary-color);
+        --bs-btn-disabled-bg: transparent;
+        --bs-btn-disabled-border-color: var(--secondary-color);
+        --bs-gradient: none;
+    }
+
+    .btn-secundary {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--secondary-color);
+        --bs-btn-border-color: var(--secondary-color);
+        --bs-btn-hover-color: var(--primary-color);
+        --bs-btn-hover-bg: var(--primary-color);
+        --bs-btn-hover-border-color: var(--secondary-color);
+        --bs-btn-focus-shadow-rgb: 49,132,253;
+        --bs-btn-active-color: var(--primaruy-color);
+        --bs-btn-active-bg: var(--secundary-color);
+        --bs-btn-active-border-color: var(--secondary-color);
+        --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+        --bs-btn-disabled-color: var(--primary-color);
+        --bs-btn-disabled-bg: var(--secondary-color);
+        --bs-btn-disabled-border-color: var(--secondary-color);
+    }
+
     .btn-primary-custom:hover {
         background-color: var(--secondary-color);; /* Azul mais escuro ao passar o mouse */
+        color: white;
+    }
+    .btn-secundary-custom:hover {
+        background-color: var(--primary-color);; /* Azul mais escuro ao passar o mouse */
         color: white;
     }
 
