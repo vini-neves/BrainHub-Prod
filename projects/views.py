@@ -310,39 +310,60 @@ def operational_kanban_board(request):
 @login_required
 def update_task_kanban(request, pk):
     """
-    VIEW CRÍTICA: Processa o formulário do Modal (Briefing, Copy, Design, Aprovação).
-    Recebe POST padrão (não JSON) para lidar com arquivos.
+    Processa a edição do Modal e aplica PERMISSÕES POR FUNÇÃO.
     """
     task = get_object_or_404(Task, pk=pk)
+    user = request.user
     
+    # Pegamos a função do usuário (Ajuste 'funcao' para o nome real do campo no seu model)
+    # Ex: pode ser user.role, user.job_title, etc.
+    user_role = getattr(user, 'funcao', '').lower() 
+
     if request.method == 'POST':
         action = request.POST.get('action') # save, approve, reject
         
-        # 1. Campos de Briefing
-        if 'social_network' in request.POST: task.social_network = request.POST.get('social_network')
-        if 'content_type' in request.POST: task.content_type = request.POST.get('content_type')
-        if 'briefing_text' in request.POST: task.briefing_text = request.POST.get('briefing_text')
-        
-        # Data (trata string vazia)
-        sched_date = request.POST.get('scheduled_date')
-        if sched_date:
-            task.scheduled_date = sched_date
-        
-        if request.FILES.get('briefing_files'):
-            task.briefing_files = request.FILES.get('briefing_files')
+        # --- 1. BLOCO DE BRIEFING (Geralmente Atendimento ou Social Media) ---
+        # Qualquer um pode editar ou restringimos para 'atendimento'?
+        # Aqui vou deixar liberado para quem criou ou atendimentos
+        if 'briefing_text' in request.POST:
+            task.social_network = request.POST.get('social_network')
+            task.content_type = request.POST.get('content_type')
+            task.briefing_text = request.POST.get('briefing_text')
+            
+            sched_date = request.POST.get('scheduled_date')
+            if sched_date: task.scheduled_date = sched_date
+            
+            if request.FILES.get('briefing_files'):
+                task.briefing_files = request.FILES.get('briefing_files')
 
-        # 2. Campos de Copy
-        if 'script_content' in request.POST: task.script_content = request.POST.get('script_content')
-        if 'copy_content' in request.POST: task.copy_content = request.POST.get('copy_content')
-        if 'caption_content' in request.POST: task.caption_content = request.POST.get('caption_content')
+        # --- 2. BLOCO DE COPY (Apenas Redatores) ---
+        # Verificamos se o usuário está tentando salvar copy
+        if 'copy_content' in request.POST or 'caption_content' in request.POST:
+            # Se quiser travar:
+            # if 'redator' in user_role or 'social' in user_role:
+            task.script_content = request.POST.get('script_content')
+            task.copy_content = request.POST.get('copy_content')
+            task.caption_content = request.POST.get('caption_content')
+            
+            # Avança status automático se for Redator
+            if task.status == 'copy' and task.caption_content:
+                task.status = 'design' # Passa a bola pro Designer
 
-        # 3. Campos de Design
-        if request.FILES.get('final_art'):
-            task.final_art = request.FILES.get('final_art')
-        if request.FILES.get('design_files'):
-            task.design_files = request.FILES.get('design_files')
+        # --- 3. BLOCO DE DESIGN (Apenas Designers) ---
+        if request.FILES.get('final_art') or request.FILES.get('design_files'):
+            # if 'designer' in user_role:  <-- Descomente para ativar a trava
+            if request.FILES.get('final_art'):
+                task.final_art = request.FILES.get('final_art')
+                task.has_art = True # Flag auxiliar
+                
+            if request.FILES.get('design_files'):
+                task.design_files = request.FILES.get('design_files')
 
-        # 4. Lógica de Aprovação / Rejeição
+            # Avança status automático
+            if task.status == 'design' and task.final_art:
+                task.status = 'review_internal' # Manda para aprovação
+
+        # --- 4. APROVAÇÃO (Gestores/Atendimento) ---
         if action == 'approve':
             if task.status == 'review_internal':
                 task.status = 'review_client'
@@ -357,11 +378,11 @@ def update_task_kanban(request, pk):
             if image_annotation:
                 task.feedback_image_annotation = image_annotation
                 
-            # Regra: Se reprovou, volta para design
+            # Se rejeitou, volta para Design (ou Copy, dependendo da lógica)
             task.status = 'design' 
             
         task.save()
-        messages.success(request, f"Tarefa '{task.title}' atualizada.")
+        messages.success(request, f"Tarefa atualizada com sucesso.")
         
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
@@ -486,35 +507,44 @@ def get_task_details_api(request, pk):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AddOperationalTaskAPI(View):
-    """Cria tarefa Operacional (Social Media)"""
+    """Cria tarefa Operacional (Sem responsável individual)"""
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         try:
+            # 1. Campos Básicos
             title = request.POST.get('title')
             client_id = request.POST.get('client')
-            desc = request.POST.get('description', '')
-            assigned_id = request.POST.get('assigned_to')
             
-            if not title: return JsonResponse({'status':'error', 'message':'Título obrigatório'}, status=400)
-            
+            if not title:
+                return JsonResponse({'status':'error', 'message':'O título é obrigatório.'}, status=400)
             if not client_id:
-                 return JsonResponse({'status':'error', 'message':'Selecione um Cliente ou Projeto.'}, status=400)
+                return JsonResponse({'status':'error', 'message':'Selecione um cliente.'}, status=400)
             
+            # 2. Ordem automática
             max_order = Task.objects.filter(kanban_type='operational', status='briefing').aggregate(models.Max('order'))['order__max']
             new_order = (max_order or 0) + 1
             
+            # 3. Cria a tarefa (SEM assigned_to)
             task = Task.objects.create(
                 title=title,
-                description=desc,
+                client_id=client_id,
+                created_by=request.user, # Apenas quem criou fica registrado
                 kanban_type='operational',
                 status='briefing',
-                client_id=client_id,
-                created_by=request.user,
-                assigned_to_id=assigned_id or None,
-                order=new_order
+                order=new_order,
+                
+                # Campos do Briefing que já vêm preenchidos
+                social_network=request.POST.get('social_network'),
+                content_type=request.POST.get('content_type'),
+                briefing_text=request.POST.get('briefing_text', ''),
+                scheduled_date=request.POST.get('scheduled_date') or None, 
+                briefing_files=request.FILES.get('briefing_files')
             )
+            
             return JsonResponse({'status':'success', 'task': task.to_dict()})
+            
         except Exception as e:
+            print(f"ERRO AO SALVAR: {e}")
             return JsonResponse({'status':'error', 'message': str(e)}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
