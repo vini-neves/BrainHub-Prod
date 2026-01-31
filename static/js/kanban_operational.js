@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('task-id').value = ""; // ID vazio indica criação
         
         // Reset Visual
-        document.getElementById('modalKanbanType').innerText = "Novo Job / Briefing";
+        document.getElementById('modalKanbanType').innerText = "Briefing";
         document.getElementById('modalTitleInput').value = "";
         
         // Reset Selects
