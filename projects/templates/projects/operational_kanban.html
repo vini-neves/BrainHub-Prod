@@ -105,38 +105,6 @@
 
 {% block modals %}
 
-<div class="modal fade" id="newTaskModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Novo Post</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="newTaskForm">
-                    <div class="mb-3">
-                        <label class="form-label">Título <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Cliente <span class="text-danger">*</span></label>
-                        <select name="client" class="form-select" required>
-                            <option value="">Selecione...</option>
-                            {% for client in clients %}
-                                <option value="{{ client.id }}">{{ client.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Criar Tarefa</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="taskModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content border-0">
@@ -204,11 +172,8 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Rede Social</label>
-                                    <select name="social_network" id="networkSelect" class="form-select" onchange="window.filterFormats()">
-                                        <option value="">Selecione...</option>
-                                        {% for code, label in social_networks %}
-                                            <option value="{{ code }}">{{ label }}</option>
-                                        {% endfor %}
+                                    <select name="social_network" id="networkSelect" class="form-select" disabled>
+                                        <option value="">Selecione um cliente primeiro...</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
