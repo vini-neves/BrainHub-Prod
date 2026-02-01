@@ -213,6 +213,109 @@ def delete_client_api(request, pk):
 # ==============================================================================
 
 @login_required
+def general_kanban_view(request):
+    """
+    Kanban Simples para gestão interna.
+    Usa a estrutura clássica de dicionário que seu HTML antigo espera.
+    """
+    template = 'projects/general_kanban.html'
+    title = 'Tarefas Gerais'
+    
+    # Colunas padrão
+    stages = [
+        ('todo', 'A Fazer'), 
+        ('doing', 'Em Andamento'), 
+        ('done', 'Concluído')
+    ]
+
+    # Busca tarefas apenas do tipo 'general'
+    tasks = Task.objects.filter(kanban_type='general').order_by('order')
+    
+    # Monta o dicionário simples: {'todo': [tarefas], 'doing': [tarefas]...}
+    # Isso é o que o seu HTML antigo (provavelmente) usa: kanban_data.todo
+    kanban_data = {}
+    for key, label in stages:
+        kanban_data[key] = tasks.filter(status=key)
+
+    context = {
+        'kanban_data': kanban_data, # Dicionário simples
+        'stages': stages,           # Lista de tuplas para iterar cabeçalhos se precisar
+        'clients': Client.objects.filter(is_active=True),
+        'users': CustomUser.objects.filter(agency=request.tenant),
+        'page_title': title,
+        'kanban_type': 'general',
+        'csrf_token': request.COOKIES.get('csrftoken')
+    }
+    
+    return render(request, template, context)
+
+
+# ==============================================================================
+# VIEW 2: KANBAN OPERACIONAL (Social Media / Produção)
+# ==============================================================================
+@login_required
+def operational_kanban_view(request):
+    """
+    Kanban Avançado para Social Media.
+    Envia JSONs de redes sociais e estrutura de colunas completa.
+    """
+    template = 'projects/operational_kanban.html'
+    title = 'Fluxo de Produção'
+    
+    stages = [
+        ('briefing', 'Briefing'),
+        ('copy', 'Copy'),
+        ('design', 'Design'),
+        ('review_internal', 'Aprovação Interna'),
+        ('review_client', 'Aprovação Cliente'),
+        ('scheduled', 'Agendado'),
+    ]
+
+    # Busca tarefas operacionais
+    tasks = Task.objects.filter(kanban_type='operational').order_by('order')
+    
+    # Monta estrutura de LISTA (Melhor para o HTML novo)
+    kanban_columns = []
+    for key, label in stages:
+        stage_tasks = tasks.filter(status=key)
+        kanban_columns.append({
+            'id': key,
+            'title': label,
+            'tasks': [t.to_dict() for t in stage_tasks] # Usa o to_dict() atualizado
+        })
+
+    # Lógica de Redes Sociais (Só necessária aqui)
+    clients = Client.objects.filter(is_active=True)
+    client_networks_map = {}
+    
+    for client in clients:
+        try:
+            qs = getattr(client, 'social_accounts', getattr(client, 'socialaccount_set', None))
+            if qs:
+                # Pega redes ativas
+                client_networks_map[client.id] = list(set(qs.filter(is_active=True).values_list('platform', flat=True)))
+            else:
+                client_networks_map[client.id] = []
+        except:
+            client_networks_map[client.id] = []
+
+    context = {
+        'kanban_columns': kanban_columns, # Estrutura nova
+        'clients': clients,
+        'users': CustomUser.objects.filter(agency=request.tenant),
+        'page_title': title,
+        'kanban_type': 'operational',
+        
+        # Dados exclusivos do Operacional
+        'client_networks_json': json.dumps(client_networks_map),
+        'social_networks': SOCIAL_NETWORKS,
+        'content_types': CONTENT_TYPES,
+        'csrf_token': request.COOKIES.get('csrftoken')
+    }
+    
+    return render(request, template, context)
+
+@login_required
 def kanban_view(request, kanban_type='general'):
     # 1. Definição de Colunas
     if kanban_type == 'operational':

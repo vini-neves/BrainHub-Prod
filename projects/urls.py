@@ -26,20 +26,16 @@ urlpatterns = [
 
     # --- KANBAN UNIFICADO (GERAL & OPERACIONAL) ---
     # Rotas de Visualização
-    path('kanban/general/', views.kanban_view, {'kanban_type': 'general'}, name='kanban_general'),
-    path('kanban/operational/', views.kanban_view, {'kanban_type': 'operational'}, name='kanban_operational'),
+    path('kanban/general/', views.general_kanban_view, name='general_kanban'),
+    path('kanban/operational/', views.operational_kanban_view, name='operational_kanban'),
     
     # APIs de Manipulação (Drag&Drop, CRUD)
     path('api/task/add-general/', views.AddTaskAPI.as_view(), name='add_task_api'),
     path('api/task/add-operational/', views.AddOperationalTaskAPI.as_view(), name='add_operational_task'),
-    path('api/task/update-drag/', views.KanbanUpdateTask.as_view(), name='kanban_update_task'),
-    path('api/task/edit/<int:pk>/', views.EditTaskAPI.as_view(), name='edit_task_api'),
-    path('api/task/delete/<int:pk>/', views.DeleteTaskAPI.as_view(), name='delete_task_api'),
-    path('api/task/details/<int:pk>/', views.get_task_details_api, name='get_task_details_api'),
     path('api/kanban/update/', views.KanbanUpdateTask.as_view(), name='kanban_update_task'),
-
-    # --- FORMULÁRIO COMPLETO DE EDIÇÃO (MODAL HTML) ---
-    # Esta rota recebe o POST do formulário com arquivos (Briefing/Copy/Design)
+    path('api/task/details/<int:pk>/', views.get_task_details_api, name='get_task_details_api'),
+    path('api/task/delete/<int:pk>/', views.DeleteTaskAPI.as_view(), name='delete_task_api'),
+    path('api/task/edit/<int:pk>/', views.EditTaskAPI.as_view(), name='edit_task_api'),
     path('task/update/<int:pk>/', views.update_task_kanban, name='update_task_kanban'),
 
     # --- CLIENTES & PROJETOS ---
