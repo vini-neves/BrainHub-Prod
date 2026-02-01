@@ -6,6 +6,7 @@ import uuid
 from django.utils.text import slugify
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.utils import timezone
 
 # ==============================================================================
 # 1. ESCOLHAS GLOBAIS E CONSTANTES (KANBAN & REDES)
