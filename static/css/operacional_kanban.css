@@ -94,7 +94,7 @@
 /* Classe adicionada via JS enquanto arrasta */
 .kanban-card.dragging {
     opacity: 0.5;
-    border: 2px dashed #0d6efd;
+    border: 2px dashed var(--secundary-color);;
 }
 
 /* Imagem de Capa */
@@ -145,7 +145,7 @@
     margin-right: 0.5rem;
 }
 .nav-pills .nav-link.active {
-    background-color: #0d6efd;
+    background-color: var(--secundary-color);
     color: white;
 }
 .tab-content {

@@ -4,7 +4,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/operacional_kanban.css' %}">
+<link rel="stylesheet" href="{% static 'css/operacional_kanban.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -15,7 +15,7 @@
             <h4 class="m-0 fw-bold text-dark">{{ page_title }}</h4>
             <span class="text-muted small">Fluxo de Produção Social Media</span>
         </div>
-        
+
         <div class="d-flex gap-2">
             <div class="btn-group">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -34,84 +34,93 @@
     </div>
 
     <div class="kanban-board" id="kanban-board">
-        
+
         {% for column in kanban_columns %}
         <div class="col-kanban">
             <div class="col-kanban-header">
-                <span>{{ column.title }}</span> <span class="badge bg-white text-dark border">{{ column.tasks|length }}</span>
+                <span>{{ column.title }}</span> <span class="badge bg-white text-dark border">{{ column.tasks|length
+                    }}</span>
             </div>
-            
+
             <div class="kanban-tasks-list" id="col-{{ column.id }}" data-status="{{ column.id }}">
-                
+
                 {% for task in column.tasks %}
                 <div class="kanban-card {% if task.priority == 'high' %}priority-high{% elif task.priority == 'medium' %}priority-medium{% else %}priority-low{% endif %}"
-                     draggable="true"
-                     data-id="{{ task.id }}"
-                     onclick="openEditModal({{ task.id }})">
-                    
+                    draggable="true" data-id="{{ task.id }}" onclick="openEditModal({{ task.id }})">
+
                     {% if task.art_url %}
-                        <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
+                    <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
                     {% endif %}
-                    
+
                     <div class="p-3">
                         <div class="d-flex justify-content-between mb-2 align-items-center">
-                            
+
                             {% if task.social_network %}
-                                <div class="social-badge">
-                                    {% if task.social_network == 'instagram' %}<i class="fa-brands fa-instagram text-danger"></i>
-                                    {% elif task.social_network == 'facebook' %}<i class="fa-brands fa-facebook text-primary"></i>
-                                    {% elif task.social_network == 'linkedin' %}<i class="fa-brands fa-linkedin text-info"></i>
-                                    {% elif task.social_network == 'tiktok' %}<i class="fa-brands fa-tiktok text-dark"></i>
-                                    {% elif task.social_network == 'youtube' %}<i class="fa-brands fa-youtube text-danger"></i>
-                                    {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
-                                    <span class="ms-1 text-uppercase small fw-bold">{{ task.social_network }}</span>
-                                </div>
+                            <div class="social-badge">
+                                {% if task.social_network == 'instagram' %}<i
+                                    class="fa-brands fa-instagram text-danger"></i>
+                                {% elif task.social_network == 'facebook' %}<i
+                                    class="fa-brands fa-facebook text-primary"></i>
+                                {% elif task.social_network == 'linkedin' %}<i
+                                    class="fa-brands fa-linkedin text-info"></i>
+                                {% elif task.social_network == 'tiktok' %}<i class="fa-brands fa-tiktok text-dark"></i>
+                                {% elif task.social_network == 'youtube' %}<i
+                                    class="fa-brands fa-youtube text-danger"></i>
+                                {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
+                                <span class="ms-1 text-uppercase small fw-bold">{{ task.social_network }}</span>
+                            </div>
                             {% else %}
-                                <span></span>
+                            <span></span>
                             {% endif %}
-                            
+
                             <small class="text-muted opacity-50" style="font-size: 0.7rem;">#{{ task.id }}</small>
                         </div>
 
                         <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem; line-height: 1.4;">
                             {{ task.title }}
                         </h6>
-                        
+                        {% if task.briefing_text %}
+                        <p class="text-muted mb-2 small"
+                            style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ task.briefing_text }}
+                        </p>
+                        {% endif %}
+
                         <p class="small text-muted mb-3 text-truncate">
                             <i class="fa-regular fa-building me-1"></i> {{ task.client_name|default:"Sem Cliente" }}
                         </p>
 
                         <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-1">
-                            
+
                             <small class="text-secondary" style="font-size: 0.75rem;">
                                 {% if task.scheduled_date %}
-                                    <i class="fa-regular fa-calendar me-1"></i> 
-                                    {{ task.scheduled_date|slice:":10" }} {% else %}
-                                    <span class="text-muted">-</span>
+                                <i class="fa-regular fa-calendar me-1"></i>
+                                {{ task.scheduled_date|slice:":10" }} {% else %}
+                                <span class="text-muted">-</span>
                                 {% endif %}
                             </small>
 
                             <div class="d-flex gap-2">
                                 {% if task.final_art %}
-                                    <i class="fa-solid fa-image text-primary" title="Arte Anexada"></i>
+                                <i class="fa-solid fa-image text-primary" title="Arte Anexada"></i>
                                 {% endif %}
                                 {% if task.briefing_files %}
-                                    <i class="fa-solid fa-paperclip text-secondary" title="Anexo"></i>
+                                <i class="fa-solid fa-paperclip text-secondary" title="Anexo"></i>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                    <div class="py-4 text-center text-muted small opacity-50">
-                        
-                    </div>
+                <div class="py-4 text-center text-muted small opacity-50">
+
+                </div>
                 {% endfor %}
 
             </div>
         </div>
         {% endfor %}
-        
+
     </div>
 </div>
 {% endblock %}
@@ -122,7 +131,7 @@
 <div class="modal fade" id="taskModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content border-0">
-            
+
             <div class="modal-header bg-white pb-2 border-bottom-0 align-items-center">
                 <div class="w-100">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -130,19 +139,23 @@
                             <small class="text-muted text-uppercase fw-bold mb-1 d-block" id="modalKanbanType">
                                 Briefing
                             </small>
-                            <input type="text" name="title" id="modalTitleInput" 
-                                   class="form-control form-control-lg fw-bold border-0 px-0 fs-4" 
-                                   placeholder="Digite o Título do Post aqui..." 
-                                   style="background: transparent; box-shadow: none;" required form="kanbanTaskForm">
+                            <input type="text" name="title" id="modalTitleInput"
+                                class="form-control form-control-lg fw-bold border-0 px-0 fs-4"
+                                placeholder="Digite o Título do Post aqui..."
+                                style="background: transparent; box-shadow: none;" required form="kanbanTaskForm">
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <ul class="nav nav-pills" id="taskTabs" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-briefing" type="button">1. Briefing</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-copy" type="button">2. Copy</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-design" type="button">3. Design</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-approval" type="button">4. Aprovação</button></li>
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab"
+                                data-bs-target="#tab-briefing" type="button">1. Briefing</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-copy"
+                                type="button">2. Copy</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-design"
+                                type="button">3. Design</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab"
+                                data-bs-target="#tab-approval" type="button">4. Aprovação</button></li>
                     </ul>
                 </div>
             </div>
@@ -151,9 +164,9 @@
                 <form id="kanbanTaskForm" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="task_id" id="task-id">
-                    
+
                     <div class="tab-content shadow-sm rounded">
-                        
+
                         <div class="tab-pane fade show active" id="tab-briefing">
                             <div class="row g-3">
                                 <div class="col-12" id="clientSelectContainer">
@@ -161,7 +174,7 @@
                                     <select name="client" id="clientSelect" class="form-select" required>
                                         <option value="">Selecione o Cliente...</option>
                                         {% for client in clients %}
-                                            <option value="{{ client.id }}">{{ client.name }}</option>
+                                        <option value="{{ client.id }}">{{ client.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -183,7 +196,8 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Briefing / Ideia do Post</label>
-                                    <textarea name="briefing_text" id="briefing_text" class="form-control" rows="5"></textarea>
+                                    <textarea name="briefing_text" id="briefing_text" class="form-control"
+                                        rows="5"></textarea>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Anexos</label>
@@ -201,11 +215,13 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Legenda</label>
-                                    <textarea name="caption_content" id="inputCaption" class="form-control" rows="8"></textarea>
+                                    <textarea name="caption_content" id="inputCaption" class="form-control"
+                                        rows="8"></textarea>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Roteiro</label>
-                                    <textarea name="script_content" id="script_content" class="form-control" rows="4"></textarea>
+                                    <textarea name="script_content" id="script_content" class="form-control"
+                                        rows="4"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +232,8 @@
                                     <label class="form-label fw-bold">Arte Final</label>
                                     <input type="file" name="final_art" class="form-control mb-2" accept="image/*">
                                     <div class="mt-3 p-2 border rounded bg-light text-center">
-                                        <img id="previewArtImg" src="" style="max-width: 100%; max-height: 250px; display:none;">
+                                        <img id="previewArtImg" src=""
+                                            style="max-width: 100%; max-height: 250px; display:none;">
                                         <span id="noArtText" class="text-muted small">Nenhuma arte carregada</span>
                                     </div>
                                 </div>
@@ -231,19 +248,27 @@
                             <div class="row">
                                 <div class="col-lg-8">
                                     <div class="border rounded bg-white p-3 text-center position-relative">
-                                        <img id="designImage" src="" class="img-fluid border" style="max-height: 500px;">
-                                        <canvas id="feedbackCanvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></canvas>
+                                        <img id="designImage" src="" class="img-fluid border"
+                                            style="max-height: 500px;">
+                                        <canvas id="feedbackCanvas"
+                                            style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></canvas>
                                     </div>
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="d-grid gap-2 mb-4">
-                                        <button type="button" class="btn btn-success" onclick="submitApproval('approve')">Aprovar Arte</button>
-                                        <button type="button" class="btn btn-outline-danger" onclick="toggleRejectMode()">Solicitar Ajuste</button>
+                                        <button type="button" class="btn btn-success"
+                                            onclick="submitApproval('approve')">Aprovar Arte</button>
+                                        <button type="button" class="btn btn-outline-danger"
+                                            onclick="toggleRejectMode()">Solicitar Ajuste</button>
                                     </div>
                                     <div id="rejectTools" style="display:none;">
-                                        <button type="button" class="btn btn-sm btn-outline-dark w-100 mb-2" onclick="enableDrawingMode()"><i class="fa-solid fa-pencil"></i> Riscar Imagem</button>
-                                        <textarea name="last_feedback" class="form-control mb-3" rows="3" placeholder="Motivo do ajuste..."></textarea>
-                                        <button type="button" class="btn btn-danger w-100" onclick="submitRejection()">Enviar Solicitação</button>
+                                        <button type="button" class="btn btn-sm btn-outline-dark w-100 mb-2"
+                                            onclick="enableDrawingMode()"><i class="fa-solid fa-pencil"></i> Riscar
+                                            Imagem</button>
+                                        <textarea name="last_feedback" class="form-control mb-3" rows="3"
+                                            placeholder="Motivo do ajuste..."></textarea>
+                                        <button type="button" class="btn btn-danger w-100"
+                                            onclick="submitRejection()">Enviar Solicitação</button>
                                     </div>
                                 </div>
                             </div>
@@ -251,7 +276,8 @@
 
                     </div>
                     <div class="modal-footer bg-white border-top-0 mt-3">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary px-4" id="btnSaveTask">Salvar Tarefa</button>
                     </div>
                 </form>
@@ -266,7 +292,7 @@
 
 <script>
     // Inicialização manual das Abas (Caso Bootstrap não carregue automático)
-    document.addEventListener("DOMContentLoaded", function(){
+    document.addEventListener("DOMContentLoaded", function () {
         var triggerTabList = [].slice.call(document.querySelectorAll('#taskTabs button'))
         triggerTabList.forEach(function (triggerEl) {
             var tabTrigger = new bootstrap.Tab(triggerEl)
@@ -280,14 +306,14 @@
 
 <script>
     // JSON DO DJANGO (Crucial para as redes)
-    window.CLIENT_NETWORKS = {{ client_networks_json|safe }};
-    
+    window.CLIENT_NETWORKS = {{ client_networks_json | safe }};
+
     // Configurações Globais
     window.KANBAN_CONFIG = {
-        urls: { 
-            addTask: "{% url 'add_operational_task' %}", 
-            taskDetails: "/api/task/details/", 
-            taskUpdate: "/task/update/" 
+        urls: {
+            addTask: "{% url 'add_operational_task' %}",
+            taskDetails: "/api/task/details/",
+            taskUpdate: "/task/update/"
         },
         csrfToken: "{{ csrf_token }}"
     };

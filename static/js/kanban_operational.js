@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('task-id').value = "";
         
         // Reset UI
-        document.getElementById('modalKanbanType').innerText = "Novo Job / Briefing";
+        document.getElementById('modalKanbanType').innerText = "Briefing";
         document.getElementById('modalTitleInput').value = "";
         document.getElementById('networkSelect').innerHTML = '<option value="">Selecione um cliente...</option>';
         document.getElementById('networkSelect').disabled = true;

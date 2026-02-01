@@ -217,64 +217,37 @@ class Task(models.Model):
         return False
 
     def to_dict(self):
-        """JSON para o Frontend do Kanban"""
-        
-        # Lógica de Iniciais dos Responsáveis
-        assignees_list = []
-        for user in self.assigned_to.all():
-            first = (user.first_name or "").strip()
-            last = (user.last_name or "").strip()
-            
-            # Tenta pegar iniciais (Primeira letra do Nome + Primeira do Sobrenome)
-            if first and last: 
-                initials = f"{first[0]}{last[0]}"
-            elif first: 
-                initials = first[:2]
-            else: 
-                initials = user.username[:2]
-            
-            assignees_list.append({
-                'id': user.id,
-                'username': user.username,
-                'initials': initials.upper(),
-                'full_name': user.get_full_name() or user.username
-            })
-        
-        # Nome do Cliente (REMOVIDO A LÓGICA DE PROJETO AQUI)
-        client_name = "Sem Cliente"
-        if self.client:
-            client_name = self.client.name
-
-        # Tags
-        tags_list = []
-        if self.tags:
-            tags_list = self.tags.split(',')
-        
-        # Formatação de Data Segura
-        deadline_formatted = ""
-        if self.deadline:
-            if hasattr(self.deadline, 'strftime'):
-                deadline_formatted = self.deadline.strftime('%d/%m/%Y')
-            else:
-                deadline_formatted = str(self.deadline)
-
+        """Serializa a tarefa para JSON"""
         return {
             'id': self.id,
             'title': self.title,
-            'description': self.description or "",
+            'description': self.description,
             'status': self.status,
-            'kanban_type': self.kanban_type,
             'priority': self.priority,
-            'status_display': self.get_status_display(),    
-            'client_name': client_name, # Apenas Cliente agora
             'order': self.order,
-            'created_at': self.created_at.strftime('%d/%m/%Y') if self.created_at else "",
-            'assignees': assignees_list,
-            'deadline': deadline_formatted,
-            'tags': tags_list,
-            'has_art': bool(self.final_art),
+            
+            # --- DADOS DO CLIENTE (Crucial para aparecer no Card) ---
+            'client_id': self.client.id if self.client else None,
+            'client_name': self.client.name if self.client else "Sem Cliente",
+            
+            # --- DADOS OPERACIONAIS ---
+            'social_network': self.social_network,
+            'content_type': self.content_type,
+            'briefing_text': self.briefing_text,
+            'copy_content': self.copy_content,
+            'caption_content': self.caption_content,
+            'script_content': self.script_content,
+            
+            # --- DATAS ---
+            'deadline': self.deadline.strftime('%d/%m/%Y') if self.deadline else None,
+            'scheduled_date': self.scheduled_date.strftime('%Y-%m-%d') if self.scheduled_date else None,
+            'is_late': (self.deadline < timezone.now().date()) if self.deadline else False,
+            
+            # --- ARQUIVOS E IMAGENS ---
             'art_url': self.final_art.url if self.final_art else None,
-            'social_network': self.get_social_network_display() if self.social_network else None,
+            'briefing_files': self.briefing_files.url if self.briefing_files else None,
+            'design_files': self.design_files.url if self.design_files else None,
+            'has_art': bool(self.final_art),
         }
 
 # ==============================================================================

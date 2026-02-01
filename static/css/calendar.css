@@ -7,9 +7,6 @@
     --border-color: #E5E7EB;
     --text-primary: #111827;
     --text-secondary: #6B7280;
-    --primary-blue: #3B82F6;
-    /* Azul do botão New Post */
-    --primary-blue-hover: #2563EB;
 
     /* Cores das Tags (Pastel) */
     --tag-feed-bg: #E0F2FE;
@@ -122,7 +119,7 @@
 }
 
 .btn-primary-action {
-    background-color: var(--primary-blue);
+    background-color: var(--primary-color);;
     color: white;
     border: none;
     padding: 8px 20px;
@@ -137,7 +134,7 @@
 }
 
 .btn-primary-action:hover {
-    background-color: var(--primary-blue-hover);
+    background-color: var(--secundary-color);
 }
 
 .modal-header {
@@ -224,7 +221,7 @@
 }
 
 .day-cell.today .day-number {
-    color: var(--primary-blue);
+    color:var(--primary-color);
 }
 
 .padding-cell {
@@ -617,7 +614,7 @@
 
 .form-control:focus {
     outline: none;
-    border-color: var(--primary-blue);
+    border-color: var(--primary-color);
     ring: 2px solid rgba(59, 130, 246, 0.1);
 }
 
