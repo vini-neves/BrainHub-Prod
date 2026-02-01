@@ -36,6 +36,7 @@ urlpatterns = [
     path('api/task/edit/<int:pk>/', views.EditTaskAPI.as_view(), name='edit_task_api'),
     path('api/task/delete/<int:pk>/', views.DeleteTaskAPI.as_view(), name='delete_task_api'),
     path('api/task/details/<int:pk>/', views.get_task_details_api, name='get_task_details_api'),
+    path('api/kanban/update/', views.KanbanUpdateTask.as_view(), name='kanban_update_task'),
 
     # --- FORMULÁRIO COMPLETO DE EDIÇÃO (MODAL HTML) ---
     # Esta rota recebe o POST do formulário com arquivos (Briefing/Copy/Design)
