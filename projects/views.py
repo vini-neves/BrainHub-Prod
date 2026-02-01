@@ -214,9 +214,7 @@ def delete_client_api(request, pk):
 
 @login_required
 def kanban_view(request, kanban_type='general'):
-    """View Principal que renderiza o Kanban (Geral ou Operacional)"""
-    
-    # 1. Definição de Colunas e Template
+    # 1. Definição de Colunas
     if kanban_type == 'operational':
         stages = [
             ('briefing', 'Briefing'),
@@ -229,72 +227,50 @@ def kanban_view(request, kanban_type='general'):
         template = 'projects/operational_kanban.html'
         title = 'Fluxo de Produção'
     else:
-        stages = [
-            ('todo', 'A Fazer'), 
-            ('doing', 'Em Andamento'), 
-            ('done', 'Concluído')
-        ]
+        # Fallback para kanban geral
+        stages = [('todo', 'A Fazer'), ('doing', 'Em Andamento'), ('done', 'Concluído')]
         template = 'projects/general_kanban.html'
         title = 'Tarefas Gerais'
 
-    # 2. Busca tarefas e serializa
+    # 2. Busca e Organiza Tarefas
     tasks = Task.objects.filter(kanban_type=kanban_type).order_by('order')
-    kanban_data = {}
     
+    # Monta uma estrutura fácil para o HTML ler:
+    # [ {'id': 'briefing', 'title': 'Briefing', 'tasks': [... कृपा...]}, ... ]
+    kanban_columns = []
     for key, label in stages:
         stage_tasks = tasks.filter(status=key)
-        kanban_data[key] = [task.to_dict() for task in stage_tasks]
+        kanban_columns.append({
+            'id': key,
+            'title': label,
+            'tasks': [t.to_dict() for t in stage_tasks]
+        })
 
-    # ==================================================================
-    # 3. LÓGICA DE REDES SOCIAIS (CORREÇÃO AQUI)
-    # ==================================================================
-    
-    # Busca apenas clientes ativos
+    # 3. Lógica de Redes (Mantida igual a anterior)
     clients = Client.objects.filter(is_active=True)
     client_networks_map = {}
-    
-    # DEBUG: Vai imprimir no terminal do VS Code/CMD
-    print(f"\n--- INICIANDO MAPEAMENTO DE REDES ({kanban_type}) ---")
-
     for client in clients:
-        # Tenta buscar pelo related_name definido no Model (social_accounts)
-        # Se não achar, tenta o padrão do Django (socialaccount_set)
-        if hasattr(client, 'social_accounts'):
-            qs = client.social_accounts.all()
-        elif hasattr(client, 'socialaccount_set'):
-            qs = client.socialaccount_set.all()
-        else:
-            qs = None
-
-        if qs is not None:
-            # Pega apenas as plataformas ativas, remove duplicatas e cria lista
-            platforms = list(set(qs.filter(is_active=True).values_list('platform', flat=True)))
-            client_networks_map[client.id] = platforms
-            
-            # Print para conferência
-            print(f"Cliente: {client.name} (ID {client.id}) -> Redes: {platforms}")
-        else:
+        try:
+            # Pega related_name 'social_accounts' ou 'socialaccount_set'
+            qs = getattr(client, 'social_accounts', getattr(client, 'socialaccount_set', None))
+            if qs:
+                client_networks_map[client.id] = list(set(qs.filter(is_active=True).values_list('platform', flat=True)))
+            else:
+                client_networks_map[client.id] = []
+        except:
             client_networks_map[client.id] = []
-            print(f"Cliente: {client.name} (ID {client.id}) -> Sem relacionamento encontrado.")
-            
-    print("--- FIM DO MAPEAMENTO ---\n")
 
-    # 4. Contexto
     context = {
-        'kanban_data': kanban_data,
-        'kanban_data_json': json.dumps(kanban_data),
-        'stages': stages,
+        'kanban_columns': kanban_columns, # <--- A NOVA ESTRUTURA
         'clients': clients,
         'users': CustomUser.objects.filter(agency=request.tenant),
-        'kanban_type': kanban_type,
         'page_title': title,
-        
-        # --- O JSON QUE O JAVASCRIPT PRECISA ---
         'client_networks_json': json.dumps(client_networks_map),
-        
         'social_networks': SOCIAL_NETWORKS,
-        'content_types': CONTENT_TYPES, 
+        'content_types': CONTENT_TYPES,
+        'csrf_token': request.COOKIES.get('csrftoken') # Garante token
     }
+    
     return render(request, template, context)
 
 @login_required

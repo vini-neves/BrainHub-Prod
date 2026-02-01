@@ -1,200 +1,176 @@
-/* Garante que o container ocupe a altura exata da tela menos o menu */
 .kanban-wrapper {
-    height: calc(100vh - 60px); /* Ajuste os 60px conforme altura do seu navbar principal */
+    height: calc(100vh - 70px); /* Ajuste conforme a altura do seu Navbar */
     display: flex;
     flex-direction: column;
     background-color: var(--kanban-bg);
-    overflow: hidden; /* O body não rola, só o conteúdo interno */
+    overflow: hidden; 
 }
 
-/* Cabeçalho Fixo */
+/* Cabeçalho Fixo (Título e Botão Novo Post) */
 .kanban-header {
     flex: 0 0 auto;
     padding: 1rem 1.5rem;
     background: white;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid #dfe1e6;
     z-index: 10;
 }
 
-/* Área das Colunas (Scrool Horizontal) */
+/* Área de Rolagem Horizontal das Colunas */
 .kanban-board {
     flex: 1 1 auto;
     display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 1rem;
+    overflow-x: auto;       /* Permite rolar para o lado */
+    overflow-y: hidden;     /* Bloqueia rolagem vertical da tela inteira */
+    padding: 1rem 1.5rem;
     gap: 1rem;
-    align-items: flex-start; /* Alinha colunas ao topo */
+    align-items: flex-start;
 }
 
-/* --- COLUNAS --- */
+/* =========================================
+   2. COLUNAS
+   ========================================= */
 .col-kanban {
-    flex: 0 0 320px; /* Largura fixa da coluna */
-    width: 320px;
-    max-height: 100%;
+    flex: 0 0 300px;        /* Largura fixa da coluna */
+    width: 300px;
+    max-height: 100%;       /* Ocupa toda altura disponível */
     display: flex;
     flex-direction: column;
     background-color: var(--column-bg);
     border-radius: 8px;
-    padding: 0.5rem;
+    margin-right: 4px;      /* Espacinho extra */
 }
 
 .col-kanban-header {
-    padding: 0.75rem 0.5rem;
+    padding: 12px 16px;
     font-weight: 600;
-    color: #5e6c84;
+    color: var(--text-secondary);
     font-size: 0.85rem;
     text-transform: uppercase;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 2px solid transparent; /* Reserva espaço */
 }
 
-/* Área de Cards (Scroll Vertical dentro da coluna) */
+/* Área onde ficam os Cards (Rola verticalmente DENTRO da coluna) */
 .kanban-tasks-list {
+    flex: 1 1 auto;
     overflow-y: auto;
     overflow-x: hidden;
-    flex: 1 1 auto;
-    padding: 0 4px;
-    min-height: 50px; /* Área para soltar items vazios */
+    padding: 0 8px 8px 8px; /* Padding interno para o scroll não colar no card */
+    min-height: 100px;      /* Garante área de drop mesmo vazia */
 }
 
-/* --- ESTILIZAÇÃO DA SCROLLBAR --- */
-.kanban-board::-webkit-scrollbar,
-.kanban-tasks-list::-webkit-scrollbar {
-    height: 8px;
-    width: 6px;
-}
-.kanban-board::-webkit-scrollbar-thumb,
-.kanban-tasks-list::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 4px;
-}
-
-/* --- CARTÕES --- */
+/* =========================================
+   3. CARDS (TAREFAS)
+   ========================================= */
 .kanban-card {
     background: var(--card-bg);
-    border-radius: 6px;
-    box-shadow: 0 1px 2px rgba(9, 30, 66, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(9, 30, 66, 0.25);
     margin-bottom: 8px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid transparent; /* Para evitar pulo no hover */
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    overflow: hidden; /* Para a imagem de capa não sair para fora */
+    position: relative;
 }
 
 .kanban-card:hover {
-    transform: translateY(-2px);
+    background-color: #fafbfc;
     box-shadow: 0 4px 8px rgba(9, 30, 66, 0.15);
+    transform: translateY(-2px);
 }
 
-/* Bordas de Prioridade */
+/* Imagem de Capa do Card (Arte) */
+.card-cover {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-bottom: 1px solid #eee;
+}
+
+/* Bordas coloridas indicando prioridade */
 .priority-high { border-left: 4px solid #dc3545 !important; }
 .priority-medium { border-left: 4px solid #ffc107 !important; }
 .priority-low { border-left: 4px solid #0dcaf0 !important; }
 
-/* Imagem de Capa do Card */
-.card-cover {
-    height: 140px;
-    width: 100%;
-    object-fit: cover;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    border-bottom: 1px solid #eee;
-}
-
-/* Tags e Redes Sociais */
+/* Badge de Rede Social */
 .social-badge {
-    font-size: 0.75rem;
-    padding: 2px 6px;
+    background-color: #f4f5f7;
     border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-}
-.social-instagram { background: #fceceb; color: #c13584; }
-.social-linkedin { background: #eef3f8; color: #0077b5; }
-.social-tiktok { background: #e0f2f1; color: #000; }
-
-/* Avatares Empilhados */
-.avatars-stack {
-    display: flex;
-    padding-left: 10px;
-}
-.avatars-stack .avatar-circle {
-    margin-left: -10px;
-    border: 2px solid white;
-    font-size: 10px;
-    width: 26px;
-    height: 26px;
+    color: var(--text-secondary);
 }
 
-/* --- MODAL COM ABAS --- */
-.nav-pills .nav-link {
-    color: #5e6c84;
-    font-weight: 500;
-    cursor: pointer;
-}
-.nav-pills .nav-link.active {
-    background-color: var(--secondary-color); /* Cor primária fixa ou use var(--primary-color) */
-    color: white;
-    font-weight: 600;
-}
+/* =========================================
+   4. MODAL E ABAS (CORREÇÕES IMPORTANTES)
+   ========================================= */
 
-.tab-content {
-    padding: 1.5rem;
-    border: 1px solid #dee2e6;
-    border-top: none;
-    background: white;
-    border-bottom-left-radius: 0.375rem;
-    border-bottom-right-radius: 0.375rem;
-}
-
-.tab-content > .tab-pane {
-    display: none !important; /* Esconde todas as abas por padrão */
-}
-.tab-content > .active {
-    display: block !important; /* Mostra apenas a aba ativa */
-}
-
-.modal-content {
-    background-color: #ffffff !important; /* Garante branco */
-    opacity: 1 !important;                /* Sem transparência */
-    border: none;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important; /* Sombra forte para destacar do fundo */
-}
-
-/* 2. Garante que o modal fique ACIMA de tudo (Cabeçalho e Menu) */
+/* Garante que o Modal fique SOBRE o menu lateral/topo */
 .modal {
-    display: none; /* Essencial: Se tirar isso, ele bloqueia a tela invisivelmente */
-    background: rgba(0, 0, 0, 0.5); /* Fundo escuro */
-    z-index: 1055 !important; /* Fica acima de tudo */
+    z-index: 1060 !important; 
 }
-
-/* 2. Estado Visível: O Bootstrap adiciona a classe .show */
-.modal.show {
-    display: block; /* Agora sim ele aparece */
-}
-
-/* 3. Aparência do Modal (Branco e Opaco) */
-.modal-content {
-    background-color: #ffffff !important;
-    opacity: 1 !important;
-    border: none;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
-}
-
-/* 4. Ajustes de Header e Footer para não ficarem transparentes */
-.modal-header {
-    background-color: #ffffff !important;
-    border-bottom: 1px solid #dee2e6;
-}
-.modal-footer {
-    background-color: #f8f9fa !important;
-    border-top: 1px solid #dee2e6;
-}
-
-/* 5. Correção do Backdrop (O fundo preto) */
 .modal-backdrop {
     z-index: 1050 !important;
-    opacity: 0.5 !important;
+}
+
+/* Estilo das Abas (Briefing, Copy, Design...) */
+.nav-pills .nav-link {
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    transition: all 0.2s;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #0d6efd; /* Azul Bootstrap */
+    color: white;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #e9ecef;
+    color: var(--text-primary);
+}
+
+/* Conteúdo das Abas (Fundo Branco e Borda) */
+.tab-content {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none; /* Cola nas abas */
+    padding: 20px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* =========================================
+   5. SCROLLBARS (Para ficar bonito no Windows)
+   ========================================= */
+.kanban-board::-webkit-scrollbar,
+.kanban-tasks-list::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.kanban-board::-webkit-scrollbar-track,
+.kanban-tasks-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb,
+.kanban-tasks-list::-webkit-scrollbar-thumb {
+    background: #c1c7d0;
+    border-radius: 4px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover,
+.kanban-tasks-list::-webkit-scrollbar-thumb:hover {
+    background: #a5adba;
 }
