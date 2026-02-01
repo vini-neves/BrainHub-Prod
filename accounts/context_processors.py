@@ -67,12 +67,12 @@ def sidebar_menu(request):
             "submenu": [
                 {
                     "label": "Kanban Geral",
-                    "url_name": "kanban_general",
+                    "url_name": "general_kanban",
                     "perms": None
                 },
                 {
                     "label": "Kanban Operacional",
-                    "url_name": "kanban_operational",
+                    "url_name": "operational_kanban",
                     "perms": None
                 },
                 {
