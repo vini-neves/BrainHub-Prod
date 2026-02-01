@@ -215,48 +215,56 @@ def delete_client_api(request, pk):
 @login_required
 def general_kanban_view(request):
     """
-    Kanban Simples para gestão interna.
-    AGORA ATUALIZADO para enviar LISTA (kanban_columns) igual ao Operacional.
+    Kanban Geral (Versão Compatível com HTML Antigo/JS)
     """
     template = 'projects/general_kanban.html'
-    title = 'Tarefas Gerais'
+    title = 'Administração da Agência'
     
-    # 1. Definição das Colunas
+    # 1. Definição das Colunas (Para o loop {% for ... in stages %} do HTML)
     stages = [
         ('todo', 'A Fazer'), 
         ('doing', 'Em Andamento'), 
         ('done', 'Concluído')
     ]
 
-    # 2. Busca tarefas
+    # 2. Busca tarefas do tipo GERAL
     tasks = Task.objects.filter(kanban_type='general').order_by('order')
     
-    # 3. Monta a ESTRUTURA DE LISTA (Correção aqui)
-    kanban_columns = []
-    for key, label in stages:
-        stage_tasks = tasks.filter(status=key)
-        kanban_columns.append({
-            'id': key,
-            'title': label,
-            # Importante: Usamos to_dict() para garantir que os dados cheguem completos no HTML
-            'tasks': [t.to_dict() for t in stage_tasks]
-        })
+    # 3. Monta o Dicionário de Listas para o JavaScript
+    # O seu HTML antigo usa JS para renderizar, então precisamos serializar tudo aqui.
+    tasks_by_status = {
+        'todo': [],
+        'doing': [],
+        'done': []
+    }
 
-    # 4. Contexto
+    for task in tasks:
+        # Garante que o status existe no dicionário (segurança)
+        if task.status in tasks_by_status:
+            tasks_by_status[task.status].append(task.to_dict())
+        else:
+            # Caso tenha algum status antigo ou inválido, joga no 'todo' ou ignora
+            if 'todo' in tasks_by_status: 
+                tasks_by_status['todo'].append(task.to_dict())
+
+    # Serializa para JSON
+    kanban_data_json = json.dumps(tasks_by_status)
+
     context = {
-        'kanban_columns': kanban_columns, # <--- Agora o HTML vai entender!
+        # Variáveis que o seu HTML antigo pede:
+        'stages': stages,                     # Para montar as colunas <div>
+        'kanban_data': kanban_data_json,      # Para o primeiro script (se houver)
+        'kanban_data_json': kanban_data_json, # Para o window.KANBAN_INITIAL_DATA
+        
+        # Dados auxiliares para o Modal de Criação:
         'clients': Client.objects.filter(is_active=True),
         'users': CustomUser.objects.filter(agency=request.tenant),
         'page_title': title,
         'kanban_type': 'general',
-        
-        # Precisamos mandar isso vazio ou com dados básicos para o JS não quebrar
-        'client_networks_json': json.dumps({}), 
         'csrf_token': request.COOKIES.get('csrftoken')
     }
     
     return render(request, template, context)
-
 
 # ==============================================================================
 # VIEW 2: KANBAN OPERACIONAL (Social Media / Produção)
