@@ -218,19 +218,19 @@ class Task(models.Model):
         return False
 
     def to_dict(self):
-        """Serializa a tarefa para JSON com detalhes dos responsáveis"""
+        """
+        Serializa a tarefa contendo TODOS os dados necessários
+        tanto para o Kanban Geral quanto para o Operacional.
+        """
         
-        # Monta a lista de responsáveis com dados visuais (Iniciais e Nome)
+        # 1. Lógica de Responsáveis (Para o Kanban Geral)
         assignees_data = []
         for user in self.assigned_to.all():
-            # Tenta pegar as iniciais (ex: "J" de John + "D" de Doe = JD)
             initials = ""
             if user.first_name:
                 initials += user.first_name[0]
             if user.last_name:
                 initials += user.last_name[0]
-            
-            # Se não tiver nome, pega as 2 primeiras letras do username
             if not initials:
                 initials = user.username[:2]
 
@@ -238,10 +238,10 @@ class Task(models.Model):
                 'id': user.id,
                 'name': user.get_full_name() or user.username,
                 'initials': initials.upper(),
-                # Se tiver foto de perfil, pode adicionar aqui: 'avatar': user.avatar.url
             })
 
         return {
+            # --- DADOS COMUNS (Básicos) ---
             'id': self.id,
             'title': self.title,
             'description': self.description,
@@ -249,18 +249,36 @@ class Task(models.Model):
             'priority': self.priority,
             'order': self.order,
             
-            # --- DADOS DOS RESPONSÁVEIS (AQUI ESTÁ A CORREÇÃO) ---
-            'assignees': assignees_data,  # Lista completa com nomes e iniciais
-            'assigned_to': [u.id for u in self.assigned_to.all()], # Lista só de IDs (para formulários)
+            # --- DADOS DE RESPONSÁVEIS (Geral) ---
+            'assignees': assignees_data,  # Lista rica (com iniciais)
+            'assigned_to': [u.id for u in self.assigned_to.all()], # Lista de IDs
             
-            # --- DADOS DE CLIENTE E PRAZO ---
-            'client_name': self.client.name if self.client else None,
+            # --- DADOS DE CLIENTE (Operacional e Geral) ---
+            'client_id': self.client.id if self.client else None, # Importante para filtros
+            'client_name': self.client.name if self.client else "Sem Cliente",
+            
+            # --- DATAS (Atenção aqui) ---
+            # 'deadline' é usado no Geral
             'deadline': self.deadline.strftime('%d/%m/%Y') if self.deadline else None,
+            # 'scheduled_date' é usado no Operacional (Post Agendado)
+            'scheduled_date': self.scheduled_date.strftime('%Y-%m-%d') if self.scheduled_date else None,
+            
             'is_late': (self.deadline < timezone.now().date()) if self.deadline else False,
             
-            # --- DADOS VISUAIS EXTRAS ---
+            # --- DADOS ESPECÍFICOS DO OPERACIONAL (Social Media) ---
             'social_network': self.social_network,
-            'art_url': self.final_art.url if self.final_art else None,
+            'content_type': self.content_type,
+            'briefing_text': self.briefing_text,
+            'copy_content': self.copy_content,
+            'caption_content': self.caption_content,
+            'script_content': self.script_content,
+            
+            # --- ARQUIVOS E IMAGENS ---
+            'art_url': self.final_art.url if self.final_art else None, # URL da imagem de capa
+            'final_art': self.final_art.url if self.final_art else None, # Redundância segura
+            'briefing_files': self.briefing_files.url if self.briefing_files else None,
+            'design_files': self.design_files.url if self.design_files else None,
+            'has_art': bool(self.final_art),
         }
 
 # ==============================================================================
