@@ -216,34 +216,42 @@ def delete_client_api(request, pk):
 def general_kanban_view(request):
     """
     Kanban Simples para gestão interna.
-    Usa a estrutura clássica de dicionário que seu HTML antigo espera.
+    AGORA ATUALIZADO para enviar LISTA (kanban_columns) igual ao Operacional.
     """
     template = 'projects/general_kanban.html'
     title = 'Tarefas Gerais'
     
-    # Colunas padrão
+    # 1. Definição das Colunas
     stages = [
         ('todo', 'A Fazer'), 
         ('doing', 'Em Andamento'), 
         ('done', 'Concluído')
     ]
 
-    # Busca tarefas apenas do tipo 'general'
+    # 2. Busca tarefas
     tasks = Task.objects.filter(kanban_type='general').order_by('order')
     
-    # Monta o dicionário simples: {'todo': [tarefas], 'doing': [tarefas]...}
-    # Isso é o que o seu HTML antigo (provavelmente) usa: kanban_data.todo
-    kanban_data = {}
+    # 3. Monta a ESTRUTURA DE LISTA (Correção aqui)
+    kanban_columns = []
     for key, label in stages:
-        kanban_data[key] = tasks.filter(status=key)
+        stage_tasks = tasks.filter(status=key)
+        kanban_columns.append({
+            'id': key,
+            'title': label,
+            # Importante: Usamos to_dict() para garantir que os dados cheguem completos no HTML
+            'tasks': [t.to_dict() for t in stage_tasks]
+        })
 
+    # 4. Contexto
     context = {
-        'kanban_data': kanban_data, # Dicionário simples
-        'stages': stages,           # Lista de tuplas para iterar cabeçalhos se precisar
+        'kanban_columns': kanban_columns, # <--- Agora o HTML vai entender!
         'clients': Client.objects.filter(is_active=True),
         'users': CustomUser.objects.filter(agency=request.tenant),
         'page_title': title,
         'kanban_type': 'general',
+        
+        # Precisamos mandar isso vazio ou com dados básicos para o JS não quebrar
+        'client_networks_json': json.dumps({}), 
         'csrf_token': request.COOKIES.get('csrftoken')
     }
     
