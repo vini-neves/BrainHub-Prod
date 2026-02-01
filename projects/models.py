@@ -218,7 +218,29 @@ class Task(models.Model):
         return False
 
     def to_dict(self):
-        """Serializa a tarefa para JSON"""
+        """Serializa a tarefa para JSON com detalhes dos responsáveis"""
+        
+        # Monta a lista de responsáveis com dados visuais (Iniciais e Nome)
+        assignees_data = []
+        for user in self.assigned_to.all():
+            # Tenta pegar as iniciais (ex: "J" de John + "D" de Doe = JD)
+            initials = ""
+            if user.first_name:
+                initials += user.first_name[0]
+            if user.last_name:
+                initials += user.last_name[0]
+            
+            # Se não tiver nome, pega as 2 primeiras letras do username
+            if not initials:
+                initials = user.username[:2]
+
+            assignees_data.append({
+                'id': user.id,
+                'name': user.get_full_name() or user.username,
+                'initials': initials.upper(),
+                # Se tiver foto de perfil, pode adicionar aqui: 'avatar': user.avatar.url
+            })
+
         return {
             'id': self.id,
             'title': self.title,
@@ -227,28 +249,18 @@ class Task(models.Model):
             'priority': self.priority,
             'order': self.order,
             
-            # --- DADOS DO CLIENTE (Crucial para aparecer no Card) ---
-            'client_id': self.client.id if self.client else None,
-            'client_name': self.client.name if self.client else "Sem Cliente",
+            # --- DADOS DOS RESPONSÁVEIS (AQUI ESTÁ A CORREÇÃO) ---
+            'assignees': assignees_data,  # Lista completa com nomes e iniciais
+            'assigned_to': [u.id for u in self.assigned_to.all()], # Lista só de IDs (para formulários)
             
-            # --- DADOS OPERACIONAIS ---
-            'social_network': self.social_network,
-            'content_type': self.content_type,
-            'briefing_text': self.briefing_text,
-            'copy_content': self.copy_content,
-            'caption_content': self.caption_content,
-            'script_content': self.script_content,
-            
-            # --- DATAS ---
+            # --- DADOS DE CLIENTE E PRAZO ---
+            'client_name': self.client.name if self.client else None,
             'deadline': self.deadline.strftime('%d/%m/%Y') if self.deadline else None,
-            'scheduled_date': self.scheduled_date.strftime('%Y-%m-%d') if self.scheduled_date else None,
             'is_late': (self.deadline < timezone.now().date()) if self.deadline else False,
             
-            # --- ARQUIVOS E IMAGENS ---
+            # --- DADOS VISUAIS EXTRAS ---
+            'social_network': self.social_network,
             'art_url': self.final_art.url if self.final_art else None,
-            'briefing_files': self.briefing_files.url if self.briefing_files else None,
-            'design_files': self.design_files.url if self.design_files else None,
-            'has_art': bool(self.final_art),
         }
 
 # ==============================================================================
