@@ -20,7 +20,82 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     // ============================================================
-    // 1. DRAG AND DROP (ARRASTAR E SOLTAR)
+    // 1. LÓGICA DE DESENHO NO CANVAS (RISCAR IMAGEM)
+    // ============================================================
+    let canvas, ctx;
+    let isDrawing = false;
+    let hasAnnotation = false;
+
+    function initCanvas() {
+        canvas = document.getElementById('annotationCanvas');
+        const img = document.getElementById('approvalImage');
+        
+        // Só inicia se a imagem e o canvas existirem e a imagem tiver tamanho
+        if(canvas && img && img.clientWidth > 0) {
+            canvas.width = img.clientWidth;
+            canvas.height = img.clientHeight;
+            
+            ctx = canvas.getContext('2d');
+            ctx.strokeStyle = "#ff0000"; // Cor Vermelha
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            
+            // Event Listeners para Mouse
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('mouseout', endDraw);
+            
+            // Event Listeners para Touch (Celular/Tablet)
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e.touches[0]); });
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); });
+            canvas.addEventListener('touchend', endDraw);
+        }
+    }
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
+
+    function startDraw(e) {
+        isDrawing = true;
+        hasAnnotation = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        
+        // Mostra botão de limpar se existir
+        const controls = document.getElementById('drawControls');
+        if(controls) controls.style.display = 'block';
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+
+    function endDraw() {
+        isDrawing = false;
+        ctx.beginPath();
+    }
+
+    window.clearCanvas = function() {
+        if(!ctx || !canvas) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasAnnotation = false;
+        const controls = document.getElementById('drawControls');
+        if(controls) controls.style.display = 'none';
+    };
+
+
+    // ============================================================
+    // 2. DRAG AND DROP (ARRASTAR E SOLTAR)
     // ============================================================
     
     const cards = document.querySelectorAll('.kanban-card');
@@ -51,64 +126,41 @@ document.addEventListener("DOMContentLoaded", function() {
         draggedCard = null;
     }
 
-    function dragOver(e) {
-        e.preventDefault(); // Necessário para permitir o drop
-    }
+    function dragOver(e) { e.preventDefault(); }
 
     function dragEnter(e) {
         e.preventDefault();
-        this.style.backgroundColor = '#e2e4e7'; // Feedback visual na coluna
+        this.style.backgroundColor = '#e2e4e7';
     }
 
     function dragLeave() {
-        this.style.backgroundColor = ''; // Remove feedback
+        this.style.backgroundColor = '';
     }
 
     function dragDrop(e) {
         this.style.backgroundColor = '';
-        
         if (draggedCard) {
-            this.appendChild(draggedCard); // Move o elemento no HTML
-            
-            // Pega os dados para salvar
+            this.appendChild(draggedCard);
             const taskId = draggedCard.getAttribute('data-id');
             const newStatus = this.getAttribute('data-status');
-            
-            // Coleta a nova ordem dos cards nesta coluna
-            const newOrderList = Array.from(this.querySelectorAll('.kanban-card'))
-                                      .map(card => card.getAttribute('data-id'));
-
+            const newOrderList = Array.from(this.querySelectorAll('.kanban-card')).map(card => card.getAttribute('data-id'));
             saveKanbanChange(taskId, newStatus, newOrderList);
         }
     }
 
-    // Função que chama a API para salvar a mudança de coluna/ordem
     function saveKanbanChange(taskId, status, orderList) {
-        // A URL geralmente é '/task/update/kanban/' ou similar. 
-        // Vou usar a taskUpdate que já temos, ou adaptar se você tiver uma rota específica para DragDrop.
-        // Baseado no seu views.py, você tem: class KanbanUpdateTask
-        // Precisamos saber a URL dela. Vou assumir '/api/kanban/update/' ou usar a taskUpdate genérica.
-        
-        // Se não tiver URL específica de DragDrop, use a de update normal:
-        const url = "/api/kanban/update/"; // AJUSTE ESSA ROTA NO SEU URLS.PY SE NÃO EXISTIR
+        const url = "/api/kanban/update/"; 
         
         fetch(url, {
             method: 'POST',
-            body: JSON.stringify({
-                task_id: taskId,
-                status: status,
-                newOrderList: orderList
-            }),
-            headers: {
-                'X-CSRFToken': CONFIG.csrfToken,
-                'Content-Type': 'application/json'
-            }
+            body: JSON.stringify({ task_id: taskId, status: status, newOrderList: orderList }),
+            headers: { 'X-CSRFToken': CONFIG.csrfToken, 'Content-Type': 'application/json' }
         })
         .then(res => res.json())
         .then(data => {
             if(data.status !== 'success') {
-                alert('Erro ao salvar posição: ' + data.message);
-                location.reload(); // Reverte se der erro
+                Swal.fire('Erro', 'Erro ao salvar posição: ' + data.message, 'error');
+                location.reload();
             }
         })
         .catch(err => console.error(err));
@@ -116,10 +168,49 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // ============================================================
-    // 2. FUNÇÕES DE MODAL (CLICK NO CARD E NOVO POST)
+    // 3. FUNÇÕES DE MODAL (ABRIR, EDITAR E POPULAR ABA APROVAÇÃO)
     // ============================================================
 
-    // Torna as funções globais (window) para o onclick="" do HTML funcionar
+    // Preenche a aba "Aprovação" com o layout de celular
+    function populateApprovalTab(data) {
+        // Textos
+        const els = {
+            'apprTitle': data.title,
+            'apprClient': data.client_name,
+            'apprNetwork': data.social_network || 'Geral',
+            'apprDate': data.scheduled_date || 'Sem data',
+            'apprCaption': data.caption_content || 'Sem legenda.',
+            'apprScript': data.script_content || 'Sem roteiro.'
+        };
+
+        for (const [id, val] of Object.entries(els)) {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
+        }
+        
+        // Imagem e Canvas
+        const img = document.getElementById('approvalImage');
+        if (data.art_url) {
+            img.src = data.art_url;
+            img.style.display = 'block';
+            // Inicia o canvas apenas após a imagem carregar para pegar o tamanho certo
+            img.onload = function() { 
+                initCanvas(); 
+            };
+        } else {
+            img.src = "";
+            img.style.display = 'none';
+        }
+        
+        // Reseta estados visuais
+        const rejectPanel = document.getElementById('rejectPanel');
+        const mainActions = document.getElementById('mainActions');
+        if(rejectPanel) rejectPanel.style.display = 'none';
+        if(mainActions) mainActions.style.display = 'grid';
+        
+        window.clearCanvas();
+    }
+
     window.openNewTaskModal = function() {
         const modalEl = document.getElementById('taskModal');
         const form = document.getElementById('kanbanTaskForm');
@@ -127,20 +218,28 @@ document.addEventListener("DOMContentLoaded", function() {
         form.reset();
         document.getElementById('task-id').value = "";
         
-        // Reset UI
-        document.getElementById('modalKanbanType').innerText = "Briefing";
-        document.getElementById('modalTitleInput').value = "";
-        document.getElementById('networkSelect').innerHTML = '<option value="">Selecione um cliente...</option>';
-        document.getElementById('networkSelect').disabled = true;
-        document.getElementById('formatSelect').innerHTML = '<option value="">Selecione a rede...</option>';
+        // Detecta contexto (Operacional vs Geral)
+        const isOperational = window.location.href.includes("operational");
+        
+        if (isOperational) {
+            document.getElementById('modalKanbanType').innerText = "Novo Job / Briefing";
+            CONFIG.urls.addTask = "/api/task/add-operational/";
+        } else {
+            document.getElementById('modalKanbanType').innerText = "Nova Tarefa Geral";
+            CONFIG.urls.addTask = "/api/task/add-general/";
+        }
 
-        // Reseta Imagens
+        const netSelect = document.getElementById('networkSelect');
+        if(netSelect) {
+            netSelect.innerHTML = '<option value="">Selecione um cliente...</option>';
+            netSelect.disabled = true;
+        }
+
         const previewImg = document.getElementById('previewArtImg');
         const noArtText = document.getElementById('noArtText');
         if(previewImg) { previewImg.src = ""; previewImg.style.display = 'none'; }
         if(noArtText) noArtText.style.display = 'block';
 
-        // Abre na primeira aba
         const triggerEl = document.querySelector('#taskTabs button[data-bs-target="#tab-briefing"]');
         if(triggerEl) bootstrap.Tab.getOrCreateInstance(triggerEl).show();
 
@@ -148,12 +247,10 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     window.openEditModal = function(taskId) {
-        // Evita abrir modal se estiver arrastando
         if (document.querySelector('.kanban-card.dragging')) return;
 
         const modalEl = document.getElementById('taskModal');
         const form = document.getElementById('kanbanTaskForm');
-        
         form.reset();
         document.getElementById('task-id').value = taskId;
         
@@ -163,44 +260,43 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch(`${CONFIG.urls.taskDetails}${taskId}/`)
             .then(res => res.json())
             .then(data => {
+                // Preenche campos básicos
                 document.getElementById('modalTitleInput').value = data.title;
                 document.getElementById('modalKanbanType').innerText = `Editando #${data.id}`;
                 
                 const clientSelect = document.getElementById('clientSelect');
                 if(clientSelect) clientSelect.value = data.client_id;
 
-                // Carrega Redes e Formatos
                 window.updateSocialNetworks(data.client_id, data.social_network);
                 
-                // Formatos
                 const fmtSelect = document.getElementById('formatSelect');
                 if(fmtSelect) fmtSelect.dataset.value = data.content_type;
                 window.filterFormats();
 
-                // Campos
                 setVal('scheduled_date', data.scheduled_date ? data.scheduled_date.slice(0, 10) : '');
                 setVal('briefing_text', data.briefing_text);
                 setVal('copy_content', data.copy_content);
                 setVal('inputCaption', data.caption_content);
                 setVal('script_content', data.script_content);
 
-                // Imagens
+                // Preview da Arte na aba Design
                 const previewImg = document.getElementById('previewArtImg');
                 const noArtText = document.getElementById('noArtText');
                 if(data.art_url) {
                     if(previewImg) { previewImg.src = data.art_url; previewImg.style.display = 'block'; }
                     if(noArtText) noArtText.style.display = 'none';
-                    if(document.getElementById('designImage')) document.getElementById('designImage').src = data.art_url;
                 } else {
                     if(previewImg) { previewImg.src = ""; previewImg.style.display = 'none'; }
                     if(noArtText) noArtText.style.display = 'block';
-                    if(document.getElementById('designImage')) document.getElementById('designImage').src = "";
                 }
+
+                // >>> IMPORTANTE: Popula a aba de aprovação com o novo layout <<<
+                populateApprovalTab(data);
                 
-                // Abre a aba correta
+                // Abre a aba correta baseado no status
                 const statusMap = {
                     'briefing': '#tab-briefing', 'copy': '#tab-copy', 'design': '#tab-design',
-                    'review_internal': '#tab-approval', 'review_client': '#tab-approval', 'done': '#tab-approval'
+                    'review_internal': '#tab-approval', 'review_client': '#tab-approval', 'done': '#tab-approval', 'scheduled': '#tab-approval'
                 };
                 let targetTabId = statusMap[data.status] || '#tab-briefing';
                 const tabBtn = document.querySelector(`#taskTabs button[data-bs-target="${targetTabId}"]`);
@@ -209,8 +305,9 @@ document.addEventListener("DOMContentLoaded", function() {
             .catch(err => console.error(err));
     };
 
+
     // ============================================================
-    // 3. FUNÇÕES AUXILIARES (REDES, FORMATOS, ETC)
+    // 4. FUNÇÕES AUXILIARES DE FORMULÁRIO
     // ============================================================
 
     window.filterFormats = function() {
@@ -273,7 +370,6 @@ document.addEventListener("DOMContentLoaded", function() {
         if(el) el.value = val || '';
     }
 
-    // Listeners de mudança nos selects
     const clientSelect = document.getElementById('clientSelect');
     if(clientSelect) clientSelect.addEventListener('change', function() { window.updateSocialNetworks(this.value); });
     
@@ -282,66 +378,128 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // ============================================================
-    // 4. SUBMIT DO FORMULÁRIO (SALVAR)
+    // 5. SUBMIT CENTRALIZADO (COM SWEETALERT)
     // ============================================================
+    
+    // Função Genérica para Enviar Formulário via AJAX com Feedback Visual
+    function submitFormViaAjax(formData) {
+        Swal.fire({
+            title: 'Processando...',
+            text: 'Salvando suas alterações',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading() }
+        });
+
+        const taskId = document.getElementById('task-id').value;
+        
+        // Define URL (Criação ou Edição)
+        let url = CONFIG.urls.addTask;
+        if(taskId) {
+            url = `${CONFIG.urls.taskUpdate}${taskId}/`;
+        }
+
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {'X-CSRFToken': CONFIG.csrfToken}
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                Swal.fire({
+                    title: 'Sucesso!',
+                    text: 'Tarefa salva com sucesso.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Recarrega a página para atualizar as colunas
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire('Erro', data.message || "Erro desconhecido ao salvar.", 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Erro', 'Erro de conexão com o servidor.', 'error');
+        });
+    }
+
+    // Listener para o botão "Salvar Tarefa" padrão
     const form = document.getElementById('kanbanTaskForm');
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const taskId = document.getElementById('task-id').value;
             const formData = new FormData(this);
             const titleInput = document.getElementById('modalTitleInput');
             if (titleInput) formData.set('title', titleInput.value);
-
-            let url = CONFIG.urls.addTask;
-            if(taskId) {
-                url = `${CONFIG.urls.taskUpdate}${taskId}/`;
+            
+            // Adiciona action 'save' padrão se não tiver outra
+            if(!formData.has('action')) {
                 formData.append('action', 'save');
             }
 
-            const btn = document.getElementById('btnSaveTask');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "Salvando...";
-
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {'X-CSRFToken': CONFIG.csrfToken}
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    window.location.replace(window.location.pathname);
-                } else {
-                    alert(data.message || "Erro ao salvar.");
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                btn.disabled = false;
-                btn.innerText = originalText;
-            });
+            submitFormViaAjax(formData);
         });
     }
 
-    // Funções extras (Aprovação)
+    // ============================================================
+    // 6. AÇÕES ESPECÍFICAS (APROVAR / REJEITAR)
+    // ============================================================
+
+    // Alterna a visualização do painel de rejeição
     window.toggleRejectMode = function() {
-        const tools = document.getElementById('rejectTools');
-        if(tools) tools.style.display = tools.style.display === 'none' ? 'block' : 'none';
+        const panel = document.getElementById('rejectPanel');
+        const actions = document.getElementById('mainActions');
+        
+        if (panel && actions) {
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                actions.style.display = 'none';
+                initCanvas(); // Garante que o canvas está pronto para desenhar
+            } else {
+                panel.style.display = 'none';
+                actions.style.display = 'grid';
+            }
+        }
     };
-    window.submitApproval = function() {
-        const hiddenInput = document.createElement('input'); hiddenInput.type = 'hidden';
-        hiddenInput.name = 'action'; hiddenInput.value = 'approve';
-        form.appendChild(hiddenInput); form.requestSubmit();
+
+    // Botão Aprovar (Verde)
+    window.submitApproval = function(action) {
+        const form = document.getElementById('kanbanTaskForm');
+        const formData = new FormData(form);
+        formData.append('action', action);
+        submitFormViaAjax(formData);
     };
-    window.submitRejection = function() {
-        const hiddenInput = document.createElement('input'); hiddenInput.type = 'hidden';
-        hiddenInput.name = 'action'; hiddenInput.value = 'reject';
-        form.appendChild(hiddenInput); form.requestSubmit();
+
+    // Botão Confirmar Ajuste (Vermelho) - Envia Imagem Riscada
+    window.saveWithAnnotation = function() {
+        const feedback = document.getElementById('feedbackInput').value;
+        if (!feedback) {
+            Swal.fire('Atenção', 'Por favor, descreva o motivo do ajuste.', 'warning');
+            return;
+        }
+        
+        const form = document.getElementById('kanbanTaskForm');
+        const formData = new FormData(form);
+        formData.append('action', 'reject');
+        
+        // Se houve risco na tela, converte canvas para imagem e anexa
+        if (hasAnnotation && canvas) {
+            canvas.toBlob(function(blob) {
+                formData.append('feedback_image_annotation', blob, 'annotation.png');
+                submitFormViaAjax(formData);
+            });
+        } else {
+            // Se não riscou, envia só o texto
+            submitFormViaAjax(formData);
+        }
     };
-    window.enableDrawingMode = function() { /* ... sua lógica de canvas ... */ };
+
+    window.enableDrawingMode = function() { 
+        // Apenas um atalho caso precise chamar externamente,
+        // mas o initCanvas já é chamado ao abrir o reject mode.
+        initCanvas(); 
+    };
 });

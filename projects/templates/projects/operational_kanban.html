@@ -40,8 +40,7 @@
         {% for column in kanban_columns %}
         <div class="col-kanban">
             <div class="col-kanban-header">
-                <span>{{ column.title }}</span> <span class="badge bg-white text-dark border">{{ column.tasks|length
-                    }}</span>
+                <span class="badge bg-white text-dark border">{{ column.tasks|length }}</span>
             </div>
 
             <div class="kanban-tasks-list" id="col-{{ column.id }}" data-status="{{ column.id }}">
@@ -248,30 +247,79 @@
 
                         <div class="tab-pane fade" id="tab-approval">
                             <div class="row">
-                                <div class="col-lg-8">
-                                    <div class="border rounded bg-white p-3 text-center position-relative">
-                                        <img id="designImage" src="" class="img-fluid border"
-                                            style="max-height: 500px;">
-                                        <canvas id="feedbackCanvas"
-                                            style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></canvas>
+                                
+                                <div class="col-lg-5 d-flex justify-content-center align-items-start">
+                                    <div class="phone-mockup">
+                                        <div class="phone-notch"></div>
+                                        <div class="phone-screen bg-light">
+                                            <div class="position-relative w-100 h-100 bg-dark d-flex align-items-center justify-content-center">
+                                                <img id="approvalImage" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                                <canvas id="annotationCanvas" style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair; touch-action: none;"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="drawControls" class="mt-2 text-center" style="display:none; position: absolute; bottom: 0; left: 50px;">
+                                        <button type="button" class="btn btn-sm btn-danger rounded-pill" onclick="clearCanvas()">
+                                            <i class="fa-solid fa-eraser"></i> Limpar Risco
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="d-grid gap-2 mb-4">
-                                        <button type="button" class="btn btn-success"
-                                            onclick="submitApproval('approve')">Aprovar Arte</button>
-                                        <button type="button" class="btn btn-outline-danger"
-                                            onclick="toggleRejectMode()">Solicitar Ajuste</button>
+                        
+                                <div class="col-lg-7">
+                                    
+                                    <div class="approval-card">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h5 class="fw-bold mb-1" id="apprTitle">Título do Post</h5>
+                                                <p class="text-muted small mb-0" id="apprClient">Nome do Cliente</p>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-light text-dark border" id="apprNetwork">Instagram</span>
+                                                <div class="mt-1 small text-muted">
+                                                    <i class="fa-regular fa-calendar"></i> <span id="apprDate">--/--</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div id="rejectTools" style="display:none;">
-                                        <button type="button" class="btn btn-sm btn-outline-dark w-100 mb-2"
-                                            onclick="enableDrawingMode()"><i class="fa-solid fa-pencil"></i> Riscar
-                                            Imagem</button>
-                                        <textarea name="last_feedback" class="form-control mb-3" rows="3"
-                                            placeholder="Motivo do ajuste..."></textarea>
-                                        <button type="button" class="btn btn-danger w-100"
-                                            onclick="submitRejection()">Enviar Solicitação</button>
+                        
+                                    <div class="approval-card">
+                                        <span class="approval-label">Legenda</span>
+                                        <p class="mb-0 text-secondary" id="apprCaption" style="white-space: pre-wrap;">...</p>
                                     </div>
+                        
+                                    <div class="approval-card">
+                                        <span class="approval-label">Roteiro / Copy</span>
+                                        <div class="bg-light p-2 rounded small text-secondary" id="apprScript" style="max-height: 100px; overflow-y: auto;">
+                                            ...
+                                        </div>
+                                    </div>
+                        
+                                    <div class="mt-4">
+                                        <div class="d-grid gap-2" id="mainActions">
+                                            <button type="button" class="btn btn-success btn-lg" onclick="submitApproval('approve')">
+                                                <i class="fa-solid fa-check me-2"></i> Aprovar e Agendar
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" onclick="toggleRejectMode()">
+                                                <i class="fa-solid fa-triangle-exclamation me-2"></i> Solicitar Ajuste
+                                            </button>
+                                        </div>
+                        
+                                        <div id="rejectPanel" class="card border-danger mt-3" style="display:none; background: #fff5f5;">
+                                            <div class="card-body">
+                                                <h6 class="text-danger fw-bold"><i class="fa-solid fa-pencil"></i> Modo de Ajuste</h6>
+                                                <p class="small text-muted mb-2">Risque na imagem do celular onde precisa de alteração.</p>
+                                                
+                                                <textarea name="last_feedback" id="feedbackInput" class="form-control mb-3" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
+                                                
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn btn-secondary flex-fill" onclick="toggleRejectMode()">Cancelar</button>
+                                                    <button type="button" class="btn btn-danger flex-fill" onclick="saveWithAnnotation()">Confirmar Ajuste</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
                                 </div>
                             </div>
                         </div>
