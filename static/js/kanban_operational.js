@@ -162,6 +162,33 @@ document.addEventListener("DOMContentLoaded", function () {
     // 4. PREENCHIMENTO VISUAL (POPULATE)
     // ============================================================
     function populateDesignTab(data) {
+
+        const feedbackCard = document.getElementById('designFeedbackCard');
+        const feedbackImg = document.getElementById('designFeedbackImg');
+        const feedbackText = document.getElementById('designFeedbackText');
+
+        // Se tiver imagem de anotação OU texto de feedback (e não estiver aprovado)
+        if ( (data.feedback_image_annotation_url || data.last_feedback) && data.status === 'design') {
+            
+            if (feedbackCard) feedbackCard.style.display = 'block';
+            
+            // Preenche o texto
+            if (feedbackText) feedbackText.innerText = data.last_feedback || "Ver imagem acima.";
+
+            // Preenche a imagem riscada
+            if (feedbackImg) {
+                if (data.feedback_image_annotation_url) {
+                    feedbackImg.src = data.feedback_image_annotation_url;
+                    feedbackImg.style.display = 'block';
+                } else {
+                    feedbackImg.style.display = 'none';
+                }
+            }
+        } else {
+            // Esconde se não tiver ajustes
+            if (feedbackCard) feedbackCard.style.display = 'none';
+        }
+
         setText('designBriefTitle', data.title);
         setText('designNetwork', data.social_network || 'Geral');
         setText('designDate', data.scheduled_date ? data.scheduled_date.slice(0,10) : '--/--');
@@ -358,55 +385,93 @@ document.addEventListener("DOMContentLoaded", function () {
     // ============================================================
 
     // >>> NOVA FUNÇÃO: VOLTAR O CARD PARA UMA ETAPA ANTERIOR <<<
+    // >>> FUNÇÃO CORRIGIDA: VOLTAR CARD (INTELIGENTE) <<<
     window.returnToStage = function(targetStage) {
         const taskId = document.getElementById('task-id').value;
-        
-        // Proteção: Não tenta mover se não tiver ID
-        if(!taskId) {
-             Swal.fire('Erro', 'A tarefa ainda não foi salva. Salve antes de mover.', 'warning');
-             return;
-        }
+        if(!taskId) return;
 
-        Swal.fire({
-            title: 'Movendo card...',
-            text: 'Aguarde um momento.',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+        // Verifica se é um retorno para Design e se tem anotações feitas
+        if (targetStage === 'design' && typeof hasAnnotation !== 'undefined' && hasAnnotation) {
+            // Se tem rabisco, precisamos pedir o motivo e salvar a imagem
+            Swal.fire({
+                title: 'Solicitar Ajuste',
+                text: 'Descreva o que precisa ser alterado no design:',
+                input: 'textarea',
+                inputPlaceholder: 'Ex: Aumentar a logo e trocar a cor do fundo...',
+                showCancelButton: true,
+                confirmButtonText: 'Enviar para Designer',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#d63384', // Rosa do Design
+                preConfirm: (text) => {
+                    if (!text) { Swal.showValidationMessage('Escreva o motivo do ajuste'); }
+                    return text;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sendReturnRequest(targetStage, result.value, true); // True = tem imagem
+                }
+            });
+        } else {
+            // Retorno simples (sem rabisco), ex: voltar para copy
+            Swal.fire({
+                title: 'Voltar etapa?',
+                text: 'A tarefa voltará para a coluna anterior.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, voltar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sendReturnRequest(targetStage, null, false);
+                }
+            });
+        }
+    };
+
+    function sendReturnRequest(targetStage, feedbackText, withImage) {
+        Swal.fire({ title: 'Enviando...', didOpen: () => Swal.showLoading() });
 
         const form = document.getElementById('kanbanTaskForm');
         const formData = new FormData(form);
-        formData.append('action', 'save');
-        formData.append('force_status', targetStage); // O segredo está aqui
+        
+        formData.append('action', 'reject'); // Ação de rejeição/ajuste
+        formData.append('force_status', targetStage); // Força o status (design/copy)
+        
+        if (feedbackText) {
+            formData.append('rejection_reason', feedbackText);
+        }
 
-        // Garante que a URL termine com barra
+        const taskId = document.getElementById('task-id').value;
         const url = `${CONFIG.urls.taskUpdate}${taskId}/`;
 
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-CSRFToken': CONFIG.csrfToken }
-        })
-        .then(async res => {
-            // Se o servidor der erro 500, pegamos o texto para saber o porquê
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`Erro do Servidor (${res.status})`);
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                window.location.reload(); // Recarrega para mostrar o card na coluna nova
-            } else {
-                Swal.fire('Erro', data.message || 'Não foi possível mover.', 'error');
-            }
-        })
-        .catch(err => {
-            console.error("Erro no returnToStage:", err);
-            Swal.fire('Atenção', 'Houve um erro ao mover o card. Verifique se o servidor aceita a mudança de status.', 'error');
-        });
-    };
+        // Função interna para o fetch
+        const executeFetch = () => {
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': CONFIG.csrfToken }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    Swal.fire('Erro', data.message || 'Erro ao mover.', 'error');
+                }
+            })
+            .catch(err => Swal.fire('Erro', 'Erro de conexão.', 'error'));
+        };
+
+        // Se tiver imagem, converte o canvas antes
+        if (withImage && typeof canvas !== 'undefined') {
+            canvas.toBlob(function(blob) {
+                formData.append('feedback_image_annotation', blob, 'ajuste_design.png');
+                executeFetch();
+            });
+        } else {
+            executeFetch();
+        }
+    }
 
     // Navegação apenas visual (abas)
     window.goToTab = function (tabId) {

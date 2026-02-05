@@ -334,222 +334,251 @@
                             <div class="row h-100">
 
                                 <div class="col-md-5 pe-3 border-end" style="max-height: 550px; overflow-y: auto;">
-
-                                    <div class="design-info-card">
-                                        <div class="design-section-title">
-                                            <i class="fa-regular fa-file-lines text-primary"></i> Briefing
+                                    <div id="designFeedbackCard" class="design-info-card border-danger bg-light"
+                                        style="display:none;">
+                                        <div class="design-section-title text-danger">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> Ajustes Solicitados
                                         </div>
 
-                                        <span class="design-label-small">Título</span>
-                                        <div class="fw-bold text-dark small mb-2" id="designBriefTitle">--</div>
-
-                                        <div class="d-flex gap-1 mb-2">
-                                            <span class="badge bg-light text-dark border" id="designNetwork">--</span>
-                                            <span class="badge bg-light text-dark border" id="designFormat">--</span>
+                                        <div class="mb-2">
+                                            <span class="design-label-small text-danger">Marcações na Imagem</span>
+                                            <img id="designFeedbackImg" src=""
+                                                class="img-fluid rounded border border-danger bg-white"
+                                                onclick="window.open(this.src, '_blank')" style="cursor: zoom-in;">
                                         </div>
 
-                                        <div class="text-muted x-small mb-2">
-                                            <i class="fa-regular fa-calendar"></i> <span id="designDate">--/--</span>
-                                            <i class="fa-regular fa-clock ms-2"></i> <span id="designTime">--:--</span>
-                                        </div>
-
-                                        <hr class="border-light my-2">
-
-                                        <div class="design-text-content small" id="designBriefText">...</div>
-                                    </div>
-
-                                    <div class="design-info-card">
-                                        <div class="design-section-title">
-                                            <i class="fa-regular fa-comment-dots text-info"></i> Copy
-                                        </div>
-
-                                        <span class="design-label-small"><i class="fa-solid fa-list-ol me-1"></i>
-                                            Roteiro</span>
-                                        <div class="design-text-content small mb-3 p-2 bg-light rounded"
-                                            id="designScript">
-                                            <em>Sem roteiro definido.</em>
-                                        </div>
-
-                                        <span class="design-label-small">Copy (Texto na Arte)</span>
-                                        <div class="design-text-content small mb-2" id="designCopyText">...</div>
-
-                                        <span class="design-label-small">Legenda Sugerida</span>
-                                        <div class="design-text-content small text-muted" id="designCaption">...</div>
-                                    </div>
-
-                                    <div class="design-info-card">
-                                        <div class="design-section-title">
-                                            <i class="fa-regular fa-image text-warning"></i> Mídia de Referência
-                                        </div>
-                                        <div id="designRefContainer" class="mt-2">
-                                            <span class="text-muted x-small fst-italic">Nenhuma referência
-                                                anexada.</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-7 ps-4 d-flex flex-column">
-
-                                    <div class="design-section-title text-danger mb-3">
-                                        <i class="fa-solid fa-cloud-arrow-up"></i> Design Final
-                                    </div>
-
-                                    <div class="upload-zone-large flex-grow-1"
-                                        onclick="document.getElementById('finalArtInput').click()">
-                                        <input type="file" id="finalArtInput" name="final_art" accept="image/*"
-                                            style="display:none" onchange="previewUpload(this)">
-
-                                        <img id="designPreviewImg" class="preview"
-                                            style="display:none; max-width: 100%; max-height: 100%; object-fit: contain;">
-
-                                        <div id="designUploadPlaceholder" class="upload-zone-content">
-                                            <i class="fa-solid fa-arrow-up-from-bracket fs-2 text-muted mb-3"></i>
-                                            <h6 class="fw-bold text-secondary">Arraste o design finalizado</h6>
-                                            <span class="text-muted x-small">PNG, JPG, MP4 até 50MB</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
-                                    onclick="goToTab('tab-copy')">Cancelar</button>
-                                <button type="button" class="btn btn-success px-4 fw-bold text-white"
-                                    style=" border: none;" onclick="saveAndAdvance('review_internal')">
-                                    Enviar para Aprovação
-                                </button>
-                            </div>
-
-                        </div>
-                        <div class="tab-pane fade" id="tab-approval">
-
-                            <div class="row">
-
-                                <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
-
-                                    <div class="phone-frame shadow-sm"
-                                        style="transform: scale(0.85); transform-origin: top center; margin-bottom: -40px;">
-                                        <div
-                                            class="phone-screen bg-black d-flex align-items-center justify-content-center position-relative">
-                                            <img id="approvalImage" src=""
-                                                style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                                            <canvas id="annotationCanvas"
-                                                style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair;"></canvas>
-                                        </div>
-                                    </div>
-
-                                    <div id="drawControls" class="mb-3" style="display:none;">
-                                        <button type="button" class="btn btn-sm btn-danger rounded-pill shadow px-3"
-                                            onclick="clearCanvas()">
-                                            <i class="fa-solid fa-eraser me-1"></i> Limpar Risco
-                                        </button>
-                                    </div>
-
-                                    <div class="reschedule-panel w-100">
-                                        <h6 class="fw-bold small mb-3 text-dark">Alterar Agendamento</h6>
-                                        <div class="row g-2">
-                                            <div class="col-7">
-                                                <label class="small text-muted">Data</label>
-                                                <input type="date" id="apprDateInput" name="scheduled_date"
-                                                    class="form-control form-control-sm border-0 bg-white">
-                                            </div>
-                                            <div class="col-5">
-                                                <label class="small text-muted">Horário</label>
-                                                <input type="time" name="scheduled_time"
-                                                    class="form-control form-control-sm border-0 bg-white">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-7 ps-4" style="max-height: 600px; overflow-y: auto;">
-
-                                    <div class="approval-detail-card d-flex justify-content-between">
                                         <div>
-                                            <div class="approval-header-title" id="apprTitle">Título do Post</div>
-                                            <div class="text-muted small" id="apprClient">Nome do Cliente</div>
-                                            <div class="text-muted small mt-2">
-                                                <i class="fa-regular fa-calendar me-1"></i> <span
-                                                    id="apprDateDisplay">--/--</span>
-                                                <i class="fa-regular fa-clock ms-2 me-1"></i> <span
-                                                    id="apprTimeDisplay">--:--</span>
+                                            <span class="design-label-small text-danger">Motivo</span>
+                                            <div class="p-2 bg-white rounded border border-danger-subtle text-danger small"
+                                                id="designFeedbackText">
+                                                ...
                                             </div>
                                         </div>
-                                        <div class="text-end">
-                                            <span class="badge bg-light text-dark border"
-                                                id="apprNetwork">Instagram</span>
-                                            <span class="badge bg-light text-dark border ms-1"
-                                                id="apprFormat">Feed</span>
+                                        <div class="design-info-card">
+                                            <div class="design-section-title">
+                                                <i class="fa-regular fa-file-lines text-primary"></i> Briefing
+                                            </div>
+
+                                            <span class="design-label-small">Título</span>
+                                            <div class="fw-bold text-dark small mb-2" id="designBriefTitle">--</div>
+
+                                            <div class="d-flex gap-1 mb-2">
+                                                <span class="badge bg-light text-dark border"
+                                                    id="designNetwork">--</span>
+                                                <span class="badge bg-light text-dark border"
+                                                    id="designFormat">--</span>
+                                            </div>
+
+                                            <div class="text-muted x-small mb-2">
+                                                <i class="fa-regular fa-calendar"></i> <span
+                                                    id="designDate">--/--</span>
+                                                <i class="fa-regular fa-clock ms-2"></i> <span
+                                                    id="designTime">--:--</span>
+                                            </div>
+
+                                            <hr class="border-light my-2">
+
+                                            <div class="design-text-content small" id="designBriefText">...</div>
                                         </div>
+
+                                        <div class="design-info-card">
+                                            <div class="design-section-title">
+                                                <i class="fa-regular fa-comment-dots text-info"></i> Copy
+                                            </div>
+
+                                            <span class="design-label-small"><i class="fa-solid fa-list-ol me-1"></i>
+                                                Roteiro</span>
+                                            <div class="design-text-content small mb-3 p-2 bg-light rounded"
+                                                id="designScript">
+                                                <em>Sem roteiro definido.</em>
+                                            </div>
+
+                                            <span class="design-label-small">Copy (Texto na Arte)</span>
+                                            <div class="design-text-content small mb-2" id="designCopyText">...</div>
+
+                                            <span class="design-label-small">Legenda Sugerida</span>
+                                            <div class="design-text-content small text-muted" id="designCaption">...
+                                            </div>
+                                        </div>
+
+                                        <div class="design-info-card">
+                                            <div class="design-section-title">
+                                                <i class="fa-regular fa-image text-warning"></i> Mídia de Referência
+                                            </div>
+                                            <div id="designRefContainer" class="mt-2">
+                                                <span class="text-muted x-small fst-italic">Nenhuma referência
+                                                    anexada.</span>
+                                            </div>
+                                        </div>
+
                                     </div>
 
-                                    <div class="approval-detail-card">
-                                        <div class="approval-label-section">
-                                            <span>Legenda</span>
-                                            <span class="link-back" onclick="returnToStage('copy')">← Voltar para Copy</span>
+                                    <div class="col-md-7 ps-4 d-flex flex-column">
+
+                                        <div class="design-section-title text-danger mb-3">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Design Final
                                         </div>
-                                        <div class="approval-text-content" id="apprCaption">Sem legenda definida.</div>
+
+                                        <div class="upload-zone-large flex-grow-1"
+                                            onclick="document.getElementById('finalArtInput').click()">
+                                            <input type="file" id="finalArtInput" name="final_art" accept="image/*"
+                                                style="display:none" onchange="previewUpload(this)">
+
+                                            <img id="designPreviewImg" class="preview"
+                                                style="display:none; max-width: 100%; max-height: 100%; object-fit: contain;">
+
+                                            <div id="designUploadPlaceholder" class="upload-zone-content">
+                                                <i class="fa-solid fa-arrow-up-from-bracket fs-2 text-muted mb-3"></i>
+                                                <h6 class="fw-bold text-secondary">Arraste o design finalizado</h6>
+                                                <span class="text-muted x-small">PNG, JPG, MP4 até 50MB</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
+                                        onclick="goToTab('tab-copy')">Cancelar</button>
+                                    <button type="button" class="btn btn-success px-4 fw-bold text-white"
+                                        style=" border: none;" onclick="saveAndAdvance('review_internal')">
+                                        Enviar para Aprovação
+                                    </button>
+                                </div>
+
+                            </div>
+                            <div class="tab-pane fade" id="tab-approval">
+
+                                <div class="row">
+
+                                    <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
+
+                                        <div class="phone-frame shadow-sm"
+                                            style="transform: scale(0.85); transform-origin: top center; margin-bottom: -40px;">
+                                            <div
+                                                class="phone-screen bg-black d-flex align-items-center justify-content-center position-relative">
+                                                <img id="approvalImage" src=""
+                                                    style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                                <canvas id="annotationCanvas"
+                                                    style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair;"></canvas>
+                                            </div>
+                                        </div>
+
+                                        <div id="drawControls" class="mb-3" style="display:none;">
+                                            <button type="button" class="btn btn-sm btn-danger rounded-pill shadow px-3"
+                                                onclick="clearCanvas()">
+                                                <i class="fa-solid fa-eraser me-1"></i> Limpar Risco
+                                            </button>
+                                        </div>
+
+                                        <div class="reschedule-panel w-100">
+                                            <h6 class="fw-bold small mb-3 text-dark">Alterar Agendamento</h6>
+                                            <div class="row g-2">
+                                                <div class="col-7">
+                                                    <label class="small text-muted">Data</label>
+                                                    <input type="date" id="apprDateInput" name="scheduled_date"
+                                                        class="form-control form-control-sm border-0 bg-white">
+                                                </div>
+                                                <div class="col-5">
+                                                    <label class="small text-muted">Horário</label>
+                                                    <input type="time" name="scheduled_time"
+                                                        class="form-control form-control-sm border-0 bg-white">
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
 
-                                    <div class="approval-detail-card">
-                                        <div class="approval-label-section">
-                                            <span>Design</span>
+                                    <div class="col-md-7 ps-4" style="max-height: 600px; overflow-y: auto;">
+
+                                        <div class="approval-detail-card d-flex justify-content-between">
                                             <div>
-                                                <span class="link-back me-3" onclick="toggleRejectMode()"><i class="fa-solid fa-pencil"></i> Anotar</span>
-                                                <span class="link-back" onclick="returnToStage('design')">← Voltar para Designer</span>
+                                                <div class="approval-header-title" id="apprTitle">Título do Post</div>
+                                                <div class="text-muted small" id="apprClient">Nome do Cliente</div>
+                                                <div class="text-muted small mt-2">
+                                                    <i class="fa-regular fa-calendar me-1"></i> <span
+                                                        id="apprDateDisplay">--/--</span>
+                                                    <i class="fa-regular fa-clock ms-2 me-1"></i> <span
+                                                        id="apprTimeDisplay">--:--</span>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-light text-dark border"
+                                                    id="apprNetwork">Instagram</span>
+                                                <span class="badge bg-light text-dark border ms-1"
+                                                    id="apprFormat">Feed</span>
                                             </div>
                                         </div>
-                                        <img id="apprThumb" src="" class="approval-design-thumb">
-                                    </div>
 
-                                    <div class="approval-detail-card">
-                                        <div class="approval-label-section"><span>Roteiro</span></div>
-                                        <div class="text-muted small mb-3" id="apprScript"
-                                            style="white-space: pre-wrap;">...</div>
+                                        <div class="approval-detail-card">
+                                            <div class="approval-label-section">
+                                                <span>Legenda</span>
+                                                <span class="link-back" onclick="returnToStage('copy')">← Voltar para
+                                                    Copy</span>
+                                            </div>
+                                            <div class="approval-text-content" id="apprCaption">Sem legenda definida.
+                                            </div>
+                                        </div>
 
-                                        <hr class="border-light">
+                                        <div class="approval-detail-card">
+                                            <div class="approval-label-section">
+                                                <span>Design</span>
+                                                <div>
+                                                    <span class="link-back me-3" onclick="toggleRejectMode()"><i
+                                                            class="fa-solid fa-pencil"></i> Anotar</span>
+                                                    <span class="link-back" onclick="returnToStage('design')">← Voltar
+                                                        para Designer</span>
+                                                </div>
+                                            </div>
+                                            <img id="apprThumb" src="" class="approval-design-thumb">
+                                        </div>
 
-                                        <div class="approval-label-section"><span>Copy (Texto na Arte)</span></div>
-                                        <div class="text-muted small" id="apprCopyText">...</div>
-                                    </div>
+                                        <div class="approval-detail-card">
+                                            <div class="approval-label-section"><span>Roteiro</span></div>
+                                            <div class="text-muted small mb-3" id="apprScript"
+                                                style="white-space: pre-wrap;">...</div>
 
-                                </div>
-                            </div>
+                                            <hr class="border-light">
 
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
-                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
-                                    onclick="goToTab('tab-design')">Cancelar</button>
-                                <button type="button" class="btn btn-success px-4 fw-bold text-white"
-                                    style="background-color: #198754; border: none;" onclick="saveAndAdvance()">
-                                    <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
-                                </button>
-                            </div>
+                                            <div class="approval-label-section"><span>Copy (Texto na Arte)</span></div>
+                                            <div class="text-muted small" id="apprCopyText">...</div>
+                                        </div>
 
-                            <div id="rejectPanel" class="card border-danger mt-3 mx-3"
-                                style="display:none; background-color: #fff5f5;">
-                                <div class="card-body">
-                                    <h6 class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i>
-                                        Solicitar Ajuste</h6>
-                                    <p class="small text-muted mb-2">Faça anotações na imagem do celular (esquerda) e
-                                        descreva abaixo:</p>
-
-                                    <textarea id="feedbackInput" class="form-control mb-3" rows="3"
-                                        placeholder="O que precisa ser alterado?"></textarea>
-
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-secondary btn-sm"
-                                            onclick="toggleRejectMode()">Cancelar</button>
-                                        <button type="button" class="btn btn-danger btn-sm"
-                                            onclick="saveWithAnnotation()">Confirmar Ajuste</button>
                                     </div>
                                 </div>
-                            </div>
 
+                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
+                                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
+                                        onclick="goToTab('tab-design')">Cancelar</button>
+                                    <button type="button" class="btn btn-success px-4 fw-bold text-white"
+                                        style="background-color: #198754; border: none;" onclick="saveAndAdvance()">
+                                        <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
+                                    </button>
+                                </div>
+
+                                <div id="rejectPanel" class="card border-danger mt-3 mx-3"
+                                    style="display:none; background-color: #fff5f5;">
+                                    <div class="card-body">
+                                        <h6 class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i>
+                                            Solicitar Ajuste</h6>
+                                        <p class="small text-muted mb-2">Faça anotações na imagem do celular (esquerda)
+                                            e
+                                            descreva abaixo:</p>
+
+                                        <textarea id="feedbackInput" class="form-control mb-3" rows="3"
+                                            placeholder="O que precisa ser alterado?"></textarea>
+
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-secondary btn-sm"
+                                                onclick="toggleRejectMode()">Cancelar</button>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                onclick="saveWithAnnotation()">Confirmar Ajuste</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
-                    </div>
                 </form>
             </div>
         </div>

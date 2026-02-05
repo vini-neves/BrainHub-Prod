@@ -164,7 +164,12 @@ class Task(models.Model):
     # Passo 4 e 5: Aprovação
     approval_token = models.CharField(max_length=64, unique=True, blank=True, null=True) # Link para cliente externo
     last_feedback = models.TextField(blank=True, null=True, verbose_name="Motivo Reprova")
-    feedback_image_annotation = models.TextField(blank=True, null=True, verbose_name="Rabisco (Base64)")
+    feedback_image_annotation = models.ImageField(
+        upload_to='feedback_annotations/', 
+        blank=True, 
+        null=True, 
+        verbose_name="Rabisco (Imagem)"
+    )
 
     # --- CAMPOS PADRÃO ---
     created_at = models.DateTimeField(auto_now_add=True)
@@ -250,22 +255,20 @@ class Task(models.Model):
             'order': self.order,
             
             # --- DADOS DE RESPONSÁVEIS (Geral) ---
-            'assignees': assignees_data,  # Lista rica (com iniciais)
-            'assigned_to': [u.id for u in self.assigned_to.all()], # Lista de IDs
+            'assignees': assignees_data,
+            'assigned_to': [u.id for u in self.assigned_to.all()],
             
             # --- DADOS DE CLIENTE (Operacional e Geral) ---
-            'client_id': self.client.id if self.client else None, # Importante para filtros
+            'client_id': self.client.id if self.client else None,
             'client_name': self.client.name if self.client else "Sem Cliente",
             'client_logo': self.client.logo.url if (self.client and self.client.logo) else None,
-            # --- DATAS (Atenção aqui) ---
-            # 'deadline' é usado no Geral
-            'deadline': self.deadline.strftime('%d/%m/%Y') if self.deadline else None,
-            # 'scheduled_date' é usado no Operacional (Post Agendado)
-            'scheduled_date': self.scheduled_date.strftime('%Y-%m-%d') if self.scheduled_date else None,
             
+            # --- DATAS ---
+            'deadline': self.deadline.strftime('%d/%m/%Y') if self.deadline else None,
+            'scheduled_date': self.scheduled_date.strftime('%Y-%m-%d') if self.scheduled_date else None,
             'is_late': (self.deadline < timezone.now().date()) if self.deadline else False,
             
-            # --- DADOS ESPECÍFICOS DO OPERACIONAL (Social Media) ---
+            # --- DADOS ESPECÍFICOS DO OPERACIONAL ---
             'social_network': self.social_network,
             'content_type': self.content_type,
             'briefing_text': self.briefing_text,
@@ -274,11 +277,15 @@ class Task(models.Model):
             'script_content': self.script_content,
             
             # --- ARQUIVOS E IMAGENS ---
-            'art_url': self.final_art.url if self.final_art else None, # URL da imagem de capa
-            'final_art': self.final_art.url if self.final_art else None, # Redundância segura
+            'art_url': self.final_art.url if self.final_art else None,
+            'final_art': self.final_art.url if self.final_art else None,
             'briefing_files': self.briefing_files.url if self.briefing_files else None,
             'design_files': self.design_files.url if self.design_files else None,
             'has_art': bool(self.final_art),
+
+            # --- NOVOS CAMPOS: FEEDBACK E AJUSTES (ADICIONE ISTO) ---
+            'last_feedback': self.last_feedback,
+            'feedback_image_annotation_url': self.feedback_image_annotation.url if self.feedback_image_annotation else None,
         }
 
 # ==============================================================================
