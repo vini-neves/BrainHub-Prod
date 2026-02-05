@@ -32,10 +32,10 @@
     </div>
 
     <div class="kanban-board" id="kanban-board">
-        
+
         {% for column in kanban_columns %}
         <div class="col-kanban">
-            
+
             <div class="col-kanban-header">
                 <div class="d-flex align-items-center">
                     <span class="col-dot dot-{{ column.id }}"></span>
@@ -43,71 +43,75 @@
                 </div>
                 <span class="badge bg-light text-secondary border rounded-pill">{{ column.tasks|length }}</span>
             </div>
-            
+
             <div class="kanban-tasks-list" id="col-{{ column.id }}" data-status="{{ column.id }}">
-                
+
                 {% if column.id == 'briefing' %}
-                    <button class="btn-add-ghost" onclick="openNewTaskModal()">
-                        <i class="fa-solid fa-plus me-2"></i> Novo Post
-                    </button>
+                <button class="btn-add-ghost" onclick="openNewTaskModal()">
+                    <i class="fa-solid fa-plus me-2"></i> Novo Post
+                </button>
                 {% endif %}
-                
+
                 {% for task in column.tasks %}
-                <div class="kanban-card"
-                     draggable="true"
-                     data-id="{{ task.id }}"
-                     onclick="openEditModal({{ task.id }})">
-                    
+                <div class="kanban-card" draggable="true" data-id="{{ task.id }}"
+                    onclick="openEditModal({{ task.id }})">
+
                     {% if task.art_url and column.id != 'briefing' and column.id != 'copy' %}
-                        <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
+                    <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
                     {% endif %}
-                    
+
                     <div class="p-3">
                         <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem; line-height: 1.4;">
                             {{ task.title }}
                         </h6>
-                        
+
                         {% if not task.art_url or column.id == 'briefing' or column.id == 'copy' %}
-                            <p class="text-muted small mb-3" style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
-                            </p>
+                        <p class="text-muted small mb-3"
+                            style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
+                        </p>
                         {% endif %}
 
-                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
-                            
+                        <div
+                            class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+
                             <div class="text-muted x-small d-flex align-items-center" style="font-size: 0.7rem;">
-                                <i class="fa-regular fa-calendar me-1"></i> 
+                                <i class="fa-regular fa-calendar me-1"></i>
                                 {% if task.scheduled_date %}
-                                    {{ task.scheduled_date|slice:"8:10" }}/{{ task.scheduled_date|slice:"5:7" }}
+                                {{ task.scheduled_date|slice:"8:10" }}/{{ task.scheduled_date|slice:"5:7" }}
                                 {% else %}
-                                    --
+                                --
                                 {% endif %}
-                                
+
                                 <i class="fa-regular fa-clock ms-2 me-1"></i>
                                 --:--
                             </div>
 
                             <div class="d-flex align-items-center gap-2">
                                 {% if task.social_network %}
-                                    {% if task.social_network == 'instagram' %}<i class="fa-brands fa-instagram text-danger"></i>
-                                    {% elif task.social_network == 'facebook' %}<i class="fa-brands fa-facebook text-primary"></i>
-                                    {% elif task.social_network == 'linkedin' %}<i class="fa-brands fa-linkedin text-info"></i>
-                                    {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
+                                {% if task.social_network == 'instagram' %}<i
+                                    class="fa-brands fa-instagram text-danger"></i>
+                                {% elif task.social_network == 'facebook' %}<i
+                                    class="fa-brands fa-facebook text-primary"></i>
+                                {% elif task.social_network == 'linkedin' %}<i
+                                    class="fa-brands fa-linkedin text-info"></i>
+                                {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
                                 {% endif %}
                             </div>
 
                         </div>
-                        
+
                         <div class="mt-2 d-flex align-items-center">
-                            
+
                             {% if task.client_logo %}
-                                <img src="{{ task.client_logo }}" class="client-avatar-small" alt="{{ task.client_name }}" style="object-fit: cover; background: white;">
+                            <img src="{{ task.client_logo }}" class="client-avatar-small" alt="{{ task.client_name }}"
+                                style="object-fit: cover; background: white;">
                             {% else %}
-                                <div class="client-avatar-small">
-                                    {{ task.client_name|slice:":2"|upper }}
-                                </div>
+                            <div class="client-avatar-small">
+                                {{ task.client_name|slice:":2"|upper }}
+                            </div>
                             {% endif %}
-                            
+
                             <span class="text-muted small text-truncate" style="font-size: 0.75rem; max-width: 120px;">
                                 {{ task.client_name }}
                             </span>
@@ -116,14 +120,14 @@
                     </div>
                 </div>
                 {% empty %}
-                    {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div>
-                    {% endif %}
+                {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div>
+                {% endif %}
                 {% endfor %}
 
             </div>
         </div>
         {% endfor %}
-        
+
     </div>
 </div>
 {% endblock %}
@@ -134,20 +138,25 @@
 <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-dialog-clean">
         <div class="modal-content modal-content-clean">
-            
+
             <div class="modal-header modal-header-clean justify-content-between">
                 <div class="modal-title-custom">
-                    <span id="modalTypeDot" style="width: 10px; height: 10px; background-color: #6f42c1; border-radius: 50%; display: inline-block;"></span>
+                    <span id="modalTypeDot"
+                        style="width: 10px; height: 10px; background-color: #6f42c1; border-radius: 50%; display: inline-block;"></span>
                     <span id="modalKanbanType">Briefing</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <ul class="nav nav-pills d-none" id="taskTabs">
-                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing"
+                        data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button>
+                </li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design"
+                        data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval"
+                        data-bs-toggle="tab"></button></li>
             </ul>
 
             <div class="modal-body pt-4">
@@ -155,29 +164,33 @@
                     {% csrf_token %}
                     <input type="hidden" name="task_id" id="task-id">
                     <input type="hidden" name="kanban_type" value="operational">
-                    
+
                     <div class="tab-content">
-                        
+
                         <div class="tab-pane fade show active" id="tab-briefing">
                             <div class="row g-3">
                                 <div class="col-12 mb-2">
                                     <label class="modal-briefing-label text-muted small">Cliente</label>
-                                    <select name="client" id="clientSelect" class="form-select form-select-clean border-0 bg-light fw-bold" required>
+                                    <select name="client" id="clientSelect"
+                                        class="form-select form-select-clean border-0 bg-light fw-bold" required>
                                         <option value="">Selecione o Cliente...</option>
                                         {% for client in clients %}
-                                            <option value="{{ client.id }}">{{ client.name }}</option>
+                                        <option value="{{ client.id }}">{{ client.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
 
                                 <div class="col-12">
                                     <label class="modal-briefing-label">Título do Post</label>
-                                    <input type="text" name="title" id="modalTitleInput" class="form-control form-control-clean bg-light" placeholder="Ex: Campanha Black Friday" required>
+                                    <input type="text" name="title" id="modalTitleInput"
+                                        class="form-control form-control-clean bg-light"
+                                        placeholder="Ex: Campanha Black Friday" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="modal-briefing-label">Rede Social</label>
-                                    <select name="social_network" id="networkSelect" class="form-select form-select-clean">
+                                    <select name="social_network" id="networkSelect"
+                                        class="form-select form-select-clean">
                                         <option value="">Instagram</option>
                                     </select>
                                 </div>
@@ -191,30 +204,40 @@
                                 <div class="col-md-6">
                                     <label class="modal-briefing-label">Data de Agendamento</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0 border-secondary-subtle"><i class="fa-regular fa-calendar"></i></span>
-                                        <input type="date" name="scheduled_date" id="scheduled_date" class="form-control form-control-clean border-start-0 ps-0">
+                                        <span class="input-group-text bg-light border-end-0 border-secondary-subtle"><i
+                                                class="fa-regular fa-calendar"></i></span>
+                                        <input type="date" name="scheduled_date" id="scheduled_date"
+                                            class="form-control form-control-clean border-start-0 ps-0">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="modal-briefing-label">Horário</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0 border-secondary-subtle"><i class="fa-regular fa-clock"></i></span>
-                                        <input type="time" name="scheduled_time" class="form-control form-control-clean border-start-0 ps-0">
+                                        <span class="input-group-text bg-light border-end-0 border-secondary-subtle"><i
+                                                class="fa-regular fa-clock"></i></span>
+                                        <input type="time" name="scheduled_time"
+                                            class="form-control form-control-clean border-start-0 ps-0">
                                     </div>
                                 </div>
 
                                 <div class="col-12 mt-3">
                                     <label class="modal-briefing-label">Briefing</label>
-                                    <textarea name="briefing_text" id="briefing_text" class="form-control form-control-clean bg-light" rows="5" placeholder="Descreva o objetivo do post..."></textarea>
+                                    <textarea name="briefing_text" id="briefing_text"
+                                        class="form-control form-control-clean bg-light" rows="5"
+                                        placeholder="Descreva o objetivo do post..."></textarea>
                                 </div>
 
                                 <div class="col-12 mt-4">
                                     <label class="modal-briefing-label">Mídia de Referência</label>
-                                    <div class="upload-box-dashed position-relative" style="border: 2px dashed #a0aec0; border-radius: 10px;">
-                                        <input type="file" name="briefing_files" class="position-absolute w-100 h-100 top-0 start-0 opacity-0" style="cursor: pointer;" onchange="updateFileName(this)">
+                                    <div class="upload-box-dashed position-relative"
+                                        style="border: 2px dashed #a0aec0; border-radius: 10px;">
+                                        <input type="file" name="briefing_files"
+                                            class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
+                                            style="cursor: pointer;" onchange="updateFileName(this)">
                                         <div class="py-4">
                                             <i class="fa-solid fa-arrow-up-from-bracket fs-3 text-secondary mb-2"></i>
-                                            <p class="mb-0 fw-bold text-secondary" id="uploadTextMain">Arraste arquivos ou clique para fazer upload</p>
+                                            <p class="mb-0 fw-bold text-secondary" id="uploadTextMain">Arraste arquivos
+                                                ou clique para fazer upload</p>
                                             <small class="text-muted">PNG, JPG, MP4 até 50MB</small>
                                         </div>
                                     </div>
@@ -222,16 +245,16 @@
                             </div>
 
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
-                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
-                                <button type="button" class="btn btn-success px-4 fw-bold text-white" 
-                                        style=" border: none; border-radius: 8px;" 
-                                        onclick="saveAndAdvance('copy')">
+                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
+                                    data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
+                                <button type="button" class="btn btn-success px-4 fw-bold text-white"
+                                    style=" border: none; border-radius: 8px;" onclick="saveAndAdvance('copy')">
                                     Enviar para Copy
                                 </button>
                             </div>
-                        </div> 
+                        </div>
                         <div class="tab-pane fade" id="tab-copy">
-                            
+
 
                             <div class="row h-100">
                                 <div class="col-md-5 pe-3 border-end">
@@ -239,7 +262,7 @@
                                         <div class="briefing-summary-title">
                                             <i class="fa-regular fa-file-lines text-primary"></i> Resumo do Briefing
                                         </div>
-                                        
+
                                         <span class="briefing-label">Título</span>
                                         <div class="briefing-value fw-bold" id="copyBriefTitle">--</div>
 
@@ -270,169 +293,272 @@
                                         <label class="copy-section-label">
                                             <i class="fa-solid fa-list-ol text-info"></i> Roteiro
                                         </label>
-                                        <textarea name="script_content" id="script_content" class="form-control form-control-copy" rows="4" placeholder="Slide 1: ..."></textarea>
+                                        <textarea name="script_content" id="script_content"
+                                            class="form-control form-control-copy" rows="4"
+                                            placeholder="Slide 1: ..."></textarea>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="copy-section-label">
                                             <i class="fa-regular fa-comment-dots text-success"></i> Copy (Texto na arte)
                                         </label>
-                                        <textarea name="copy_content" id="copy_content_input" class="form-control form-control-copy" rows="2" placeholder="Texto principal..."></textarea>
+                                        <textarea name="copy_content" id="copy_content_input"
+                                            class="form-control form-control-copy" rows="2"
+                                            placeholder="Texto principal..."></textarea>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="copy-section-label">
                                             <i class="fa-regular fa-file-alt text-warning"></i> Legenda
                                         </label>
-                                        <textarea name="caption_content" id="inputCaption" class="form-control form-control-copy" rows="4" placeholder="Escreva a legenda..." oninput="updateCharCount(this)"></textarea>
+                                        <textarea name="caption_content" id="inputCaption"
+                                            class="form-control form-control-copy" rows="4"
+                                            placeholder="Escreva a legenda..."
+                                            oninput="updateCharCount(this)"></textarea>
                                         <div class="char-counter"><span id="charCount">0</span> caracteres</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-outline-secondary px-4" onclick="goToTab('tab-briefing')">Voltar</button>
-                                <button type="button" class="btn btn-success px-4 text-white" 
-                                        style=" border: none; border-radius: 8px;" 
-                                        onclick="saveAndAdvance('design')">
+                                <button type="button" class="btn btn-outline-secondary px-4"
+                                    onclick="goToTab('tab-briefing')">Voltar</button>
+                                <button type="button" class="btn btn-success px-4 text-white"
+                                    style=" border: none; border-radius: 8px;" onclick="saveAndAdvance('design')">
                                     Enviar para Design
                                 </button>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="tab-design">
-    
-                            <div class="d-flex align-items-center mb-4 ps-1">
-                                <span style="width: 10px; height: 10px; background-color: #d63384; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
-                                <h5 class="fw-bold m-0 text-dark">Design</h5>
-                            </div>
-                        
+
                             <div class="row h-100">
-                                
+
                                 <div class="col-md-5 pe-3 border-end" style="max-height: 550px; overflow-y: auto;">
-                                    
+
                                     <div class="design-info-card">
                                         <div class="design-section-title">
                                             <i class="fa-regular fa-file-lines text-primary"></i> Briefing
                                         </div>
-                                        
+
                                         <span class="design-label-small">Título</span>
                                         <div class="fw-bold text-dark small mb-2" id="designBriefTitle">--</div>
-                        
+
                                         <div class="d-flex gap-1 mb-2">
                                             <span class="badge bg-light text-dark border" id="designNetwork">--</span>
                                             <span class="badge bg-light text-dark border" id="designFormat">--</span>
                                         </div>
-                        
+
                                         <div class="text-muted x-small mb-2">
                                             <i class="fa-regular fa-calendar"></i> <span id="designDate">--/--</span>
                                             <i class="fa-regular fa-clock ms-2"></i> <span id="designTime">--:--</span>
                                         </div>
-                        
+
                                         <hr class="border-light my-2">
-                                        
+
                                         <div class="design-text-content small" id="designBriefText">...</div>
                                     </div>
-                        
+
                                     <div class="design-info-card">
                                         <div class="design-section-title">
                                             <i class="fa-regular fa-comment-dots text-info"></i> Copy
                                         </div>
-                        
-                                        <span class="design-label-small"><i class="fa-solid fa-list-ol me-1"></i> Roteiro</span>
-                                        <div class="design-text-content small mb-3 p-2 bg-light rounded" id="designScript">
+
+                                        <span class="design-label-small"><i class="fa-solid fa-list-ol me-1"></i>
+                                            Roteiro</span>
+                                        <div class="design-text-content small mb-3 p-2 bg-light rounded"
+                                            id="designScript">
                                             <em>Sem roteiro definido.</em>
                                         </div>
-                        
+
                                         <span class="design-label-small">Copy (Texto na Arte)</span>
                                         <div class="design-text-content small mb-2" id="designCopyText">...</div>
-                        
+
                                         <span class="design-label-small">Legenda Sugerida</span>
                                         <div class="design-text-content small text-muted" id="designCaption">...</div>
                                     </div>
-                        
+
                                     <div class="design-info-card">
                                         <div class="design-section-title">
                                             <i class="fa-regular fa-image text-warning"></i> Mídia de Referência
                                         </div>
                                         <div id="designRefContainer" class="mt-2">
-                                            <span class="text-muted x-small fst-italic">Nenhuma referência anexada.</span>
+                                            <span class="text-muted x-small fst-italic">Nenhuma referência
+                                                anexada.</span>
                                         </div>
                                     </div>
-                        
+
                                 </div>
-                        
+
                                 <div class="col-md-7 ps-4 d-flex flex-column">
-                                    
+
                                     <div class="design-section-title text-danger mb-3">
                                         <i class="fa-solid fa-cloud-arrow-up"></i> Design Final
                                     </div>
-                        
-                                    <div class="upload-zone-large flex-grow-1" onclick="document.getElementById('finalArtInput').click()">
-                                        <input type="file" id="finalArtInput" name="final_art" accept="image/*" style="display:none" onchange="previewUpload(this)">
-                                        
-                                        <img id="designPreviewImg" class="preview" style="display:none; max-width: 100%; max-height: 100%; object-fit: contain;">
-                                        
+
+                                    <div class="upload-zone-large flex-grow-1"
+                                        onclick="document.getElementById('finalArtInput').click()">
+                                        <input type="file" id="finalArtInput" name="final_art" accept="image/*"
+                                            style="display:none" onchange="previewUpload(this)">
+
+                                        <img id="designPreviewImg" class="preview"
+                                            style="display:none; max-width: 100%; max-height: 100%; object-fit: contain;">
+
                                         <div id="designUploadPlaceholder" class="upload-zone-content">
                                             <i class="fa-solid fa-arrow-up-from-bracket fs-2 text-muted mb-3"></i>
                                             <h6 class="fw-bold text-secondary">Arraste o design finalizado</h6>
                                             <span class="text-muted x-small">PNG, JPG, MP4 até 50MB</span>
                                         </div>
                                     </div>
-                        
+
                                 </div>
                             </div>
-                        
+
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold" onclick="goToTab('tab-copy')">Cancelar</button>
-                                <button type="button" class="btn btn-success px-4 fw-bold text-white" 
-                                        style=" border: none;"
-                                        onclick="saveAndAdvance('review_internal')">
+                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
+                                    onclick="goToTab('tab-copy')">Cancelar</button>
+                                <button type="button" class="btn btn-success px-4 fw-bold text-white"
+                                    style=" border: none;" onclick="saveAndAdvance('review_internal')">
                                     Enviar para Aprovação
                                 </button>
                             </div>
-                        
+
                         </div>
                         <div class="tab-pane fade" id="tab-approval">
-                             <div class="row">
-                                <div class="col-md-6 d-flex justify-content-center">
-                                    <div class="phone-frame" style="transform: scale(0.9); transform-origin: top center;">
-                                        <div class="phone-screen bg-black d-flex align-items-center justify-content-center position-relative">
-                                            <img id="approvalImage" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                                            <canvas id="annotationCanvas" style="position: absolute; top:0; left:0; width:100%; height:100%;"></canvas>
-                                        </div>
-                                    </div>
-                                    <div id="drawControls" style="display:none; position: absolute; bottom: 10px;">
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="clearCanvas()">Limpar</button>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 id="apprTitle">Título</h5>
-                                    <small id="apprClient">Cliente</small> | <span id="apprNetwork">Rede</span>
-                                    <div class="my-2"><i class="fa-regular fa-clock"></i> <span id="apprDate">Data</span></div>
-                                    
-                                    <div class="card p-2 bg-light mb-3">
-                                        <small class="fw-bold">Legenda</small>
-                                        <p class="small mb-0" id="apprCaption">...</p>
-                                    </div>
-                                    
-                                    <img id="apprThumb" src="" style="display:none;">
-                                    <input type="date" id="apprDateInput" class="d-none">
 
-                                    <div class="d-grid gap-2" id="mainActions">
-                                        <button type="button" class="btn btn-success" onclick="saveAndAdvance()">Aprovar / Salvar</button>
-                                        <button type="button" class="btn btn-outline-danger" onclick="toggleRejectMode()">Solicitar Ajuste</button>
-                                    </div>
-                                    
-                                    <div id="rejectPanel" class="card border-danger mt-3" style="display:none;">
-                                        <div class="card-body p-2">
-                                            <textarea id="feedbackInput" class="form-control mb-2" rows="2" placeholder="Motivo do ajuste..."></textarea>
-                                            <button type="button" class="btn btn-danger w-100" onclick="saveWithAnnotation()">Confirmar</button>
+                            <div class="d-flex align-items-center mb-4 ps-1">
+                                <span
+                                    style="width: 10px; height: 10px; background-color: #fd7e14; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
+                                <h5 class="fw-bold m-0 text-dark">Aprovação Interna</h5>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
+
+                                    <div class="phone-frame shadow-sm"
+                                        style="transform: scale(0.85); transform-origin: top center; margin-bottom: -40px;">
+                                        <div
+                                            class="phone-screen bg-black d-flex align-items-center justify-content-center position-relative">
+                                            <img id="approvalImage" src=""
+                                                style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                            <canvas id="annotationCanvas"
+                                                style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair;"></canvas>
                                         </div>
                                     </div>
+
+                                    <div id="drawControls" class="mb-3" style="display:none;">
+                                        <button type="button" class="btn btn-sm btn-danger rounded-pill shadow px-3"
+                                            onclick="clearCanvas()">
+                                            <i class="fa-solid fa-eraser me-1"></i> Limpar Risco
+                                        </button>
+                                    </div>
+
+                                    <div class="reschedule-panel w-100">
+                                        <h6 class="fw-bold small mb-3 text-dark">Alterar Agendamento</h6>
+                                        <div class="row g-2">
+                                            <div class="col-7">
+                                                <label class="small text-muted">Data</label>
+                                                <input type="date" id="apprDateInput" name="scheduled_date"
+                                                    class="form-control form-control-sm border-0 bg-white">
+                                            </div>
+                                            <div class="col-5">
+                                                <label class="small text-muted">Horário</label>
+                                                <input type="time" name="scheduled_time"
+                                                    class="form-control form-control-sm border-0 bg-white">
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
-                             </div>
+
+                                <div class="col-md-7 ps-4" style="max-height: 600px; overflow-y: auto;">
+
+                                    <div class="approval-detail-card d-flex justify-content-between">
+                                        <div>
+                                            <div class="approval-header-title" id="apprTitle">Título do Post</div>
+                                            <div class="text-muted small" id="apprClient">Nome do Cliente</div>
+                                            <div class="text-muted small mt-2">
+                                                <i class="fa-regular fa-calendar me-1"></i> <span
+                                                    id="apprDateDisplay">--/--</span>
+                                                <i class="fa-regular fa-clock ms-2 me-1"></i> <span
+                                                    id="apprTimeDisplay">--:--</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-light text-dark border"
+                                                id="apprNetwork">Instagram</span>
+                                            <span class="badge bg-light text-dark border ms-1"
+                                                id="apprFormat">Feed</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="approval-detail-card">
+                                        <div class="approval-label-section">
+                                            <span>Legenda</span>
+                                            <span class="link-back" onclick="goToTab('tab-copy')">← Voltar para
+                                                Copy</span>
+                                        </div>
+                                        <div class="approval-text-content" id="apprCaption">Sem legenda definida.</div>
+                                    </div>
+
+                                    <div class="approval-detail-card">
+                                        <div class="approval-label-section">
+                                            <span>Design</span>
+                                            <div>
+                                                <span class="link-back me-3" onclick="toggleRejectMode()"><i
+                                                        class="fa-solid fa-pencil"></i> Anotar</span>
+                                                <span class="link-back" onclick="goToTab('tab-design')">← Voltar para
+                                                    Designer</span>
+                                            </div>
+                                        </div>
+                                        <img id="apprThumb" src="" class="approval-design-thumb">
+                                    </div>
+
+                                    <div class="approval-detail-card">
+                                        <div class="approval-label-section"><span>Roteiro</span></div>
+                                        <div class="text-muted small mb-3" id="apprScript"
+                                            style="white-space: pre-wrap;">...</div>
+
+                                        <hr class="border-light">
+
+                                        <div class="approval-label-section"><span>Copy (Texto na Arte)</span></div>
+                                        <div class="text-muted small" id="apprCopyText">...</div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
+                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
+                                    onclick="goToTab('tab-design')">Cancelar</button>
+                                <button type="button" class="btn btn-success px-4 fw-bold text-white"
+                                    style="background-color: #198754; border: none;" onclick="saveAndAdvance()">
+                                    <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
+                                </button>
+                            </div>
+
+                            <div id="rejectPanel" class="card border-danger mt-3 mx-3"
+                                style="display:none; background-color: #fff5f5;">
+                                <div class="card-body">
+                                    <h6 class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i>
+                                        Solicitar Ajuste</h6>
+                                    <p class="small text-muted mb-2">Faça anotações na imagem do celular (esquerda) e
+                                        descreva abaixo:</p>
+
+                                    <textarea id="feedbackInput" class="form-control mb-3" rows="3"
+                                        placeholder="O que precisa ser alterado?"></textarea>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                            onclick="toggleRejectMode()">Cancelar</button>
+                                        <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="saveWithAnnotation()">Confirmar Ajuste</button>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                        </div>
+                    </div>
                 </form>
             </div>
         </div>

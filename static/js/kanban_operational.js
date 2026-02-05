@@ -386,22 +386,56 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function populateApprovalTab(data) {
+        // Cabeçalho
         setText('apprTitle', data.title);
         setText('apprClient', data.client_name);
         setText('apprNetwork', data.social_network || 'Geral');
-        setText('apprDate', data.scheduled_date || '--/--');
-        setText('apprCaption', data.caption_content || 'Sem legenda.');
-
-        const img = document.getElementById('approvalImage');
-        if (img) {
-            if (data.art_url) {
-                img.src = data.art_url;
-                img.onload = function () { initCanvas(); };
-            } else {
-                img.src = "";
-            }
+        setText('apprFormat', data.content_type || 'Post');
+        
+        // Data e Hora (Display e Inputs)
+        if (data.scheduled_date && data.scheduled_date.length >= 10) {
+            const datePart = data.scheduled_date.slice(0, 10);
+            const timePart = data.scheduled_date.slice(11, 16);
+            
+            setText('apprDateDisplay', datePart);
+            setText('apprTimeDisplay', timePart || '--:--');
+            
+            // Preenche inputs de reagendamento
+            setVal('apprDateInput', datePart);
+            // setVal('apprTimeInput', timePart); // Se tiver input de hora específico
         }
+
+        // Textos
+        setText('apprCaption', data.caption_content || 'Sem legenda.');
+        setText('apprScript', data.script_content || 'Sem roteiro.');
+        setText('apprCopyText', data.copy_content || 'Sem copy.'); // Se tiver esse campo no backend
+
+        // Imagens (Celular e Thumbnail Lateral)
+        const imgMobile = document.getElementById('approvalImage');
+        const imgThumb = document.getElementById('apprThumb');
+        
+        if (data.art_url) {
+            // Imagem Celular
+            if (imgMobile) {
+                imgMobile.src = data.art_url;
+                imgMobile.onload = function () { initCanvas(); };
+            }
+            // Thumbnail Lateral
+            if (imgThumb) {
+                imgThumb.src = data.art_url;
+                imgThumb.style.display = 'block';
+            }
+        } else {
+            if (imgMobile) imgMobile.src = "";
+            if (imgThumb) imgThumb.style.display = 'none';
+        }
+        
+        // Reseta canvas e modo rejeição
         window.clearCanvas();
+        const rejectPanel = document.getElementById('rejectPanel');
+        const mainActions = document.getElementById('mainActions');
+        if(rejectPanel) rejectPanel.style.display = 'none';
+        if(mainActions) mainActions.style.display = 'flex';
     }
 
     function setVal(id, val) {

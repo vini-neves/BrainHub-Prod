@@ -591,3 +591,67 @@ img.client-avatar-small {
     text-align: center;
     pointer-events: none;
 }
+
+/* --- ESTILOS DA ABA APROVAÇÃO (REF. EXATA) --- */
+
+/* Cards de Detalhes (Direita) */
+.approval-detail-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.approval-header-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 2px;
+}
+
+.approval-label-section {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #344767;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.approval-text-content {
+    font-size: 0.9rem;
+    color: #495057;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+/* Link "Voltar para..." */
+.link-back {
+    font-size: 0.75rem;
+    color: #fd7e14; /* Laranja */
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+.link-back:hover { text-decoration: underline; }
+
+/* Thumbnail do Design na Direita */
+.approval-design-thumb {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-top: 5px;
+}
+
+/* Painel de Reagendamento (Abaixo do celular) */
+.reschedule-panel {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+}
