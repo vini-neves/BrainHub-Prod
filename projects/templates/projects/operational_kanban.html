@@ -425,12 +425,6 @@
                         </div>
                         <div class="tab-pane fade" id="tab-approval">
 
-                            <div class="d-flex align-items-center mb-4 ps-1">
-                                <span
-                                    style="width: 10px; height: 10px; background-color: #fd7e14; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
-                                <h5 class="fw-bold m-0 text-dark">Aprovação Interna</h5>
-                            </div>
-
                             <div class="row">
 
                                 <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
@@ -495,8 +489,7 @@
                                     <div class="approval-detail-card">
                                         <div class="approval-label-section">
                                             <span>Legenda</span>
-                                            <span class="link-back" onclick="goToTab('tab-copy')">← Voltar para
-                                                Copy</span>
+                                            <span class="link-back" onclick="returnToStage('copy')">← Voltar para Copy</span>
                                         </div>
                                         <div class="approval-text-content" id="apprCaption">Sem legenda definida.</div>
                                     </div>
@@ -505,10 +498,8 @@
                                         <div class="approval-label-section">
                                             <span>Design</span>
                                             <div>
-                                                <span class="link-back me-3" onclick="toggleRejectMode()"><i
-                                                        class="fa-solid fa-pencil"></i> Anotar</span>
-                                                <span class="link-back" onclick="goToTab('tab-design')">← Voltar para
-                                                    Designer</span>
+                                                <span class="link-back me-3" onclick="toggleRejectMode()"><i class="fa-solid fa-pencil"></i> Anotar</span>
+                                                <span class="link-back" onclick="returnToStage('design')">← Voltar para Designer</span>
                                             </div>
                                         </div>
                                         <img id="apprThumb" src="" class="approval-design-thumb">
