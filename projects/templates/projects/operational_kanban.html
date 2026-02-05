@@ -143,11 +143,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <ul class="nav d-none" id="taskTabs">
-                <li class="nav-item"><button data-bs-target="#tab-briefing" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button data-bs-target="#tab-copy" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button data-bs-target="#tab-design" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button data-bs-target="#tab-approval" data-bs-toggle="tab"></button></li>
+            <ul class="nav nav-pills d-none" id="taskTabs">
+                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval" data-bs-toggle="tab"></button></li>
             </ul>
 
             <div class="modal-body pt-4">
@@ -334,7 +334,6 @@
                                 </div>
                              </div>
                         </div>
-
                         <div class="tab-pane fade" id="tab-approval">
                              <div class="row">
                                 <div class="col-md-6 d-flex justify-content-center">
@@ -375,8 +374,7 @@
                                 </div>
                              </div>
                         </div>
-
-                    </div>
+                        </div>
                 </form>
             </div>
         </div>

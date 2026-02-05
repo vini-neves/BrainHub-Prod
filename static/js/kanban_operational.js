@@ -424,15 +424,111 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // Botão Salvar Principal
-    window.saveAndAdvance = function (nextStatus) {
+    // Botão Salvar Principal (Com troca de aba visual e lógica de dados)
+    window.saveAndAdvance = function (nextTabName) { 
         const form = document.getElementById('kanbanTaskForm');
         const formData = new FormData(form);
 
         formData.append('action', 'save');
-        // Se quisermos forçar a mudança de status pelo botão, descomente abaixo:
-        // if(nextStatus) formData.append('force_status', nextStatus);
 
-        submitFormViaAjax(formData);
+        // Feedback Visual no Botão (Loading)
+        const btn = document.activeElement;
+        let originalText = "Salvar";
+        if(btn) {
+            originalText = btn.innerText;
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
+        }
+
+        const taskId = document.getElementById('task-id').value;
+        let url = CONFIG.urls.addTask;
+        if (taskId) url = `${CONFIG.urls.taskUpdate}${taskId}/`;
+
+        // Faz o envio MANUALMENTE aqui para controlar o sucesso
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': CONFIG.csrfToken }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                
+                // 1. Se era criação, atualiza o ID para as próximas edições não criarem duplicatas
+                if(!taskId) {
+                    document.getElementById('task-id').value = data.task_id;
+                    CONFIG.urls.addTask = `${CONFIG.urls.taskUpdate}${data.task_id}/`;
+                }
+
+                // 2. Se tem próxima aba, faz a transição visual
+                if (nextTabName) {
+                    const targetId = `#tab-${nextTabName}`;
+                    const tabTrigger = document.querySelector(`#taskTabs button[data-bs-target="${targetId}"]`);
+                    
+                    if (tabTrigger) {
+                        // Mostra a nova aba
+                        bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
+
+                        // --- ATUALIZA TÍTULO E COR DO MODAL ---
+                        const modalTitle = document.getElementById('modalKanbanType');
+                        const modalDot = document.getElementById('modalTypeDot');
+                        
+                        if (nextTabName === 'copy') {
+                            if(modalTitle) modalTitle.innerText = "Copy";
+                            if(modalDot) modalDot.style.backgroundColor = "#0d6efd"; // Azul
+                            
+                            // Popula o resumo lateral da aba Copy com os dados que acabamos de salvar/ler dos inputs
+                            populateCopyTab({
+                                title: document.getElementById('modalTitleInput').value,
+                                briefing_text: document.getElementById('briefing_text').value,
+                                social_network: document.getElementById('networkSelect').value,
+                                scheduled_date: document.getElementById('scheduled_date').value,
+                                // Adicione briefing_files se tiver lógica para pegar a URL temporária ou mantiver a antiga
+                            });
+
+                        } else if (nextTabName === 'design') {
+                            if(modalTitle) modalTitle.innerText = "Design";
+                            if(modalDot) modalDot.style.backgroundColor = "#d63384"; // Rosa
+                            
+                            // Popula resumo do Design
+                            populateDesignTab({
+                                title: document.getElementById('modalTitleInput').value,
+                                briefing_text: document.getElementById('briefing_text').value,
+                                copy_content: document.getElementById('copy_content_input') ? document.getElementById('copy_content_input').value : '',
+                                caption_content: document.getElementById('inputCaption') ? document.getElementById('inputCaption').value : ''
+                            });
+
+                        } else if (nextTabName === 'approval') {
+                            if(modalTitle) modalTitle.innerText = "Aprovação";
+                            if(modalDot) modalDot.style.backgroundColor = "#fd7e14"; // Laranja
+                            
+                            populateApprovalTab({
+                                title: document.getElementById('modalTitleInput').value,
+                                client_name: document.getElementById('clientSelect').options[document.getElementById('clientSelect').selectedIndex].text,
+                                caption_content: document.getElementById('inputCaption') ? document.getElementById('inputCaption').value : ''
+                                // A imagem precisa vir do backend ou do preview atual
+                            });
+                        }
+                    }
+                } else {
+                    // Se não foi passado nome de aba (é um salvar final), recarrega a página
+                    window.location.reload();
+                }
+
+            } else {
+                Swal.fire('Erro', data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Erro', 'Erro de conexão.', 'error');
+        })
+        .finally(() => {
+            if(btn) {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
     };
 
     function submitFormViaAjax(formData) {
