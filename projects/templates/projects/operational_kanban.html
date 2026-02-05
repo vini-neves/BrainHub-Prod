@@ -28,100 +28,96 @@
                     <li><a class="dropdown-item" href="#">Alta Prioridade</a></li>
                 </ul>
             </div>
-
-            <button class="btn btn-primary" onclick="openNewTaskModal()">
-                <i class="fa-solid fa-plus me-1"></i> Novo Post
-            </button>
         </div>
     </div>
 
     <div class="kanban-board" id="kanban-board">
-
+        
         {% for column in kanban_columns %}
         <div class="col-kanban">
+            
             <div class="col-kanban-header">
-                <span class="badge bg-white text-dark border">{{ column.tasks|length }}</span>
+                <div class="d-flex align-items-center">
+                    <span class="col-dot dot-{{ column.id }}"></span>
+                    <span>{{ column.title }}</span>
+                </div>
+                <span class="badge bg-light text-secondary border rounded-pill">{{ column.tasks|length }}</span>
             </div>
-
+            
             <div class="kanban-tasks-list" id="col-{{ column.id }}" data-status="{{ column.id }}">
-
+                
+                {% if column.id == 'briefing' %}
+                    <button class="btn-add-ghost" onclick="openNewTaskModal()">
+                        <i class="fa-solid fa-plus me-2"></i> Novo Post
+                    </button>
+                {% endif %}
+                
                 {% for task in column.tasks %}
-                <div class="kanban-card {% if task.priority == 'high' %}priority-high{% elif task.priority == 'medium' %}priority-medium{% else %}priority-low{% endif %}"
-                    draggable="true" data-id="{{ task.id }}" onclick="openEditModal({{ task.id }})">
-
-                    {% if task.art_url %}
-                    <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
+                <div class="kanban-card"
+                     draggable="true"
+                     data-id="{{ task.id }}"
+                     onclick="openEditModal({{ task.id }})">
+                    
+                    {% if task.art_url and column.id != 'briefing' and column.id != 'copy' %}
+                        <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
                     {% endif %}
-
+                    
                     <div class="p-3">
-                        <div class="d-flex justify-content-between mb-2 align-items-center">
-
-                            {% if task.social_network %}
-                            <div class="social-badge">
-                                {% if task.social_network == 'instagram' %}<i
-                                    class="fa-brands fa-instagram text-danger"></i>
-                                {% elif task.social_network == 'facebook' %}<i
-                                    class="fa-brands fa-facebook text-primary"></i>
-                                {% elif task.social_network == 'linkedin' %}<i
-                                    class="fa-brands fa-linkedin text-info"></i>
-                                {% elif task.social_network == 'tiktok' %}<i class="fa-brands fa-tiktok text-dark"></i>
-                                {% elif task.social_network == 'youtube' %}<i
-                                    class="fa-brands fa-youtube text-danger"></i>
-                                {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
-                                <span class="ms-1 text-uppercase small fw-bold">{{ task.social_network }}</span>
-                            </div>
-                            {% else %}
-                            <span></span>
-                            {% endif %}
-
-                            <small class="text-muted opacity-50" style="font-size: 0.7rem;">#{{ task.id }}</small>
-                        </div>
-
-                        <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem; line-height: 1.4;">
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem; line-height: 1.4;">
                             {{ task.title }}
                         </h6>
-                        {% if task.briefing_text %}
-                        <p class="text-muted mb-2 small"
-                            style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            {{ task.briefing_text }}
-                        </p>
+                        
+                        {% if not task.art_url or column.id == 'briefing' or column.id == 'copy' %}
+                            <p class="text-muted small mb-3" style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
+                            </p>
                         {% endif %}
 
-                        <p class="small text-muted mb-3 text-truncate">
-                            <i class="fa-regular fa-building me-1"></i> {{ task.client_name|default:"Sem Cliente" }}
-                        </p>
-
-                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-1">
-
-                            <small class="text-secondary" style="font-size: 0.75rem;">
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+                            
+                            <div class="text-muted x-small d-flex align-items-center" style="font-size: 0.7rem;">
+                                <i class="fa-regular fa-calendar me-1"></i> 
                                 {% if task.scheduled_date %}
-                                <i class="fa-regular fa-calendar me-1"></i>
-                                {{ task.scheduled_date|slice:":10" }} {% else %}
-                                <span class="text-muted">-</span>
+                                    {{ task.scheduled_date|slice:"8:10" }}/{{ task.scheduled_date|slice:"5:7" }}
+                                {% else %}
+                                    --
                                 {% endif %}
-                            </small>
+                                
+                                <i class="fa-regular fa-clock ms-2 me-1"></i>
+                                --:--
+                            </div>
 
-                            <div class="d-flex gap-2">
-                                {% if task.final_art %}
-                                <i class="fa-solid fa-image text-primary" title="Arte Anexada"></i>
-                                {% endif %}
-                                {% if task.briefing_files %}
-                                <i class="fa-solid fa-paperclip text-secondary" title="Anexo"></i>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if task.social_network %}
+                                    {% if task.social_network == 'instagram' %}<i class="fa-brands fa-instagram text-danger"></i>
+                                    {% elif task.social_network == 'facebook' %}<i class="fa-brands fa-facebook text-primary"></i>
+                                    {% elif task.social_network == 'linkedin' %}<i class="fa-brands fa-linkedin text-info"></i>
+                                    {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
                                 {% endif %}
                             </div>
+
                         </div>
+                        
+                        <div class="mt-2 d-flex align-items-center">
+                            <div class="client-avatar-small">
+                                {{ task.client_name|slice:":2"|upper }}
+                            </div>
+                            <span class="text-muted small" style="font-size: 0.75rem;">
+                                {{ task.client_name|truncatechars:15 }}
+                            </span>
+                        </div>
+
                     </div>
                 </div>
                 {% empty %}
-                <div class="py-4 text-center text-muted small opacity-50">
-
-                </div>
+                    {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div>
+                    {% endif %}
                 {% endfor %}
 
             </div>
         </div>
         {% endfor %}
-
+        
     </div>
 </div>
 {% endblock %}

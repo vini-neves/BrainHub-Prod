@@ -60,16 +60,10 @@
 /* =========================================
    3. CARDS (TAREFAS)
    ========================================= */
-.kanban-card {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(9, 30, 66, 0.25);
-    margin-bottom: 8px;
-    cursor: grab; /* Mãozinha de pegar */
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid transparent;
-    position: relative;
-    user-select: none; /* Evita selecionar texto ao arrastar */
+   .kanban-card {
+    border: 1px solid #e9ecef; /* Borda suave */
+    box-shadow: none;
+    margin-bottom: 12px;
 }
 
 .kanban-card:active {
@@ -77,9 +71,8 @@
 }
 
 .kanban-card:hover {
-    background-color: #fafbfc;
-    box-shadow: 0 4px 8px rgba(9, 30, 66, 0.15);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-color: #dee2e6;
 }
 
 /* Classe adicionada via JS enquanto arrasta */
@@ -88,13 +81,13 @@
     border: 2px dashed var(--secundary-color);;
 }
 
-/* Imagem de Capa */
 .card-cover {
     width: 100%;
-    height: 140px;
+    height: 160px; /* Mais alto como na referência */
     object-fit: cover;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f1f1f1;
     border-radius: 8px 8px 0 0;
+    background-color: #f8f9fa;
 }
 
 /* Badge de Rede Social */
@@ -307,4 +300,52 @@
     color: #fd7e14; /* Cor laranja do seu print */
     font-weight: 600;
     cursor: pointer;
+}
+
+.col-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+.dot-briefing { background-color: #6f42c1; } /* Roxo */
+.dot-copy { background-color: #0d6efd; }     /* Azul */
+.dot-design { background-color: #d63384; }   /* Rosa */
+.dot-review_internal { background-color: #fd7e14; } /* Laranja */
+.dot-review_client { background-color: #0dcaf0; }   /* Ciano */
+.dot-scheduled { background-color: #198754; }       /* Verde */
+
+.btn-add-ghost {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    background-color: transparent;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    color: #adb5bd;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.btn-add-ghost:hover {
+    border-color: var(--secondary-color);
+    color: var(--primary-color);
+    background-color: #f8f9fa;
+}
+
+.client-avatar-small {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #495057;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 6px;
 }
