@@ -99,11 +99,17 @@
                         </div>
                         
                         <div class="mt-2 d-flex align-items-center">
-                            <div class="client-avatar-small">
-                                {{ task.client_name|slice:":2"|upper }}
-                            </div>
-                            <span class="text-muted small" style="font-size: 0.75rem;">
-                                {{ task.client_name|truncatechars:15 }}
+                            
+                            {% if task.client_logo %}
+                                <img src="{{ task.client_logo }}" class="client-avatar-small" alt="{{ task.client_name }}" style="object-fit: cover; background: white;">
+                            {% else %}
+                                <div class="client-avatar-small">
+                                    {{ task.client_name|slice:":2"|upper }}
+                                </div>
+                            {% endif %}
+                            
+                            <span class="text-muted small text-truncate" style="font-size: 0.75rem; max-width: 120px;">
+                                {{ task.client_name }}
                             </span>
                         </div>
 
@@ -165,42 +171,93 @@
                     <div class="tab-content shadow-sm rounded">
 
                         <div class="tab-pane fade show active" id="tab-briefing">
-                            <div class="row g-3">
-                                <div class="col-12" id="clientSelectContainer">
-                                    <label class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
-                                    <select name="client" id="clientSelect" class="form-select" required>
-                                        <option value="">Selecione o Cliente...</option>
-                                        {% for client in clients %}
-                                        <option value="{{ client.id }}">{{ client.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                            <div class="px-2 py-1">
+                                
+                                <div class="d-flex align-items-center mb-4">
+                                    <span class="col-dot dot-briefing me-2"></span>
+                                    <h5 class="fw-bold m-0 text-dark">Briefing</h5>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Rede Social</label>
-                                    <select name="social_network" id="networkSelect" class="form-select" disabled>
-                                        <option value="">Selecione um cliente...</option>
-                                    </select>
+                        
+                                <div class="row g-3">
+                                    
+                                    <div class="col-12" id="clientSelectContainer">
+                                        <label class="modal-briefing-label">Cliente / Projeto</label>
+                                        <select name="client" id="clientSelect" class="form-select form-select-clean" required>
+                                            <option value="">Selecione...</option>
+                                            {% for client in clients %}
+                                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                        
+                                    <div class="col-12">
+                                        <label class="modal-briefing-label">Título do Post</label>
+                                        <input type="text" name="title" id="modalTitleInput" 
+                                               class="form-control form-control-clean" 
+                                               placeholder="Ex: Campanha Black Friday" required>
+                                    </div>
+                        
+                                    <div class="col-md-6">
+                                        <label class="modal-briefing-label">Rede Social</label>
+                                        <select name="social_network" id="networkSelect" class="form-select form-select-clean" disabled>
+                                            <option value="">Selecione o cliente...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="modal-briefing-label">Tipo de Conteúdo</label>
+                                        <select name="content_type" id="formatSelect" class="form-select form-select-clean">
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                    </div>
+                        
+                                    <div class="col-md-6">
+                                        <label class="modal-briefing-label">Data de Agendamento</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fa-regular fa-calendar"></i></span>
+                                            <input type="date" name="scheduled_date" id="scheduled_date" class="form-control form-control-clean border-start-0 ps-0">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="modal-briefing-label">Horário</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fa-regular fa-clock"></i></span>
+                                            <input type="time" name="scheduled_time" class="form-control form-control-clean border-start-0 ps-0">
+                                        </div>
+                                    </div>
+                        
+                                    <div class="col-12">
+                                        <label class="modal-briefing-label">Briefing</label>
+                                        <textarea name="briefing_text" id="briefing_text" class="form-control form-control-clean" rows="4" 
+                                                  placeholder="Descreva o objetivo do post, tom de voz e detalhes importantes..."></textarea>
+                                    </div>
+                        
+                                    <div class="col-12 mt-4">
+                                        <label class="modal-briefing-label">Mídia de Referência</label>
+                                        
+                                        <div class="upload-box-dashed position-relative">
+                                            <input type="file" name="briefing_files" class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;" onchange="updateFileName(this)">
+                                            
+                                            <div class="text-center pointer-events-none">
+                                                <i class="fa-solid fa-arrow-up-from-bracket upload-icon"></i>
+                                                <h6 class="text-dark fw-bold mb-1" id="uploadTextMain">Arraste arquivos ou clique para fazer upload</h6>
+                                                <span class="text-muted small" id="uploadTextSub">PNG, JPG, MP4 até 50MB</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="currentFileLink" class="mt-2 small text-primary text-center"></div>
+                                    </div>
+                        
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Formato</label>
-                                    <select name="content_type" id="formatSelect" class="form-select">
-                                        <option value="">Selecione a rede...</option>
-                                    </select>
+                        
+                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-success px-4" onclick="saveAndAdvance('copy')">
+                                        Enviar para Copy <i class="fa-solid fa-arrow-right ms-2"></i>
+                                    </button>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Data Prevista</label>
-                                    <input type="date" name="scheduled_date" id="scheduled_date" class="form-control">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-bold">Briefing / Ideia do Post</label>
-                                    <textarea name="briefing_text" id="briefing_text" class="form-control"
-                                        rows="5"></textarea>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-bold">Anexos</label>
-                                    <input type="file" name="briefing_files" class="form-control">
-                                    <div id="currentFileLink" class="mt-2"></div>
-                                </div>
+                        
                             </div>
                         </div>
 

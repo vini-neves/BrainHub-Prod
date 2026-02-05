@@ -256,7 +256,7 @@ class Task(models.Model):
             # --- DADOS DE CLIENTE (Operacional e Geral) ---
             'client_id': self.client.id if self.client else None, # Importante para filtros
             'client_name': self.client.name if self.client else "Sem Cliente",
-            
+            'client_logo': self.client.logo.url if (self.client and self.client.logo) else None,
             # --- DATAS (Atenção aqui) ---
             # 'deadline' é usado no Geral
             'deadline': self.deadline.strftime('%d/%m/%Y') if self.deadline else None,

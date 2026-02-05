@@ -502,4 +502,12 @@ document.addEventListener("DOMContentLoaded", function() {
         // mas o initCanvas já é chamado ao abrir o reject mode.
         initCanvas(); 
     };
+    window.updateFileName = function(input) {
+        if (input.files && input.files.length > 0) {
+            document.getElementById('uploadTextMain').innerText = input.files[0].name;
+            document.getElementById('uploadTextSub').innerText = "Arquivo selecionado pronto para envio";
+            document.querySelector('.upload-box-dashed').style.borderColor = "#198754"; // Borda verde
+            document.querySelector('.upload-icon').style.color = "#198754";
+        }
+    };
 });
