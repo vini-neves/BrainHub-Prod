@@ -399,3 +399,37 @@ img.client-avatar-small {
     color: #6c757d;
     margin-bottom: 10px;
 }
+
+.modal-dialog-clean {
+    max-width: 700px; /* Largura igual da imagem */
+    margin: 1.75rem auto;
+}
+
+.modal-content-clean {
+    border-radius: 20px; /* Arredondamento forte */
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 20px; /* Espaçamento interno geral */
+}
+
+/* Remove a borda padrão do cabeçalho */
+.modal-header-clean {
+    border-bottom: none;
+    padding-bottom: 0;
+    align-items: center;
+}
+
+/* Título do Modal com a bolinha */
+.modal-title-custom {
+    font-size: 1.2rem;
+    font-weight: 800; /* Extra bold */
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Esconde abas antigas se sobrarem */
+.nav-pills, .nav-tabs {
+    display: none !important;
+}
