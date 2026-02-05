@@ -192,22 +192,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- CANVAS (CORRIGIDO) ---
     let canvas, ctx, isDrawing = false, hasAnnotation = false;
+
     function initCanvas() {
         canvas = document.getElementById('annotationCanvas');
         const img = document.getElementById('approvalImage');
+
+        // Só inicializa se a imagem estiver visível e tiver tamanho
         if (canvas && img && img.clientWidth > 0) {
+            // Define o tamanho interno do canvas igual ao tamanho visual da imagem
             canvas.width = img.clientWidth;
             canvas.height = img.clientHeight;
-            ctx = canvas.getContext('2d');
-            ctx.strokeStyle = "#ff0000"; ctx.lineWidth = 4; ctx.lineCap = "round";
             
+            ctx = canvas.getContext('2d');
+            
+            // --- CORREÇÃO 1: COR COM TRANSPARÊNCIA (RGBA) ---
+            // 0.6 no final significa 60% de visibilidade (semi-transparente)
+            ctx.strokeStyle = "rgba(255, 0, 0, 0.6)"; 
+            ctx.lineWidth = 5; // Linha um pouco mais grossa
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            // Remove listeners antigos para não duplicar
             canvas.removeEventListener('mousedown', startDraw);
+            canvas.removeEventListener('mousemove', draw);
+            canvas.removeEventListener('mouseup', stopDraw);
+            canvas.removeEventListener('mouseout', stopDraw);
+
+            // Adiciona novos listeners
             canvas.addEventListener('mousedown', startDraw);
             canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', () => isDrawing = false);
+            canvas.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('mouseout', stopDraw);
         }
     }
     
+    // Função para pegar a posição correta do mouse
     function getMousePos(evt) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -217,16 +236,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function startDraw(e) {
-        isDrawing = true; hasAnnotation = true;
+        isDrawing = true; 
+        hasAnnotation = true;
         const pos = getMousePos(e);
-        ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+        ctx.beginPath(); 
+        ctx.moveTo(pos.x, pos.y);
+        // Mostra o botão de limpar
         document.getElementById('drawControls').style.display = 'block';
     }
 
     function draw(e) {
         if (!isDrawing) return;
         const pos = getMousePos(e);
-        ctx.lineTo(pos.x, pos.y); ctx.stroke();
+        ctx.lineTo(pos.x, pos.y); 
+        ctx.stroke();
+    }
+
+    function stopDraw() {
+        isDrawing = false;
     }
     
     window.clearCanvas = function() {
@@ -234,7 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
         hasAnnotation = false;
         document.getElementById('drawControls').style.display = 'none';
     };
-
     // --- ACTIONS (VOLTAR, SALVAR) ---
     
     // Retorno Inteligente (Captura canvas se for design)
@@ -356,8 +382,25 @@ document.addEventListener("DOMContentLoaded", function () {
     window.toggleRejectMode = function() {
         const p = document.getElementById('rejectPanel');
         const a = document.getElementById('mainActions');
-        if(p.style.display==='none'){ p.style.display='block'; a.style.display='none'; initCanvas(); }
-        else { p.style.display='none'; a.style.display='flex'; }
+        const feedbackInput = document.getElementById('feedbackInput');
+
+        if(p.style.display === 'none'){ 
+            // MOSTRAR PAINEL DE REJEIÇÃO
+            p.style.display = 'block'; 
+            a.style.display = 'none'; 
+            
+            // Inicializa o canvas agora que o layout está pronto
+            setTimeout(initCanvas, 100); 
+
+            // Foca na caixa de texto para facilitar
+            if(feedbackInput) setTimeout(() => feedbackInput.focus(), 200);
+        } else { 
+            // ESCONDER PAINEL
+            p.style.display = 'none'; 
+            a.style.display = 'flex'; 
+            // Opcional: limpar o canvas se cancelar
+            // clearCanvas(); 
+        }
     };
     
     // Dropdowns
