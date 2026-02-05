@@ -20,7 +20,34 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // ============================================================
-    // 1. DRAG AND DROP
+    // 1. UTILITÁRIOS VISUAIS (HEADER DO MODAL)
+    // ============================================================
+    function updateModalHeader(tabName) {
+        const titleEl = document.getElementById('modalKanbanType');
+        const dotEl = document.getElementById('modalTypeDot');
+        
+        if (!titleEl || !dotEl) return;
+
+        // Limpa hashtags se vierem no nome
+        const cleanTab = tabName.replace('#tab-', '').replace('#', '');
+
+        if (cleanTab === 'copy') {
+            titleEl.innerText = "Copy";
+            dotEl.style.backgroundColor = "#0d6efd"; // Azul
+        } else if (cleanTab === 'design') {
+            titleEl.innerText = "Design";
+            dotEl.style.backgroundColor = "#d63384"; // Rosa
+        } else if (cleanTab === 'approval' || cleanTab === 'review_internal' || cleanTab === 'review_client') {
+            titleEl.innerText = "Aprovação";
+            dotEl.style.backgroundColor = "#fd7e14"; // Laranja
+        } else {
+            titleEl.innerText = "Briefing";
+            dotEl.style.backgroundColor = "#6f42c1"; // Roxo
+        }
+    }
+
+    // ============================================================
+    // 2. DRAG AND DROP
     // ============================================================
     const cards = document.querySelectorAll('.kanban-card');
     const columns = document.querySelectorAll('.kanban-tasks-list');
@@ -75,18 +102,18 @@ document.addEventListener("DOMContentLoaded", function () {
             body: JSON.stringify({ task_id: taskId, status: status, newOrderList: orderList }),
             headers: { 'X-CSRFToken': CONFIG.csrfToken, 'Content-Type': 'application/json' }
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status !== 'success') {
-                    Swal.fire('Erro', 'Erro ao mover card: ' + data.message, 'error');
-                    window.location.reload();
-                }
-            })
-            .catch(err => console.error(err));
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                Swal.fire('Erro', 'Erro ao mover card: ' + data.message, 'error');
+                window.location.reload();
+            }
+        })
+        .catch(err => console.error(err));
     }
 
     // ============================================================
-    // 2. FUNÇÕES DO MODAL (NOVO POST E EDIÇÃO)
+    // 3. FUNÇÕES DO MODAL (NOVO POST E EDIÇÃO)
     // ============================================================
 
     // --- ABRIR MODAL "NOVO POST" ---
@@ -94,24 +121,18 @@ document.addEventListener("DOMContentLoaded", function () {
         const modalEl = document.getElementById('taskModal');
         const form = document.getElementById('kanbanTaskForm');
 
-        // 1. Reseta o formulário
         if (form) form.reset();
-
-        // 2. Garante que é criação (ID vazio)
         document.getElementById('task-id').value = "";
 
-        // 3. Define URL de criação
+        // Define URL de criação
         const isOperational = window.location.href.includes("operational");
         CONFIG.urls.addTask = isOperational ? "/api/task/add-operational/" : "/api/task/add-general/";
 
-        // 4. Reseta selects
+        // Reseta selects
         const netSelect = document.getElementById('networkSelect');
-        if (netSelect) {
-            netSelect.innerHTML = '<option value="">Instagram</option>'; // Padrão
-            // Não desabilitamos mais, pois o layout clean já mostra
-        }
+        if (netSelect) netSelect.innerHTML = '<option value="">Instagram</option>';
 
-        // 5. Reseta Upload e Preview (IDs novos do layout Clean)
+        // Reseta Upload
         const previewImg = document.getElementById('designPreviewImg');
         const placeholder = document.getElementById('designUploadPlaceholder');
         const uploadText = document.getElementById('uploadTextMain');
@@ -120,18 +141,18 @@ document.addEventListener("DOMContentLoaded", function () {
         if (placeholder) placeholder.style.display = 'block';
         if (uploadText) uploadText.innerText = "Arraste arquivos ou clique para fazer upload";
 
-        // Remove borda verde do upload se houver
         const uploadBox = document.querySelector('.upload-box-dashed');
         if (uploadBox) {
             uploadBox.style.borderColor = "#a0aec0";
             uploadBox.style.backgroundColor = "transparent";
         }
 
-        // 6. Abre na aba Briefing sempre
+        // Abre na aba Briefing
         const triggerEl = document.querySelector('#taskTabs button[data-bs-target="#tab-briefing"]');
         if (triggerEl) bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+        
+        updateModalHeader('briefing'); // Reseta cabeçalho
 
-        // 7. Mostra o modal
         new bootstrap.Modal(modalEl).show();
     };
 
@@ -155,10 +176,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 setVal('clientSelect', data.client_id);
                 setVal('scheduled_date', data.scheduled_date ? data.scheduled_date.slice(0, 10) : '');
 
-                // 2. Atualiza Redes Sociais e Formatos
+                // 2. Atualiza Redes
                 window.updateSocialNetworks(data.client_id, data.social_network);
 
-                // Pequeno delay para garantir que o select populou antes de setar o valor
                 setTimeout(() => {
                     const fmtSelect = document.getElementById('formatSelect');
                     if (fmtSelect) fmtSelect.dataset.value = data.content_type;
@@ -170,12 +190,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 setVal('inputCaption', data.caption_content);
                 setVal('script_content', data.script_content);
 
-                // 4. Preenche as Abas Escondidas (Design/Aprovação)
+                // 4. Preenche as Abas Escondidas
                 populateDesignTab(data);
                 populateCopyTab(data);
                 populateApprovalTab(data);
 
-                // 5. Decide qual aba abrir baseado no status
+                // 5. Decide qual aba abrir
                 const statusMap = {
                     'briefing': '#tab-briefing',
                     'copy': '#tab-copy',
@@ -186,19 +206,117 @@ document.addEventListener("DOMContentLoaded", function () {
                 };
                 let targetTabId = statusMap[data.status] || '#tab-briefing';
 
-                // Força abrir a aba correta
                 const tabBtn = document.querySelector(`#taskTabs button[data-bs-target="${targetTabId}"]`);
                 if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+                
+                // Atualiza o título e cor do modal
+                updateModalHeader(targetTabId);
             })
             .catch(err => console.error("Erro ao carregar tarefa:", err));
     };
 
     // ============================================================
-    // 3. FUNÇÕES AUXILIARES DE PREENCHIMENTO (Populate)
+    // 4. BOTÃO SALVAR E AVANÇAR (LÓGICA PRINCIPAL)
+    // ============================================================
+    
+    window.saveAndAdvance = function (nextTabName) { 
+        const form = document.getElementById('kanbanTaskForm');
+        const formData = new FormData(form);
+
+        formData.append('action', 'save');
+
+        // Feedback Visual
+        const btn = document.activeElement;
+        let originalText = "Salvar";
+        if(btn && btn.tagName === 'BUTTON') {
+            originalText = btn.innerText;
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
+        }
+
+        const taskId = document.getElementById('task-id').value;
+        let url = CONFIG.urls.addTask;
+        if (taskId) url = `${CONFIG.urls.taskUpdate}${taskId}/`;
+
+        // Envio via AJAX
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': CONFIG.csrfToken }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                
+                // Atualiza ID se for criação
+                if(!taskId) {
+                    document.getElementById('task-id').value = data.task_id;
+                    CONFIG.urls.addTask = `${CONFIG.urls.taskUpdate}${data.task_id}/`;
+                }
+
+                // Se tiver próxima aba, troca visualmente
+                if (nextTabName) {
+                    const targetId = `#tab-${nextTabName}`;
+                    const tabTrigger = document.querySelector(`#taskTabs button[data-bs-target="${targetId}"]`);
+                    
+                    if (tabTrigger) {
+                        bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
+                        
+                        // Atualiza título e cor
+                        updateModalHeader(nextTabName);
+
+                        // Atualiza resumos imediatos com o que está nos inputs
+                        if (nextTabName === 'copy') {
+                            populateCopyTab({
+                                title: document.getElementById('modalTitleInput').value,
+                                briefing_text: document.getElementById('briefing_text').value,
+                                social_network: document.getElementById('networkSelect').value,
+                                content_type: document.getElementById('formatSelect').value,
+                                scheduled_date: document.getElementById('scheduled_date').value
+                            });
+                        } else if (nextTabName === 'design') {
+                            populateDesignTab({
+                                title: document.getElementById('modalTitleInput').value,
+                                briefing_text: document.getElementById('briefing_text').value,
+                                copy_content: document.getElementById('copy_content_input') ? document.getElementById('copy_content_input').value : '',
+                                caption_content: document.getElementById('inputCaption') ? document.getElementById('inputCaption').value : ''
+                            });
+                        }
+                    }
+                } else {
+                    // Se não tiver próxima aba (botão final), recarrega
+                    window.location.reload();
+                }
+            } else {
+                Swal.fire('Erro', data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Erro', 'Erro de conexão.', 'error');
+        })
+        .finally(() => {
+            if(btn && btn.tagName === 'BUTTON') {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+    };
+
+    // Navegação Manual (botão Voltar/Cancelar)
+    window.goToTab = function (tabId) {
+        const tabBtn = document.querySelector(`#taskTabs button[data-bs-target="#${tabId}"]`);
+        if (tabBtn) {
+            bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+            updateModalHeader(tabId);
+        }
+    };
+
+    // ============================================================
+    // 5. POPULATE FUNCTIONS (PREENCHER DADOS VISUAIS)
     // ============================================================
 
     function populateDesignTab(data) {
-        // Verifica se os elementos existem antes de tentar preencher
         setText('designBriefTitle', data.title);
         setText('designNetwork', data.social_network || 'Geral');
         setText('designDate', data.scheduled_date || '--/--');
@@ -206,7 +324,6 @@ document.addEventListener("DOMContentLoaded", function () {
         setText('designHeadline', data.copy_content || 'Sem copy.');
         setText('designCaption', data.caption_content || 'Sem legenda.');
 
-        // Preview da Arte
         const img = document.getElementById('designPreviewImg');
         const placeholder = document.getElementById('designUploadPlaceholder');
         if (img && placeholder) {
@@ -220,41 +337,27 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // --- POPULA A ABA COPY (RESUMO ESQUERDA) ---
     function populateCopyTab(data) {
-        // 1. Textos do Resumo
         setText('copyBriefTitle', data.title);
         setText('copyNetwork', data.social_network || 'Geral');
         setText('copyFormat', data.content_type || 'Post');
 
-        // Data e Hora separadas
-        if (data.scheduled_date) {
-            setText('copyDate', data.scheduled_date.slice(0, 10)); // Pega só YYYY-MM-DD
-            // Se tiver hora salva no banco, mostraria aqui. Como o scheduled_date as vezes é datetime:
+        if (data.scheduled_date && data.scheduled_date.length >= 10) {
+            setText('copyDate', data.scheduled_date.slice(0, 10));
             setText('copyTime', data.scheduled_date.slice(11, 16) || '--:--');
         }
 
         setText('copyBriefText', data.briefing_text || 'Sem descrição.');
 
-        // 2. Mídia de Referência (Miniatura)
         const refContainer = document.getElementById('copyRefContainer');
         if (refContainer) {
             if (data.briefing_files) {
-                // Se for imagem, mostra thumb. Se for arquivo, mostra link.
-                // Aqui assumindo que briefing_files é URL de imagem para simplificar visual
-                refContainer.innerHTML = `
-                <img src="${data.briefing_files}" class="briefing-thumb" onclick="window.open('${data.briefing_files}', '_blank')">
-            `;
+                refContainer.innerHTML = `<img src="${data.briefing_files}" class="briefing-thumb" onclick="window.open('${data.briefing_files}', '_blank')">`;
             } else {
                 refContainer.innerHTML = '<span class="text-muted small fst-italic">Sem referência.</span>';
             }
         }
     }
-
-    // Contador de Caracteres Simples
-    window.updateCharCount = function (textarea) {
-        document.getElementById('charCount').innerText = textarea.value.length;
-    };
 
     function populateApprovalTab(data) {
         setText('apprTitle', data.title);
@@ -263,7 +366,6 @@ document.addEventListener("DOMContentLoaded", function () {
         setText('apprDate', data.scheduled_date || '--/--');
         setText('apprCaption', data.caption_content || 'Sem legenda.');
 
-        // Imagem do Celular
         const img = document.getElementById('approvalImage');
         if (img) {
             if (data.art_url) {
@@ -276,7 +378,6 @@ document.addEventListener("DOMContentLoaded", function () {
         window.clearCanvas();
     }
 
-    // Atalhos seguros
     function setVal(id, val) {
         const el = document.getElementById(id);
         if (el) el.value = val || '';
@@ -286,17 +387,18 @@ document.addEventListener("DOMContentLoaded", function () {
         if (el) el.innerText = text || '';
     }
 
+    window.updateCharCount = function (textarea) {
+        document.getElementById('charCount').innerText = textarea.value.length;
+    };
+
     // ============================================================
-    // 4. LÓGICA DE UPLOAD E CANVAS
+    // 6. UPLOAD E CANVAS
     // ============================================================
 
-    // Atualiza nome do arquivo no Upload Tracejado (Briefing)
     window.updateFileName = function (input) {
         if (input.files && input.files.length > 0) {
             const txtMain = document.getElementById('uploadTextMain');
             if (txtMain) txtMain.innerText = input.files[0].name;
-
-            // Estilo visual de sucesso
             const box = input.closest('.upload-box-dashed');
             if (box) {
                 box.style.borderColor = "#00bfa5";
@@ -305,7 +407,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
-    // Preview do Upload de Design (Aba Design)
     window.previewUpload = function (input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
@@ -319,7 +420,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Canvas (Riscar imagem)
     let canvas, ctx, isDrawing = false, hasAnnotation = false;
     function initCanvas() {
         canvas = document.getElementById('annotationCanvas');
@@ -329,7 +429,6 @@ document.addEventListener("DOMContentLoaded", function () {
             canvas.height = img.clientHeight;
             ctx = canvas.getContext('2d');
             ctx.strokeStyle = "#ff0000"; ctx.lineWidth = 4; ctx.lineCap = "round";
-
             canvas.addEventListener('mousedown', startDraw);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', endDraw);
@@ -358,16 +457,14 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // ============================================================
-    // 5. REDES SOCIAIS E FILTROS
+    // 7. LISTENERS E REDES SOCIAIS
     // ============================================================
     window.updateSocialNetworks = function (clientId, selectedNetwork = null) {
         const netSelect = document.getElementById('networkSelect');
         const formatSelect = document.getElementById('formatSelect');
-
         if (!netSelect) return;
         netSelect.innerHTML = '<option value="">Selecione...</option>';
         if (formatSelect) formatSelect.innerHTML = '<option value="">Selecione a rede...</option>';
-
         if (!clientId) return;
 
         const networks = CLIENT_NETWORKS[clientId.toString()] || [];
@@ -379,7 +476,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (selectedNetwork && selectedNetwork === netCode) option.selected = true;
             netSelect.appendChild(option);
         });
-
         if (selectedNetwork) {
             netSelect.value = selectedNetwork;
             window.filterFormats();
@@ -390,10 +486,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const networkEl = document.getElementById('networkSelect');
         const formatSelect = document.getElementById('formatSelect');
         if (!networkEl || !formatSelect) return;
-
         const network = networkEl.value;
         const currentVal = formatSelect.dataset.value || formatSelect.value;
-
         formatSelect.innerHTML = '<option value="">Selecione...</option>';
         if (network && networkRules[network]) {
             networkRules[network].forEach(opt => {
@@ -406,168 +500,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
-    // Listeners
     const clientSelect = document.getElementById('clientSelect');
     if (clientSelect) clientSelect.addEventListener('change', function () { window.updateSocialNetworks(this.value); });
-
     const networkSelect = document.getElementById('networkSelect');
     if (networkSelect) networkSelect.addEventListener('change', window.filterFormats);
 
     // ============================================================
-    // 6. SALVAR E NAVEGAR (SAVE & ADVANCE)
+    // 8. FUNÇÕES FINAIS (SUBMIT, REJECT)
     // ============================================================
-
-    // Botão de navegação entre abas
-    window.goToTab = function (tabId) {
-        const tabBtn = document.querySelector(`#taskTabs button[data-bs-target="#${tabId}"]`);
-        if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
-    };
-
-    // Botão Salvar Principal
-    // Botão Salvar Principal (Com troca de aba visual e lógica de dados)
-    window.saveAndAdvance = function (nextTabName) { 
-        const form = document.getElementById('kanbanTaskForm');
-        const formData = new FormData(form);
-
-        formData.append('action', 'save');
-
-        // Feedback Visual no Botão (Loading)
-        const btn = document.activeElement;
-        let originalText = "Salvar";
-        if(btn) {
-            originalText = btn.innerText;
-            btn.innerText = "Salvando...";
-            btn.disabled = true;
-        }
-
-        const taskId = document.getElementById('task-id').value;
-        let url = CONFIG.urls.addTask;
-        if (taskId) url = `${CONFIG.urls.taskUpdate}${taskId}/`;
-
-        // Faz o envio MANUALMENTE aqui para controlar o sucesso
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-CSRFToken': CONFIG.csrfToken }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                
-                // 1. Se era criação, atualiza o ID para as próximas edições não criarem duplicatas
-                if(!taskId) {
-                    document.getElementById('task-id').value = data.task_id;
-                    CONFIG.urls.addTask = `${CONFIG.urls.taskUpdate}${data.task_id}/`;
-                }
-
-                // 2. Se tem próxima aba, faz a transição visual
-                if (nextTabName) {
-                    const targetId = `#tab-${nextTabName}`;
-                    const tabTrigger = document.querySelector(`#taskTabs button[data-bs-target="${targetId}"]`);
-                    
-                    if (tabTrigger) {
-                        // Mostra a nova aba
-                        bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
-
-                        // --- ATUALIZA TÍTULO E COR DO MODAL ---
-                        const modalTitle = document.getElementById('modalKanbanType');
-                        const modalDot = document.getElementById('modalTypeDot');
-                        
-                        if (nextTabName === 'copy') {
-                            if(modalTitle) modalTitle.innerText = "Copy";
-                            if(modalDot) modalDot.style.backgroundColor = "#0d6efd"; // Azul
-                            
-                            // Popula o resumo lateral da aba Copy com os dados que acabamos de salvar/ler dos inputs
-                            populateCopyTab({
-                                title: document.getElementById('modalTitleInput').value,
-                                briefing_text: document.getElementById('briefing_text').value,
-                                social_network: document.getElementById('networkSelect').value,
-                                scheduled_date: document.getElementById('scheduled_date').value,
-                                // Adicione briefing_files se tiver lógica para pegar a URL temporária ou mantiver a antiga
-                            });
-
-                        } else if (nextTabName === 'design') {
-                            if(modalTitle) modalTitle.innerText = "Design";
-                            if(modalDot) modalDot.style.backgroundColor = "#d63384"; // Rosa
-                            
-                            // Popula resumo do Design
-                            populateDesignTab({
-                                title: document.getElementById('modalTitleInput').value,
-                                briefing_text: document.getElementById('briefing_text').value,
-                                copy_content: document.getElementById('copy_content_input') ? document.getElementById('copy_content_input').value : '',
-                                caption_content: document.getElementById('inputCaption') ? document.getElementById('inputCaption').value : ''
-                            });
-
-                        } else if (nextTabName === 'approval') {
-                            if(modalTitle) modalTitle.innerText = "Aprovação";
-                            if(modalDot) modalDot.style.backgroundColor = "#fd7e14"; // Laranja
-                            
-                            populateApprovalTab({
-                                title: document.getElementById('modalTitleInput').value,
-                                client_name: document.getElementById('clientSelect').options[document.getElementById('clientSelect').selectedIndex].text,
-                                caption_content: document.getElementById('inputCaption') ? document.getElementById('inputCaption').value : ''
-                                // A imagem precisa vir do backend ou do preview atual
-                            });
-                        }
-                    }
-                } else {
-                    // Se não foi passado nome de aba (é um salvar final), recarrega a página
-                    window.location.reload();
-                }
-
-            } else {
-                Swal.fire('Erro', data.message, 'error');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            Swal.fire('Erro', 'Erro de conexão.', 'error');
-        })
-        .finally(() => {
-            if(btn) {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        });
-    };
-
-    function submitFormViaAjax(formData) {
-        Swal.fire({
-            title: 'Salvando...',
-            didOpen: () => { Swal.showLoading() }
-        });
-
-        const taskId = document.getElementById('task-id').value;
-        let url = CONFIG.urls.addTask;
-        if (taskId) url = `${CONFIG.urls.taskUpdate}${taskId}/`;
-
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-CSRFToken': CONFIG.csrfToken }
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    Swal.fire({
-                        title: 'Salvo!',
-                        icon: 'success',
-                        timer: 1000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire('Erro', data.message, 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Erro', 'Erro de conexão.', 'error');
-            });
-    }
-
-    // Funções extras (Aprovação / Rejeição)
     window.toggleRejectMode = function () {
         const panel = document.getElementById('rejectPanel');
         const actions = document.getElementById('mainActions');
@@ -580,13 +520,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
+    function submitFormViaAjax(formData) {
+        // Função usada pelo saveWithAnnotation (rejeição)
+        Swal.fire({ title: 'Salvando...', didOpen: () => { Swal.showLoading() } });
+        const taskId = document.getElementById('task-id').value;
+        let url = CONFIG.urls.addTask;
+        if (taskId) url = `${CONFIG.urls.taskUpdate}${taskId}/`;
+
+        fetch(url, {
+            method: 'POST', body: formData, headers: { 'X-CSRFToken': CONFIG.csrfToken }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                Swal.fire({ title: 'Salvo!', icon: 'success', timer: 1000, showConfirmButton: false }).then(() => { window.location.reload(); });
+            } else {
+                Swal.fire('Erro', data.message, 'error');
+            }
+        })
+        .catch(err => Swal.fire('Erro', 'Erro de conexão.', 'error'));
+    }
+
     window.saveWithAnnotation = function () {
         const feedback = document.getElementById('feedbackInput').value;
         if (!feedback) { Swal.fire('Erro', 'Escreva o motivo.', 'warning'); return; }
-
         const formData = new FormData(document.getElementById('kanbanTaskForm'));
         formData.append('action', 'reject');
-
         if (hasAnnotation && canvas) {
             canvas.toBlob(function (blob) {
                 formData.append('feedback_image_annotation', blob, 'annotation.png');
