@@ -36,7 +36,8 @@ urlpatterns = [
     path('api/task/details/<int:pk>/', views.get_task_details_api, name='get_task_details_api'),
     path('api/task/delete/<int:pk>/', views.DeleteTaskAPI.as_view(), name='delete_task_api'),
     path('api/task/edit/<int:pk>/', views.EditTaskAPI.as_view(), name='edit_task_api'),
-    path('task/update/<int:pk>/', views.update_task_kanban, name='update_task_kanban'),
+    path('task/update/<int:pk>/', views.update_task_api, name='task_update_api'),
+    
 
     # --- CLIENTES & PROJETOS ---
     path('clients/', views.client_list_create, name='client_list'),

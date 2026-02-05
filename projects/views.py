@@ -332,6 +332,86 @@ def operational_kanban_view(request):
     return render(request, template, context)
 
 @login_required
+@require_POST
+def update_task_api(request, pk):
+    """
+    Processa atualizações do Modal Operacional via AJAX/JSON.
+    Lida com: Salvar dados, Mudar Status (Voltar) e Aprovação/Rejeição.
+    """
+    task = get_object_or_404(Task, pk=pk)
+    
+    try:
+        # 1. AÇÃO ESPECIAL: VOLTAR ETAPA (FORCE STATUS)
+        # É aqui que o botão "Voltar para Copy" funciona
+        force_status = request.POST.get('force_status')
+        if force_status:
+            task.status = force_status
+
+        # 2. ATUALIZAÇÃO DE CAMPOS (DADOS DO FORMULÁRIO)
+        # Briefing
+        if 'title' in request.POST: task.title = request.POST.get('title')
+        if 'client' in request.POST: task.client_id = request.POST.get('client')
+        if 'social_network' in request.POST: task.social_network = request.POST.get('social_network')
+        if 'content_type' in request.POST: task.content_type = request.POST.get('content_type')
+        if 'briefing_text' in request.POST: task.briefing_text = request.POST.get('briefing_text')
+        
+        # Datas
+        scheduled_date = request.POST.get('scheduled_date')
+        if scheduled_date: 
+            task.scheduled_date = scheduled_date
+        
+        # Copy
+        if 'script_content' in request.POST: task.script_content = request.POST.get('script_content')
+        if 'copy_content' in request.POST: task.copy_content = request.POST.get('copy_content')
+        if 'caption_content' in request.POST: task.caption_content = request.POST.get('caption_content')
+
+        # Arquivos (Uploads)
+        if request.FILES.get('briefing_files'):
+            task.briefing_files = request.FILES.get('briefing_files')
+        
+        if request.FILES.get('final_art'):
+            task.final_art = request.FILES.get('final_art')
+            task.has_art = True
+            # Se fez upload de arte na etapa de design, pode mover automaticamente (opcional)
+            # if task.status == 'design': task.status = 'review_internal'
+
+        # 3. AÇÕES DE FLUXO (APROVAR / REJEITAR)
+        action = request.POST.get('action')
+        
+        if action == 'approve':
+            if task.status == 'review_internal':
+                task.status = 'review_client'
+            elif task.status == 'review_client':
+                task.status = 'scheduled'
+                
+        elif action == 'reject':
+            rejection_reason = request.POST.get('rejection_reason') or request.POST.get('last_feedback')
+            # Salva imagem riscada
+            if request.FILES.get('feedback_image_annotation'):
+                task.feedback_image_annotation = request.FILES.get('feedback_image_annotation')
+            
+            task.last_feedback = rejection_reason
+            
+            # Lógica de retorno ao rejeitar
+            if task.status == 'review_internal':
+                task.status = 'design' # Volta para ajuste de design
+            elif task.status == 'review_client':
+                task.status = 'review_internal'
+
+        # Salva tudo
+        task.save()
+        
+        return JsonResponse({
+            'status': 'success', 
+            'task_id': task.id, 
+            'new_status': task.status
+        })
+
+    except Exception as e:
+        print(f"Erro no update_task_api: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
 def kanban_view(request, kanban_type='general'):
     # 1. Definição de Colunas
     if kanban_type == 'operational':

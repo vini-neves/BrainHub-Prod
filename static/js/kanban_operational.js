@@ -359,18 +359,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // >>> NOVA FUNÇÃO: VOLTAR O CARD PARA UMA ETAPA ANTERIOR <<<
     window.returnToStage = function(targetStage) {
+        const taskId = document.getElementById('task-id').value;
+        
+        // Proteção: Não tenta mover se não tiver ID
+        if(!taskId) {
+             Swal.fire('Erro', 'A tarefa ainda não foi salva. Salve antes de mover.', 'warning');
+             return;
+        }
+
         Swal.fire({
             title: 'Movendo card...',
-            text: 'Aguarde enquanto retornamos a tarefa.',
+            text: 'Aguarde um momento.',
+            allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
 
         const form = document.getElementById('kanbanTaskForm');
         const formData = new FormData(form);
         formData.append('action', 'save');
-        formData.append('force_status', targetStage); // Força a mudança de status
+        formData.append('force_status', targetStage); // O segredo está aqui
 
-        const taskId = document.getElementById('task-id').value;
+        // Garante que a URL termine com barra
         const url = `${CONFIG.urls.taskUpdate}${taskId}/`;
 
         fetch(url, {
@@ -378,16 +387,25 @@ document.addEventListener("DOMContentLoaded", function () {
             body: formData,
             headers: { 'X-CSRFToken': CONFIG.csrfToken }
         })
-        .then(res => res.json())
+        .then(async res => {
+            // Se o servidor der erro 500, pegamos o texto para saber o porquê
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`Erro do Servidor (${res.status})`);
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.status === 'success') {
-                // Sucesso: Recarrega a página para o card aparecer na coluna certa
-                window.location.reload(); 
+                window.location.reload(); // Recarrega para mostrar o card na coluna nova
             } else {
-                Swal.fire('Erro', 'Não foi possível mover o card.', 'error');
+                Swal.fire('Erro', data.message || 'Não foi possível mover.', 'error');
             }
         })
-        .catch(err => Swal.fire('Erro', 'Erro de conexão.', 'error'));
+        .catch(err => {
+            console.error("Erro no returnToStage:", err);
+            Swal.fire('Atenção', 'Houve um erro ao mover o card. Verifique se o servidor aceita a mudança de status.', 'error');
+        });
     };
 
     // Navegação apenas visual (abas)
