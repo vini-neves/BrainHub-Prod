@@ -674,3 +674,89 @@ img.client-avatar-small {
     padding: 15px;
     margin-top: 20px;
 }
+
+/* --- PHONE MOCKUP (Left Column) --- */
+.phone-frame {
+    width: 300px !important;
+    height: 600px !important;
+    background: #fff; /* White frame as per image */
+    border: 1px solid #e0e0e0;
+    border-radius: 40px;
+    padding: 12px; /* Inner spacing for bezel */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin: 0 auto 20px auto;
+    flex-shrink: 0;
+}
+
+.phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #000; /* Screen content bg */
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The "Notch" or top bar simulation */
+.phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    z-index: 10;
+}
+
+/* --- RIGHT COLUMN CARDS (Reference Look) --- */
+.approval-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.approval-section-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.link-orange {
+    font-size: 0.75rem;
+    color: #fd7e14; /* Orange link color */
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+.link-orange:hover { text-decoration: underline; }
+
+.link-action {
+    font-size: 0.75rem;
+    color: #495057;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 10px;
+}
+.link-action i { margin-right: 4px; }
+
+/* Reschedule Panel (Bottom Left) */
+.reschedule-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    width: 100%;
+}

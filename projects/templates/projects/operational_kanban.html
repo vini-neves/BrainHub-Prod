@@ -256,56 +256,101 @@
 
                         <div class="tab-pane fade p-4" id="tab-approval">
                             <div class="row">
-                                <div class="col-md-5 border-end pe-3 d-flex flex-column align-items-center">
+                                <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
+                                    
                                     <div class="phone-frame">
                                         <div class="phone-screen">
-                                            <img id="approvalImage" src="" style="max-width:100%; max-height:100%; object-fit:contain;">
+                                            <img id="approvalImage" src="" style="width:100%; height:100%; object-fit:contain;">
                                             <canvas id="annotationCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; cursor:crosshair;"></canvas>
                                         </div>
                                     </div>
+                        
                                     <div id="drawControls" style="display:none;" class="mb-3">
-                                        <button type="button" class="btn btn-sm btn-danger rounded-pill" onclick="clearCanvas()">Limpar Risco</button>
+                                        <button type="button" class="btn btn-sm btn-danger rounded-pill shadow-sm" onclick="clearCanvas()">
+                                            <i class="fa-solid fa-trash-can me-1"></i> Limpar Risco
+                                        </button>
                                     </div>
-                                    <div class="bg-light rounded p-2 w-100 text-center">
-                                        <small class="fw-bold text-muted">Reagendar:</small>
-                                        <div class="d-inline-flex gap-1 align-items-center">
-                                            <input type="date" id="apprDateInput" name="scheduled_date" class="form-control form-control-sm border-0" style="width: auto;">
-                                            <input type="time" name="scheduled_time" class="form-control form-control-sm border-0" style="width: auto;">
+                        
+                                    <div class="reschedule-box">
+                                        <h6 class="small fw-bold text-dark mb-3">Alterar Agendamento</h6>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <label class="small text-muted mb-1">Data</label>
+                                                <input type="date" id="apprDateInput" name="scheduled_date" class="form-control form-control-sm border-0 bg-white">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="small text-muted mb-1">Horário</label>
+                                                <input type="time" name="scheduled_time" class="form-control form-control-sm border-0 bg-white">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                        
                                 <div class="col-md-7 ps-4 scroll-col">
-                                    <div class="d-flex justify-content-between mb-4">
-                                        <div><h5 class="fw-bold m-0" id="apprTitle">Título</h5><span class="small text-muted" id="apprClient">Cliente</span></div>
-                                        <span class="badge bg-warning text-dark" id="apprNetwork">Instagram</span>
-                                    </div>
                                     
-                                    <div class="mb-3 border-bottom pb-3">
-                                        <div class="d-flex justify-content-between"><small class="fw-bold text-muted">LEGENDA</small><a href="#" onclick="returnToStage('copy')" class="small">Editar</a></div>
-                                        <div id="apprCaption" class="small mt-1">...</div>
+                                    <div class="approval-card d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h5 class="fw-bold mb-1 text-dark" id="apprTitle">Título do Post</h5>
+                                            <span class="text-muted small" id="apprClient">Nome do Cliente</span>
+                                            <div class="mt-2 text-muted small">
+                                                <i class="fa-regular fa-calendar me-1"></i> <span id="apprDateDisplay">--/--</span>
+                                                <i class="fa-regular fa-clock ms-2 me-1"></i> <span id="apprTimeDisplay">--:--</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-white text-dark border" id="apprNetwork">Instagram</span>
+                                            <span class="badge bg-white text-dark border ms-1" id="apprFormat">Story</span>
+                                        </div>
                                     </div>
-
-                                    <div class="mb-3 border-bottom pb-3">
-                                        <div class="d-flex justify-content-between"><small class="fw-bold text-muted">DESIGN</small><div><a href="#" class="text-danger small me-2" onclick="toggleRejectMode()">Riscar</a><a href="#" onclick="returnToStage('design')" class="small">Voltar p/ Designer</a></div></div>
-                                        <img id="apprThumb" src="" class="img-fluid rounded border mt-2" style="max-height: 150px;">
+                        
+                                    <div class="approval-card">
+                                        <div class="approval-section-label">
+                                            <span>Legenda</span>
+                                            <span class="link-orange" onclick="returnToStage('copy')">← Voltar para Copy</span>
+                                        </div>
+                                        <div id="apprCaption" class="small text-secondary">Sem legenda definida.</div>
                                     </div>
-
-                                    <div class="mb-3"><small class="fw-bold text-muted">ROTEIRO</small><div id="apprScript" class="small text-muted fst-italic">...</div></div>
+                        
+                                    <div class="approval-card">
+                                        <div class="approval-section-label">
+                                            <span>Design</span>
+                                            <div>
+                                                <span class="link-action" onclick="toggleRejectMode()"><i class="fa-solid fa-pencil"></i> Anotar</span>
+                                                <span class="link-orange ms-3" onclick="returnToStage('design')">← Voltar para Designer</span>
+                                            </div>
+                                        </div>
+                                        <img id="apprThumb" src="" class="img-fluid rounded border mt-2 w-100" style="height: 200px; object-fit: cover; background: #f8f9fa;">
+                                    </div>
+                        
+                                    <div class="approval-card">
+                                        <div class="approval-section-label"><span>Roteiro / Copy</span></div>
+                                        <div class="small text-secondary mb-3">
+                                            <strong class="d-block text-dark mb-1">Roteiro:</strong>
+                                            <div id="apprScript">...</div>
+                                        </div>
+                                        <div class="small text-secondary">
+                                            <strong class="d-block text-dark mb-1">Copy (Texto na Arte):</strong>
+                                            <div id="apprCopyText">...</div>
+                                        </div>
+                                    </div>
+                        
                                 </div>
                             </div>
-                            
+                        
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
-                                <button type="button" class="btn btn-outline-secondary" onclick="goToTab('tab-design')">Voltar</button>
-                                <button type="button" class="btn btn-success fw-bold text-white" onclick="saveAndAdvance('approve')">APROVAR</button>
+                                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-success px-4 text-white fw-bold" style="background-color: #198754; border:none;" onclick="saveAndAdvance('approve')">
+                                    <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
+                                </button>
                             </div>
-
-                            <div id="rejectPanel" class="card bg-danger-subtle border-danger mt-3" style="display:none;">
+                        
+                            <div id="rejectPanel" class="card border-danger mt-3 mx-3 shadow-sm" style="display:none; background:#fff;">
                                 <div class="card-body">
-                                    <h6 class="text-danger fw-bold">O que precisa ajustar?</h6>
-                                    <textarea id="feedbackInput" class="form-control mb-2" rows="2" placeholder="Descreva aqui..."></textarea>
+                                    <h6 class="text-danger fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Solicitar Ajuste</h6>
+                                    <textarea id="feedbackInput" class="form-control mb-3" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
                                     <div class="text-end">
-                                        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleRejectMode()">Cancelar</button>
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="saveWithAnnotation()">Confirmar Ajuste</button>
+                                        <button type="button" class="btn btn-light btn-sm me-2" onclick="toggleRejectMode()">Cancelar</button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="saveWithAnnotation()">Confirmar Ajuste</button>
                                     </div>
                                 </div>
                             </div>
