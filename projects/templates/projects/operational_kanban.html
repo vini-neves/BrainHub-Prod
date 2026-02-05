@@ -2,81 +2,97 @@
 {% extends "projects/base.html" %}
 {% load static %}
 
-
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/operacional_kanban.css' %}">
 <style>
-    /* 1. FORÇA A LARGURA MÁXIMA DO MODAL */
-    /* Isso garante que caibam 2 colunas lado a lado */
+    /* --- CORREÇÕES ESTRUTURAIS FORÇADAS --- */
+    
+    /* 1. Modal Ultra Largo para caber 2 colunas */
     @media (min-width: 992px) {
         .modal-dialog-clean {
-            max-width: 1100px !important;
+            max-width: 1200px !important; /* Espaço de sobra */
+            width: 95% !important;
+            margin: 1.75rem auto;
         }
-    }
-
-    /* 2. CORREÇÃO DA ABA DESIGN (Previne quebra de linha) */
-    #tab-design .row, 
-    #tab-approval .row {
-        display: flex !important;
-        flex-wrap: nowrap !important; /* Obriga a ficar na mesma linha */
-    }
-
-    /* 3. CORREÇÃO DO CELULAR (Para não estourar a coluna) */
-    .phone-frame {
-        width: 300px !important;     /* Largura fixa */
-        height: 600px !important;    /* Altura fixa */
-        flex-shrink: 0 !important;   /* Impede que o celular seja esmagado */
-        transform-origin: top center; /* Garante que o scale diminua para o centro/topo */
-        margin-bottom: 20px;
-    }
-
-    /* 4. AJUSTE DE COLUNAS EM TELAS MENORES */
-    /* Se a tela for muito pequena, aí sim permitimos quebrar, senão fica ilegível */
-    @media (max-width: 991px) {
+        
+        /* Força colunas lado a lado */
         #tab-design .row, 
-        #tab-approval .row {
-            flex-wrap: wrap !important;
+        #tab-approval .row,
+        #tab-copy .row {
+            display: flex !important;
+            flex-wrap: nowrap !important; 
         }
-        .modal-dialog-clean {
-            max-width: 95% !important;
-        }
-        .col-md-5, .col-md-7, .col-md-4, .col-md-8 {
-            width: 100% !important; /* Colunas ocupam tudo */
-            border-right: none !important; /* Remove linha divisória */
-        }
+    }
+
+    /* 2. Celular Fixo */
+    .phone-frame {
+        width: 300px !important;
+        height: 600px !important;
+        flex-shrink: 0 !important; /* Impede amassar */
+        border: 12px solid #2c2c2c;
+        border-radius: 40px;
+        background: #000;
+        position: relative;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        margin: 0 auto 20px auto;
+    }
+
+    .phone-screen {
+        width: 100%; height: 100%;
+        background: #000;
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* 3. Área de Upload Grande */
+    .upload-zone-large {
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        background-color: #f8f9fa;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        min-height: 500px !important; /* Altura garantida */
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .upload-zone-large:hover { border-color: #0d6efd; background: #fff; }
+
+    /* 4. Scroll interno das colunas */
+    .scroll-col {
+        max-height: 650px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    /* 5. Feedback Card (Design) */
+    .feedback-card {
+        background-color: #fff5f5;
+        border: 1px solid #dc3545;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="kanban-wrapper">
-
     <div class="kanban-header d-flex justify-content-between align-items-center">
         <div>
             <h4 class="m-0 fw-bold text-dark">{{ page_title }}</h4>
             <span class="text-muted small">Fluxo de Produção Social Media</span>
         </div>
-
         <div class="d-flex gap-2">
-            <div class="btn-group">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="fa-solid fa-filter"></i> Filtrar
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#">Minhas Tarefas</a></li>
-                    <li><a class="dropdown-item" href="#">Alta Prioridade</a></li>
-                </ul>
-            </div>
+            <button class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-filter"></i> Filtrar</button>
         </div>
     </div>
 
     <div class="kanban-board" id="kanban-board">
-
         {% for column in kanban_columns %}
         <div class="col-kanban">
-
             <div class="col-kanban-header">
                 <div class="d-flex align-items-center">
                     <span class="col-dot dot-{{ column.id }}"></span>
@@ -84,542 +100,218 @@
                 </div>
                 <span class="badge bg-light text-secondary border rounded-pill">{{ column.tasks|length }}</span>
             </div>
-
+            
             <div class="kanban-tasks-list" id="col-{{ column.id }}" data-status="{{ column.id }}">
-
                 {% if column.id == 'briefing' %}
-                <button class="btn-add-ghost" onclick="openNewTaskModal()">
-                    <i class="fa-solid fa-plus me-2"></i> Novo Post
-                </button>
+                    <button class="btn-add-ghost" onclick="openNewTaskModal()">
+                        <i class="fa-solid fa-plus me-2"></i> Novo Post
+                    </button>
                 {% endif %}
-
+                
                 {% for task in column.tasks %}
-                <div class="kanban-card" draggable="true" data-id="{{ task.id }}"
-                    onclick="openEditModal({{ task.id }})">
-
+                <div class="kanban-card" draggable="true" data-id="{{ task.id }}" onclick="openEditModal({{ task.id }})">
                     {% if task.art_url and column.id != 'briefing' and column.id != 'copy' %}
-                    <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
+                        <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
                     {% endif %}
-
                     <div class="p-3">
-                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem; line-height: 1.4;">
-                            {{ task.title }}
-                        </h6>
-
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem; line-height: 1.4;">{{ task.title }}</h6>
                         {% if not task.art_url or column.id == 'briefing' or column.id == 'copy' %}
-                        <p class="text-muted small mb-3"
-                            style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                            {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
-                        </p>
+                            <p class="text-muted small mb-3" style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
+                            </p>
                         {% endif %}
-
-                        <div
-                            class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
-
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
                             <div class="text-muted x-small d-flex align-items-center" style="font-size: 0.7rem;">
-                                <i class="fa-regular fa-calendar me-1"></i>
-                                {% if task.scheduled_date %}
-                                {{ task.scheduled_date|slice:"8:10" }}/{{ task.scheduled_date|slice:"5:7" }}
-                                {% else %}
-                                --
-                                {% endif %}
-
-                                <i class="fa-regular fa-clock ms-2 me-1"></i>
-                                --:--
+                                <i class="fa-regular fa-calendar me-1"></i> 
+                                {% if task.scheduled_date %}{{ task.scheduled_date|slice:"8:10" }}/{{ task.scheduled_date|slice:"5:7" }}{% else %}--{% endif %}
                             </div>
-
                             <div class="d-flex align-items-center gap-2">
-                                {% if task.social_network %}
-                                {% if task.social_network == 'instagram' %}<i
-                                    class="fa-brands fa-instagram text-danger"></i>
-                                {% elif task.social_network == 'facebook' %}<i
-                                    class="fa-brands fa-facebook text-primary"></i>
-                                {% elif task.social_network == 'linkedin' %}<i
-                                    class="fa-brands fa-linkedin text-info"></i>
-                                {% else %}<i class="fa-solid fa-share-nodes text-secondary"></i>{% endif %}
-                                {% endif %}
+                                {% if task.social_network == 'instagram' %}<i class="fa-brands fa-instagram text-danger"></i>{% endif %}
+                                {% if task.social_network == 'facebook' %}<i class="fa-brands fa-facebook text-primary"></i>{% endif %}
                             </div>
-
                         </div>
-
                         <div class="mt-2 d-flex align-items-center">
-
                             {% if task.client_logo %}
-                            <img src="{{ task.client_logo }}" class="client-avatar-small" alt="{{ task.client_name }}"
-                                style="object-fit: cover; background: white;">
+                                <img src="{{ task.client_logo }}" class="client-avatar-small" style="object-fit: cover; background: white;">
                             {% else %}
-                            <div class="client-avatar-small">
-                                {{ task.client_name|slice:":2"|upper }}
-                            </div>
+                                <div class="client-avatar-small">{{ task.client_name|slice:":2"|upper }}</div>
                             {% endif %}
-
-                            <span class="text-muted small text-truncate" style="font-size: 0.75rem; max-width: 120px;">
-                                {{ task.client_name }}
-                            </span>
+                            <span class="text-muted small text-truncate ps-1" style="font-size: 0.75rem;">{{ task.client_name }}</span>
                         </div>
-
                     </div>
                 </div>
                 {% empty %}
-                {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div>
-                {% endif %}
+                    {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div> {% endif %}
                 {% endfor %}
-
             </div>
         </div>
         {% endfor %}
-
     </div>
 </div>
 {% endblock %}
 
-
 {% block modals %}
-
 <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-dialog-clean">
         <div class="modal-content modal-content-clean">
-
-            <div class="modal-header modal-header-clean justify-content-between">
-                <div class="modal-title-custom">
-                    <span id="modalTypeDot"
-                        style="width: 10px; height: 10px; background-color: #6f42c1; border-radius: 50%; display: inline-block;"></span>
-                    <span id="modalKanbanType">Briefing</span>
+            
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <div class="modal-title-custom d-flex align-items-center gap-2">
+                    <span id="modalTypeDot" style="width: 12px; height: 12px; background-color: #6f42c1; border-radius: 50%; display: inline-block;"></span>
+                    <span id="modalKanbanType" class="fw-bold fs-5">Briefing</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <ul class="nav nav-pills d-none" id="taskTabs">
-                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing"
-                        data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button>
-                </li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design"
-                        data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval"
-                        data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval" data-bs-toggle="tab"></button></li>
             </ul>
 
-            <div class="modal-body pt-4">
-                <form id="kanbanTaskForm" method="POST" enctype="multipart/form-data">
+            <div class="modal-body p-0">
+                <form id="kanbanTaskForm" method="POST" enctype="multipart/form-data" style="height: 100%;">
                     {% csrf_token %}
                     <input type="hidden" name="task_id" id="task-id">
                     <input type="hidden" name="kanban_type" value="operational">
-
-                    <div class="tab-content">
-
-                        <div class="tab-pane fade show active" id="tab-briefing">
+                    
+                    <div class="tab-content h-100">
+                        
+                        <div class="tab-pane fade show active p-4" id="tab-briefing">
                             <div class="row g-3">
-                                <div class="col-12 mb-2">
-                                    <label class="modal-briefing-label text-muted small">Cliente</label>
-                                    <select name="client" id="clientSelect"
-                                        class="form-select form-select-clean border-0 bg-light fw-bold" required>
-                                        <option value="">Selecione o Cliente...</option>
-                                        {% for client in clients %}
-                                        <option value="{{ client.id }}">{{ client.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="modal-briefing-label">Título do Post</label>
-                                    <input type="text" name="title" id="modalTitleInput"
-                                        class="form-control form-control-clean bg-light"
-                                        placeholder="Ex: Campanha Black Friday" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="modal-briefing-label">Rede Social</label>
-                                    <select name="social_network" id="networkSelect"
-                                        class="form-select form-select-clean">
-                                        <option value="">Instagram</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="modal-briefing-label">Tipo de Conteúdo</label>
-                                    <select name="content_type" id="formatSelect" class="form-select form-select-clean">
-                                        <option value="">Reels</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="modal-briefing-label">Data de Agendamento</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0 border-secondary-subtle"><i
-                                                class="fa-regular fa-calendar"></i></span>
-                                        <input type="date" name="scheduled_date" id="scheduled_date"
-                                            class="form-control form-control-clean border-start-0 ps-0">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="modal-briefing-label">Horário</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0 border-secondary-subtle"><i
-                                                class="fa-regular fa-clock"></i></span>
-                                        <input type="time" name="scheduled_time"
-                                            class="form-control form-control-clean border-start-0 ps-0">
-                                    </div>
-                                </div>
-
+                                <div class="col-12"><label class="small fw-bold text-muted">CLIENTE</label><select name="client" id="clientSelect" class="form-select bg-light border-0 fw-bold"><option value="">Selecione...</option>{% for c in clients %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+                                <div class="col-12"><label class="small fw-bold text-muted">TÍTULO</label><input type="text" name="title" id="modalTitleInput" class="form-control bg-light border-0" placeholder="Ex: Post Institucional" required></div>
+                                <div class="col-md-6"><label class="small text-muted">Rede</label><select name="social_network" id="networkSelect" class="form-select bg-light border-0"><option>Instagram</option></select></div>
+                                <div class="col-md-6"><label class="small text-muted">Formato</label><select name="content_type" id="formatSelect" class="form-select bg-light border-0"><option>Reels</option></select></div>
+                                <div class="col-md-6"><label class="small text-muted">Data</label><input type="date" name="scheduled_date" id="scheduled_date" class="form-control bg-light border-0"></div>
+                                <div class="col-md-6"><label class="small text-muted">Hora</label><input type="time" name="scheduled_time" class="form-control bg-light border-0"></div>
+                                <div class="col-12"><label class="small text-muted">Briefing</label><textarea name="briefing_text" id="briefing_text" class="form-control bg-light border-0" rows="5"></textarea></div>
                                 <div class="col-12 mt-3">
-                                    <label class="modal-briefing-label">Briefing</label>
-                                    <textarea name="briefing_text" id="briefing_text"
-                                        class="form-control form-control-clean bg-light" rows="5"
-                                        placeholder="Descreva o objetivo do post..."></textarea>
-                                </div>
-
-                                <div class="col-12 mt-4">
-                                    <label class="modal-briefing-label">Mídia de Referência</label>
-                                    <div class="upload-box-dashed position-relative"
-                                        style="border: 2px dashed #a0aec0; border-radius: 10px;">
-                                        <input type="file" name="briefing_files"
-                                            class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
-                                            style="cursor: pointer;" onchange="updateFileName(this)">
-                                        <div class="py-4">
-                                            <i class="fa-solid fa-arrow-up-from-bracket fs-3 text-secondary mb-2"></i>
-                                            <p class="mb-0 fw-bold text-secondary" id="uploadTextMain">Arraste arquivos
-                                                ou clique para fazer upload</p>
-                                            <small class="text-muted">PNG, JPG, MP4 até 50MB</small>
-                                        </div>
+                                    <div class="text-center py-4 bg-light rounded border border-2" style="border-style: dashed !important;">
+                                        <input type="file" name="briefing_files" class="position-absolute opacity-0 w-100 h-100 top-0 start-0" style="cursor: pointer;" onchange="updateFileName(this)">
+                                        <span class="text-muted small fw-bold" id="uploadTextMain">Anexar Referência</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
-                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
-                                    data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
-                                <button type="button" class="btn btn-success px-4 fw-bold text-white"
-                                    style=" border: none; border-radius: 8px;" onclick="saveAndAdvance('copy')">
-                                    Enviar para Copy
-                                </button>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="tab-copy">
-
-
-                            <div class="row h-100">
-                                <div class="col-md-5 pe-3 border-end">
-                                    <div class="briefing-summary-card">
-                                        <div class="briefing-summary-title">
-                                            <i class="fa-regular fa-file-lines text-primary"></i> Resumo do Briefing
-                                        </div>
-
-                                        <span class="briefing-label">Título</span>
-                                        <div class="briefing-value fw-bold" id="copyBriefTitle">--</div>
-
-                                        <div class="d-flex flex-wrap mb-3">
-                                            <span class="briefing-tag" id="copyNetwork">--</span>
-                                            <span class="briefing-tag" id="copyFormat">--</span>
-                                        </div>
-
-                                        <div class="d-flex align-items-center mb-3 text-muted small">
-                                            <i class="fa-regular fa-calendar me-2"></i> <span id="copyDate">--/--</span>
-                                            <i class="fa-regular fa-clock mx-2"></i> <span id="copyTime">--:--</span>
-                                        </div>
-
-                                        <hr class="border-light my-3">
-
-                                        <span class="briefing-label">Briefing</span>
-                                        <div class="briefing-value small text-secondary" id="copyBriefText">...</div>
-
-                                        <span class="briefing-label mt-3">Mídia de Referência</span>
-                                        <div id="copyRefContainer">
-                                            <span class="text-muted small fst-italic">Nenhuma referência.</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-7 ps-4">
-                                    <div class="mb-3">
-                                        <label class="copy-section-label">
-                                            <i class="fa-solid fa-list-ol text-info"></i> Roteiro
-                                        </label>
-                                        <textarea name="script_content" id="script_content"
-                                            class="form-control form-control-copy" rows="4"
-                                            placeholder="Slide 1: ..."></textarea>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="copy-section-label">
-                                            <i class="fa-regular fa-comment-dots text-success"></i> Copy (Texto na arte)
-                                        </label>
-                                        <textarea name="copy_content" id="copy_content_input"
-                                            class="form-control form-control-copy" rows="2"
-                                            placeholder="Texto principal..."></textarea>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="copy-section-label">
-                                            <i class="fa-regular fa-file-alt text-warning"></i> Legenda
-                                        </label>
-                                        <textarea name="caption_content" id="inputCaption"
-                                            class="form-control form-control-copy" rows="4"
-                                            placeholder="Escreva a legenda..."
-                                            oninput="updateCharCount(this)"></textarea>
-                                        <div class="char-counter"><span id="charCount">0</span> caracteres</div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-outline-secondary px-4"
-                                    onclick="goToTab('tab-briefing')">Voltar</button>
-                                <button type="button" class="btn btn-success px-4 text-white"
-                                    style=" border: none; border-radius: 8px;" onclick="saveAndAdvance('design')">
-                                    Enviar para Design
-                                </button>
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-success text-white" style="background:#00bfa5; border:none;" onclick="saveAndAdvance('copy')">Enviar para Copy</button>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="tab-design">
 
+                        <div class="tab-pane fade p-4" id="tab-copy">
                             <div class="row h-100">
-
-                                <div class="col-md-5 pe-3 border-end" style="max-height: 550px; overflow-y: auto;">
-                                    <div id="designFeedbackCard" class="design-info-card border-danger bg-light"
-                                        style="display:none;">
-                                        <div class="design-section-title text-danger">
-                                            <i class="fa-solid fa-triangle-exclamation"></i> Ajustes Solicitados
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <span class="design-label-small text-danger">Marcações na Imagem</span>
-                                            <img id="designFeedbackImg" src=""
-                                                class="img-fluid rounded border border-danger bg-white"
-                                                onclick="window.open(this.src, '_blank')" style="cursor: zoom-in;">
-                                        </div>
-
-                                        <div>
-                                            <span class="design-label-small text-danger">Motivo</span>
-                                            <div class="p-2 bg-white rounded border border-danger-subtle text-danger small"
-                                                id="designFeedbackText">
-                                                ...
-                                            </div>
-                                        </div>
-                                        <div class="design-info-card">
-                                            <div class="design-section-title">
-                                                <i class="fa-regular fa-file-lines text-primary"></i> Briefing
-                                            </div>
-
-                                            <span class="design-label-small">Título</span>
-                                            <div class="fw-bold text-dark small mb-2" id="designBriefTitle">--</div>
-
-                                            <div class="d-flex gap-1 mb-2">
-                                                <span class="badge bg-light text-dark border"
-                                                    id="designNetwork">--</span>
-                                                <span class="badge bg-light text-dark border"
-                                                    id="designFormat">--</span>
-                                            </div>
-
-                                            <div class="text-muted x-small mb-2">
-                                                <i class="fa-regular fa-calendar"></i> <span
-                                                    id="designDate">--/--</span>
-                                                <i class="fa-regular fa-clock ms-2"></i> <span
-                                                    id="designTime">--:--</span>
-                                            </div>
-
-                                            <hr class="border-light my-2">
-
-                                            <div class="design-text-content small" id="designBriefText">...</div>
-                                        </div>
-
-                                        <div class="design-info-card">
-                                            <div class="design-section-title">
-                                                <i class="fa-regular fa-comment-dots text-info"></i> Copy
-                                            </div>
-
-                                            <span class="design-label-small"><i class="fa-solid fa-list-ol me-1"></i>
-                                                Roteiro</span>
-                                            <div class="design-text-content small mb-3 p-2 bg-light rounded"
-                                                id="designScript">
-                                                <em>Sem roteiro definido.</em>
-                                            </div>
-
-                                            <span class="design-label-small">Copy (Texto na Arte)</span>
-                                            <div class="design-text-content small mb-2" id="designCopyText">...</div>
-
-                                            <span class="design-label-small">Legenda Sugerida</span>
-                                            <div class="design-text-content small text-muted" id="designCaption">...
-                                            </div>
-                                        </div>
-
-                                        <div class="design-info-card">
-                                            <div class="design-section-title">
-                                                <i class="fa-regular fa-image text-warning"></i> Mídia de Referência
-                                            </div>
-                                            <div id="designRefContainer" class="mt-2">
-                                                <span class="text-muted x-small fst-italic">Nenhuma referência
-                                                    anexada.</span>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    <div class="col-md-7 ps-4 d-flex flex-column">
-
-                                        <div class="design-section-title text-danger mb-3">
-                                            <i class="fa-solid fa-cloud-arrow-up"></i> Design Final
-                                        </div>
-
-                                        <div class="upload-zone-large flex-grow-1"
-                                            onclick="document.getElementById('finalArtInput').click()">
-                                            <input type="file" id="finalArtInput" name="final_art" accept="image/*"
-                                                style="display:none" onchange="previewUpload(this)">
-
-                                            <img id="designPreviewImg" class="preview"
-                                                style="display:none; max-width: 100%; max-height: 100%; object-fit: contain;">
-
-                                            <div id="designUploadPlaceholder" class="upload-zone-content">
-                                                <i class="fa-solid fa-arrow-up-from-bracket fs-2 text-muted mb-3"></i>
-                                                <h6 class="fw-bold text-secondary">Arraste o design finalizado</h6>
-                                                <span class="text-muted x-small">PNG, JPG, MP4 até 50MB</span>
-                                            </div>
-                                        </div>
-
-                                    </div>
+                                <div class="col-md-4 border-end pe-4 scroll-col">
+                                    <h6 class="small fw-bold text-muted mb-3">RESUMO DO BRIEFING</h6>
+                                    <div class="mb-3"><span class="d-block small text-muted">Título</span><strong id="copyBriefTitle">--</strong></div>
+                                    <div class="mb-3"><span class="badge bg-light text-dark border" id="copyNetwork">--</span> <span class="badge bg-light text-dark border" id="copyFormat">--</span></div>
+                                    <div class="mb-3"><span class="d-block small text-muted">Data</span><span id="copyDate">--/--</span></div>
+                                    <hr>
+                                    <div class="small text-secondary" id="copyBriefText">...</div>
+                                    <div id="copyRefContainer" class="mt-3"></div>
                                 </div>
-
-                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
-                                        onclick="goToTab('tab-copy')">Cancelar</button>
-                                    <button type="button" class="btn btn-success px-4 fw-bold text-white"
-                                        style=" border: none;" onclick="saveAndAdvance('review_internal')">
-                                        Enviar para Aprovação
-                                    </button>
+                                <div class="col-md-8 ps-4 scroll-col">
+                                    <div class="mb-3"><label class="small fw-bold text-info">ROTEIRO</label><textarea name="script_content" id="script_content" class="form-control bg-light border-0" rows="5"></textarea></div>
+                                    <div class="mb-3"><label class="small fw-bold text-success">COPY (TEXTO ARTE)</label><textarea name="copy_content" id="copy_content_input" class="form-control bg-light border-0" rows="2"></textarea></div>
+                                    <div class="mb-3"><label class="small fw-bold text-warning">LEGENDA</label><textarea name="caption_content" id="inputCaption" class="form-control bg-light border-0" rows="5" oninput="updateCharCount(this)"></textarea><div class="text-end small text-muted"><span id="charCount">0</span> cars</div></div>
                                 </div>
-
                             </div>
-                            <div class="tab-pane fade" id="tab-approval">
-
-                                <div class="row">
-
-                                    <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
-
-                                        <div class="phone-frame shadow-sm"
-                                            style="transform: scale(0.85); transform-origin: top center; margin-bottom: -40px;">
-                                            <div
-                                                class="phone-screen bg-black d-flex align-items-center justify-content-center position-relative">
-                                                <img id="approvalImage" src=""
-                                                    style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                                                <canvas id="annotationCanvas"
-                                                    style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair;"></canvas>
-                                            </div>
-                                        </div>
-
-                                        <div id="drawControls" class="mb-3" style="display:none;">
-                                            <button type="button" class="btn btn-sm btn-danger rounded-pill shadow px-3"
-                                                onclick="clearCanvas()">
-                                                <i class="fa-solid fa-eraser me-1"></i> Limpar Risco
-                                            </button>
-                                        </div>
-
-                                        <div class="reschedule-panel w-100">
-                                            <h6 class="fw-bold small mb-3 text-dark">Alterar Agendamento</h6>
-                                            <div class="row g-2">
-                                                <div class="col-7">
-                                                    <label class="small text-muted">Data</label>
-                                                    <input type="date" id="apprDateInput" name="scheduled_date"
-                                                        class="form-control form-control-sm border-0 bg-white">
-                                                </div>
-                                                <div class="col-5">
-                                                    <label class="small text-muted">Horário</label>
-                                                    <input type="time" name="scheduled_time"
-                                                        class="form-control form-control-sm border-0 bg-white">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    <div class="col-md-7 ps-4" style="max-height: 600px; overflow-y: auto;">
-
-                                        <div class="approval-detail-card d-flex justify-content-between">
-                                            <div>
-                                                <div class="approval-header-title" id="apprTitle">Título do Post</div>
-                                                <div class="text-muted small" id="apprClient">Nome do Cliente</div>
-                                                <div class="text-muted small mt-2">
-                                                    <i class="fa-regular fa-calendar me-1"></i> <span
-                                                        id="apprDateDisplay">--/--</span>
-                                                    <i class="fa-regular fa-clock ms-2 me-1"></i> <span
-                                                        id="apprTimeDisplay">--:--</span>
-                                                </div>
-                                            </div>
-                                            <div class="text-end">
-                                                <span class="badge bg-light text-dark border"
-                                                    id="apprNetwork">Instagram</span>
-                                                <span class="badge bg-light text-dark border ms-1"
-                                                    id="apprFormat">Feed</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="approval-detail-card">
-                                            <div class="approval-label-section">
-                                                <span>Legenda</span>
-                                                <span class="link-back" onclick="returnToStage('copy')">← Voltar para
-                                                    Copy</span>
-                                            </div>
-                                            <div class="approval-text-content" id="apprCaption">Sem legenda definida.
-                                            </div>
-                                        </div>
-
-                                        <div class="approval-detail-card">
-                                            <div class="approval-label-section">
-                                                <span>Design</span>
-                                                <div>
-                                                    <span class="link-back me-3" onclick="toggleRejectMode()"><i
-                                                            class="fa-solid fa-pencil"></i> Anotar</span>
-                                                    <span class="link-back" onclick="returnToStage('design')">← Voltar
-                                                        para Designer</span>
-                                                </div>
-                                            </div>
-                                            <img id="apprThumb" src="" class="approval-design-thumb">
-                                        </div>
-
-                                        <div class="approval-detail-card">
-                                            <div class="approval-label-section"><span>Roteiro</span></div>
-                                            <div class="text-muted small mb-3" id="apprScript"
-                                                style="white-space: pre-wrap;">...</div>
-
-                                            <hr class="border-light">
-
-                                            <div class="approval-label-section"><span>Copy (Texto na Arte)</span></div>
-                                            <div class="text-muted small" id="apprCopyText">...</div>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
-                                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
-                                        onclick="goToTab('tab-design')">Cancelar</button>
-                                    <button type="button" class="btn btn-success px-4 fw-bold text-white"
-                                        style="background-color: #198754; border: none;" onclick="saveAndAdvance()">
-                                        <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
-                                    </button>
-                                </div>
-
-                                <div id="rejectPanel" class="card border-danger mt-3 mx-3"
-                                    style="display:none; background-color: #fff5f5;">
-                                    <div class="card-body">
-                                        <h6 class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i>
-                                            Solicitar Ajuste</h6>
-                                        <p class="small text-muted mb-2">Faça anotações na imagem do celular (esquerda)
-                                            e
-                                            descreva abaixo:</p>
-
-                                        <textarea id="feedbackInput" class="form-control mb-3" rows="3"
-                                            placeholder="O que precisa ser alterado?"></textarea>
-
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <button type="button" class="btn btn-secondary btn-sm"
-                                                onclick="toggleRejectMode()">Cancelar</button>
-                                            <button type="button" class="btn btn-danger btn-sm"
-                                                onclick="saveWithAnnotation()">Confirmar Ajuste</button>
-                                        </div>
-                                    </div>
-                                </div>
-
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-light" onclick="goToTab('tab-briefing')">Voltar</button>
+                                <button type="button" class="btn btn-success text-white" style="background:#00bfa5; border:none;" onclick="saveAndAdvance('design')">Enviar para Design</button>
                             </div>
                         </div>
+
+                        <div class="tab-pane fade p-4" id="tab-design">
+                            <div class="row h-100">
+                                <div class="col-md-4 pe-3 border-end scroll-col">
+                                    <div id="designFeedbackCard" class="feedback-card" style="display:none;">
+                                        <h6 class="text-danger fw-bold small"><i class="fa-solid fa-circle-exclamation me-1"></i> AJUSTE SOLICITADO</h6>
+                                        <img id="designFeedbackImg" src="" class="img-fluid rounded border mb-2 bg-white" onclick="window.open(this.src)" style="cursor: zoom-in;">
+                                        <div id="designFeedbackText" class="small text-danger"></div>
+                                    </div>
+
+                                    <div class="card bg-light border-0 mb-3"><div class="card-body p-3"><h6 class="small fw-bold text-primary">BRIEFING</h6><div id="designBriefTitle" class="fw-bold">--</div><div id="designBriefText" class="small text-muted mt-1">...</div></div></div>
+                                    <div class="card bg-light border-0 mb-3"><div class="card-body p-3"><h6 class="small fw-bold text-info">COPY</h6><label class="small text-muted d-block">Texto na Arte</label><div id="designCopyText" class="small p-2 bg-white rounded border mb-2">...</div><label class="small text-muted d-block">Roteiro</label><div id="designScript" class="small p-2 bg-white rounded border">...</div></div></div>
+                                    <div id="designRefContainer"></div>
+                                </div>
+                                <div class="col-md-8 ps-4 d-flex flex-column">
+                                    <h6 class="small fw-bold text-secondary mb-2">UPLOAD FINAL</h6>
+                                    <div class="upload-zone-large flex-grow-1" onclick="document.getElementById('finalArtInput').click()">
+                                        <input type="file" id="finalArtInput" name="final_art" accept="image/*" style="display:none" onchange="previewUpload(this)">
+                                        <div id="designUploadPlaceholder" class="text-center">
+                                            <i class="fa-solid fa-cloud-arrow-up fs-1 text-muted mb-2"></i>
+                                            <p class="fw-bold text-muted">Arraste o Design aqui</p>
+                                        </div>
+                                        <img id="designPreviewImg" class="img-fluid" style="display:none; max-height: 100%; object-fit: contain;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-light" onclick="goToTab('tab-copy')">Voltar</button>
+                                <button type="button" class="btn btn-success text-white" style="background:#00bfa5; border:none;" onclick="saveAndAdvance('review_internal')">Enviar para Aprovação</button>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade p-4" id="tab-approval">
+                            <div class="row">
+                                <div class="col-md-5 border-end pe-3 d-flex flex-column align-items-center">
+                                    <div class="phone-frame">
+                                        <div class="phone-screen">
+                                            <img id="approvalImage" src="" style="max-width:100%; max-height:100%; object-fit:contain;">
+                                            <canvas id="annotationCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; cursor:crosshair;"></canvas>
+                                        </div>
+                                    </div>
+                                    <div id="drawControls" style="display:none;" class="mb-3">
+                                        <button type="button" class="btn btn-sm btn-danger rounded-pill" onclick="clearCanvas()">Limpar Risco</button>
+                                    </div>
+                                    <div class="bg-light rounded p-2 w-100 text-center">
+                                        <small class="fw-bold text-muted">Reagendar:</small>
+                                        <div class="d-inline-flex gap-1 align-items-center">
+                                            <input type="date" id="apprDateInput" name="scheduled_date" class="form-control form-control-sm border-0" style="width: auto;">
+                                            <input type="time" name="scheduled_time" class="form-control form-control-sm border-0" style="width: auto;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7 ps-4 scroll-col">
+                                    <div class="d-flex justify-content-between mb-4">
+                                        <div><h5 class="fw-bold m-0" id="apprTitle">Título</h5><span class="small text-muted" id="apprClient">Cliente</span></div>
+                                        <span class="badge bg-warning text-dark" id="apprNetwork">Instagram</span>
+                                    </div>
+                                    
+                                    <div class="mb-3 border-bottom pb-3">
+                                        <div class="d-flex justify-content-between"><small class="fw-bold text-muted">LEGENDA</small><a href="#" onclick="returnToStage('copy')" class="small">Editar</a></div>
+                                        <div id="apprCaption" class="small mt-1">...</div>
+                                    </div>
+
+                                    <div class="mb-3 border-bottom pb-3">
+                                        <div class="d-flex justify-content-between"><small class="fw-bold text-muted">DESIGN</small><div><a href="#" class="text-danger small me-2" onclick="toggleRejectMode()">Riscar</a><a href="#" onclick="returnToStage('design')" class="small">Voltar p/ Designer</a></div></div>
+                                        <img id="apprThumb" src="" class="img-fluid rounded border mt-2" style="max-height: 150px;">
+                                    </div>
+
+                                    <div class="mb-3"><small class="fw-bold text-muted">ROTEIRO</small><div id="apprScript" class="small text-muted fst-italic">...</div></div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
+                                <button type="button" class="btn btn-outline-secondary" onclick="goToTab('tab-design')">Voltar</button>
+                                <button type="button" class="btn btn-success fw-bold text-white" onclick="saveAndAdvance('approve')">APROVAR</button>
+                            </div>
+
+                            <div id="rejectPanel" class="card bg-danger-subtle border-danger mt-3" style="display:none;">
+                                <div class="card-body">
+                                    <h6 class="text-danger fw-bold">O que precisa ajustar?</h6>
+                                    <textarea id="feedbackInput" class="form-control mb-2" rows="2" placeholder="Descreva aqui..."></textarea>
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleRejectMode()">Cancelar</button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="saveWithAnnotation()">Confirmar Ajuste</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </form>
             </div>
         </div>
@@ -629,26 +321,8 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-    // Inicialização manual das Abas (Caso Bootstrap não carregue automático)
-    document.addEventListener("DOMContentLoaded", function () {
-        var triggerTabList = [].slice.call(document.querySelectorAll('#taskTabs button'))
-        triggerTabList.forEach(function (triggerEl) {
-            var tabTrigger = new bootstrap.Tab(triggerEl)
-            triggerEl.addEventListener('click', function (event) {
-                event.preventDefault()
-                tabTrigger.show()
-            })
-        })
-    });
-</script>
-
-<script>
-    // JSON DO DJANGO (Crucial para as redes)
     window.CLIENT_NETWORKS = {{ client_networks_json | safe }};
-
-    // Configurações Globais
     window.KANBAN_CONFIG = {
         urls: {
             addTask: "{% url 'add_operational_task' %}",
@@ -658,6 +332,5 @@
         csrfToken: "{{ csrf_token }}"
     };
 </script>
-
 <script src="{% static 'js/kanban_operational.js' %}"></script>
 {% endblock %}
