@@ -317,13 +317,39 @@ document.addEventListener("DOMContentLoaded", function () {
     // ============================================================
 
     function populateDesignTab(data) {
+        // --- 1. Cartão Briefing ---
         setText('designBriefTitle', data.title);
         setText('designNetwork', data.social_network || 'Geral');
-        setText('designDate', data.scheduled_date || '--/--');
+        setText('designFormat', data.content_type || 'Post');
+        
+        if (data.scheduled_date && data.scheduled_date.length >= 10) {
+            setText('designDate', data.scheduled_date.slice(0, 10));
+            setText('designTime', data.scheduled_date.slice(11, 16) || '--:--');
+        }
         setText('designBriefText', data.briefing_text || 'Sem briefing.');
-        setText('designHeadline', data.copy_content || 'Sem copy.');
-        setText('designCaption', data.caption_content || 'Sem legenda.');
 
+        // --- 2. Cartão Copy (Novos Campos) ---
+        // Aqui pegamos os dados que podem ter vindo da aba Copy ou do banco
+        // Se a aba copy estiver aberta, tentamos pegar do input, senão do objeto data
+        const scriptVal = document.getElementById('script_content') ? document.getElementById('script_content').value : data.script_content;
+        const copyVal = document.getElementById('copy_content_input') ? document.getElementById('copy_content_input').value : data.copy_content;
+        const captionVal = document.getElementById('inputCaption') ? document.getElementById('inputCaption').value : data.caption_content;
+
+        setText('designScript', scriptVal || 'Sem roteiro.');
+        setText('designCopyText', copyVal || 'Sem texto na arte.');
+        setText('designCaption', captionVal || 'Sem legenda.');
+
+        // --- 3. Cartão Referência ---
+        const refContainer = document.getElementById('designRefContainer');
+        if (refContainer) {
+            if (data.briefing_files) {
+                refContainer.innerHTML = `<img src="${data.briefing_files}" class="briefing-thumb" style="width: 100%; height: auto; max-height: 150px; object-fit: cover; border-radius: 8px;" onclick="window.open('${data.briefing_files}', '_blank')">`;
+            } else {
+                refContainer.innerHTML = '<span class="text-muted x-small fst-italic">Nenhuma referência.</span>';
+            }
+        }
+
+        // --- 4. Preview Upload (Direita) ---
         const img = document.getElementById('designPreviewImg');
         const placeholder = document.getElementById('designUploadPlaceholder');
         if (img && placeholder) {

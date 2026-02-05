@@ -527,3 +527,67 @@ img.client-avatar-small {
     text-align: right;
     margin-top: 4px;
 }
+
+/* --- ESTILOS DA ABA DESIGN (REF. EXATA) --- */
+
+/* Cartões de Informação (Esquerda) */
+.design-info-card {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 12px;
+}
+
+.design-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.design-label-small {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #adb5bd;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 8px;
+    margin-bottom: 2px;
+}
+
+.design-text-content {
+    font-size: 0.85rem;
+    color: #495057;
+    white-space: pre-wrap; /* Mantém quebras de linha */
+    line-height: 1.4;
+}
+
+/* Área de Upload (Direita) */
+.upload-zone-large {
+    border: 2px dashed #e9ecef;
+    border-radius: 12px;
+    height: 100%;
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.upload-zone-large:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.upload-zone-content {
+    text-align: center;
+    pointer-events: none;
+}
