@@ -222,22 +222,88 @@
                         </div>
 
                         <div class="tab-pane fade" id="tab-copy">
-                             <h5 class="fw-bold mb-3 text-primary">Copywriting e Roteiro</h5>
-                             
-                             <div class="mb-3">
-                                <label class="modal-briefing-label">Legenda do Post</label>
-                                <textarea name="caption_content" id="inputCaption" class="form-control form-control-clean" rows="4" placeholder="Escreva a legenda aqui..."></textarea>
-                             </div>
-
-                             <div class="mb-3">
-                                <label class="modal-briefing-label">Roteiro / Texto na Arte</label>
-                                <textarea name="script_content" id="script_content" class="form-control form-control-clean" rows="4" placeholder="Roteiro de vídeo ou texto que vai na imagem..."></textarea>
-                             </div>
-
-                             <div class="d-flex justify-content-between mt-4">
-                                <button type="button" class="btn btn-outline-secondary" onclick="goToTab('tab-briefing')">Voltar</button>
-                                <button type="button" class="btn btn-primary" onclick="saveAndAdvance('design')">Salvar e Enviar para Design</button>
-                             </div>
+    
+                            <div class="d-flex align-items-center mb-4 ps-2">
+                                <span style="width: 10px; height: 10px; background-color: #0d6efd; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
+                                <h5 class="fw-bold m-0 text-dark">Copy</h5>
+                            </div>
+                        
+                            <div class="row h-100">
+                                
+                                <div class="col-md-5 pe-3 border-end">
+                                    <div class="briefing-summary-card">
+                                        
+                                        <div class="briefing-summary-title">
+                                            <i class="fa-regular fa-file-lines text-primary"></i> Resumo do Briefing
+                                        </div>
+                        
+                                        <span class="briefing-label">Título</span>
+                                        <div class="briefing-value fw-bold" id="copyBriefTitle">--</div>
+                        
+                                        <div class="d-flex flex-wrap mb-3">
+                                            <span class="briefing-tag" id="copyNetwork">--</span>
+                                            <span class="briefing-tag" id="copyFormat">--</span>
+                                        </div>
+                        
+                                        <div class="d-flex align-items-center mb-3 text-muted small">
+                                            <i class="fa-regular fa-calendar me-2"></i> <span id="copyDate">--/--</span>
+                                            <i class="fa-regular fa-clock mx-2"></i> <span id="copyTime">--:--</span>
+                                        </div>
+                        
+                                        <hr class="border-light my-3">
+                        
+                                        <span class="briefing-label">Briefing</span>
+                                        <div class="briefing-value small text-secondary" id="copyBriefText">
+                                            ...
+                                        </div>
+                        
+                                        <span class="briefing-label mt-3">Mídia de Referência</span>
+                                        <div id="copyRefContainer">
+                                            <span class="text-muted small fst-italic">Nenhuma referência.</span>
+                                        </div>
+                        
+                                    </div>
+                                </div>
+                        
+                                <div class="col-md-7 ps-4">
+                                    
+                                    <div class="mb-3">
+                                        <label class="copy-section-label">
+                                            <i class="fa-solid fa-list-ol text-info"></i> Roteiro
+                                        </label>
+                                        <textarea name="script_content" id="script_content" class="form-control form-control-copy" rows="4" 
+                                                  placeholder="Slide 1: ...&#10;Slide 2: ..."></textarea>
+                                    </div>
+                        
+                                    <div class="mb-3">
+                                        <label class="copy-section-label">
+                                            <i class="fa-regular fa-comment-dots text-success"></i> Copy (Texto na arte)
+                                        </label>
+                                        <textarea name="copy_content" id="copy_content_input" class="form-control form-control-copy" rows="2" 
+                                                  placeholder="Texto principal que vai na imagem..."></textarea>
+                                    </div>
+                        
+                                    <div class="mb-3">
+                                        <label class="copy-section-label">
+                                            <i class="fa-regular fa-file-alt text-warning"></i> Legenda
+                                        </label>
+                                        <textarea name="caption_content" id="inputCaption" class="form-control form-control-copy" rows="4" 
+                                                  placeholder="✨ Escreva uma legenda engajadora...&#10;#hashtags" oninput="updateCharCount(this)"></textarea>
+                                        <div class="char-counter"><span id="charCount">0</span> caracteres</div>
+                                    </div>
+                        
+                                </div>
+                            </div>
+                        
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" onclick="goToTab('tab-briefing')">Cancelar</button>
+                                <button type="button" class="btn btn-success px-4 text-white" 
+                                        style="background-color: #00bfa5; border: none;"
+                                        onclick="saveAndAdvance('design')">
+                                    Enviar para Design
+                                </button>
+                            </div>
+                        
                         </div>
                         
                         <div class="tab-pane fade" id="tab-design">

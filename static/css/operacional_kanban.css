@@ -433,3 +433,97 @@ img.client-avatar-small {
 .nav-pills, .nav-tabs {
     display: none !important;
 }
+
+/* --- ESTILOS DA ABA COPY (RESUMO + INPUTS) --- */
+
+/* Cartão de Resumo do Briefing (Esquerda) */
+.briefing-summary-card {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.briefing-summary-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #344767;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.briefing-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    margin-right: 4px;
+}
+
+.briefing-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #adb5bd;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.briefing-value {
+    font-size: 0.85rem;
+    color: #212529;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+/* Imagem de Referência Miniatura */
+.briefing-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.briefing-thumb:hover { transform: scale(1.05); }
+
+
+/* Inputs da Copy (Direita) */
+.copy-section-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #344767;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-control-copy {
+    background-color: #f8f9fa; /* Fundo cinza claro igual imagem */
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.9rem;
+    resize: none; /* Remove redimensionamento manual feio */
+    transition: all 0.2s;
+}
+
+.form-control-copy:focus {
+    background-color: #fff;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.char-counter {
+    font-size: 0.75rem;
+    color: #adb5bd;
+    text-align: right;
+    margin-top: 4px;
+}
