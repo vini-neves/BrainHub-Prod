@@ -396,38 +396,36 @@
 
                                 <div class="col-md-5 border-end pe-4 d-flex flex-column align-items-center">
 
-                                    <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
-
                                         <div class="phone-frame">
                                             <div class="phone-screen">
                                                 <img id="approvalImage" src="" alt="Preview">
                                                 <canvas id="annotationCanvas"></canvas>
                                             </div>
                                         </div>
+                                        <div class="d-flex flex-column align-items-center">
+                                            <div id="drawControls" style="display:none;"
+                                                class="mb-3 w-100 text-center animate__animated animate__fadeIn">
 
-                                        <div id="drawControls" style="display:none;"
-                                            class="mb-3 w-100 text-center animate__animated animate__fadeIn">
+                                                <div class="palette-container">
+                                                    <div class="color-btn btn-red active"
+                                                        onclick="changeColor('#ff0000', this)" title="Vermelho"></div>
+                                                    <div class="color-btn btn-green" onclick="changeColor('#00ff00', this)"
+                                                        title="Verde"></div>
+                                                    <div class="color-btn btn-blue" onclick="changeColor('#0099ff', this)"
+                                                        title="Azul"></div>
+                                                    <div class="color-btn btn-yellow" onclick="changeColor('#ffeb3b', this)"
+                                                        title="Amarelo"></div>
+                                                    <div class="color-btn btn-white" onclick="changeColor('#ffffff', this)"
+                                                        title="Branco"></div>
+                                                </div>
 
-                                            <div class="palette-container">
-                                                <div class="color-btn btn-red active"
-                                                    onclick="changeColor('#ff0000', this)" title="Vermelho"></div>
-                                                <div class="color-btn btn-green" onclick="changeColor('#00ff00', this)"
-                                                    title="Verde"></div>
-                                                <div class="color-btn btn-blue" onclick="changeColor('#0099ff', this)"
-                                                    title="Azul"></div>
-                                                <div class="color-btn btn-yellow" onclick="changeColor('#ffeb3b', this)"
-                                                    title="Amarelo"></div>
-                                                <div class="color-btn btn-white" onclick="changeColor('#ffffff', this)"
-                                                    title="Branco"></div>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                    onclick="clearCanvas()">
+                                                    <i class="fa-solid fa-eraser me-1"></i> Limpar Tela
+                                                </button>
                                             </div>
-
-                                            <button type="button"
-                                                class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                onclick="clearCanvas()">
-                                                <i class="fa-solid fa-eraser me-1"></i> Limpar Tela
-                                            </button>
                                         </div>
-
                                         <div class="reschedule-box w-100 mt-2">
                                             <h6 class="small fw-bold text-dark mb-2">Alterar Agendamento</h6>
                                             <div class="row g-2">
@@ -440,8 +438,7 @@
                                                         class="form-control form-control-sm border-0 bg-white">
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                            </div>
                                 </div>
 
                                     <div class="col-md-7 ps-4 scroll-col">
