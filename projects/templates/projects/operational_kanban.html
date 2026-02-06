@@ -8,122 +8,132 @@
 <link rel="stylesheet" href="{% static 'css/operacional_kanban.css' %}">
 <style>
     /* --- CORREÇÕES ESTRUTURAIS FORÇADAS --- */
-    
+
     /* 1. Modal Ultra Largo para caber 2 colunas */
     @media (min-width: 992px) {
-    .modal-dialog-clean {
-        max-width: 1100px !important; /* Largura necessária para 2 colunas */
+        .modal-dialog-clean {
+            max-width: 1100px !important;
+            /* Largura necessária para 2 colunas */
+        }
     }
-}
 
-/* 2. Estilo do Celular (Igual à referência) */
-.phone-frame {
-    width: 280px !important;
-    height: 560px !important;
-    background: #fff;
-    border: 2px solid #f0f0f0; /* Borda sutil */
-    border-radius: 35px;
-    padding: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    margin: 0 auto 20px auto;
-    position: relative;
-    flex-shrink: 0;
-}
+    /* 2. Estilo do Celular (Igual à referência) */
+    .phone-frame {
+        width: 280px !important;
+        height: 560px !important;
+        background: #fff;
+        border: 2px solid #f0f0f0;
+        /* Borda sutil */
+        border-radius: 35px;
+        padding: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin: 0 auto 20px auto;
+        position: relative;
+        flex-shrink: 0;
+    }
 
-/* O "notch" (detalhe superior do celular) */
-.phone-frame::before {
-    content: '';
-    position: absolute;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 6px;
-    background: #e0e0e0;
-    border-radius: 10px;
-    z-index: 10;
-}
+    /* O "notch" (detalhe superior do celular) */
+    .phone-frame::before {
+        content: '';
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        z-index: 10;
+    }
 
-.phone-screen {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    border-radius: 28px;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #eee;
-}
+    .phone-screen {
+        width: 100%;
+        height: 100%;
+        background: #000;
+        border-radius: 28px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #eee;
+    }
 
-/* 3. Cards da Coluna Direita */
-.approval-card {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 14px;
-}
+    /* 3. Cards da Coluna Direita */
+    .approval-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
 
-.approval-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
+    .approval-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
 
-.approval-label {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #212529; /* Cor escura para o título da seção */
-}
+    .approval-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #212529;
+        /* Cor escura para o título da seção */
+    }
 
-/* Links coloridos (Laranja e Cinza) */
-.link-orange {
-    font-size: 0.75rem;
-    color: #fd7e14 !important; /* Laranja da referência */
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.link-orange:hover { color: #e66a00 !important; }
+    /* Links coloridos (Laranja e Cinza) */
+    .link-orange {
+        font-size: 0.75rem;
+        color: #fd7e14 !important;
+        /* Laranja da referência */
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
 
-.link-action {
-    font-size: 0.75rem;
-    color: #495057;
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-    margin-right: 12px;
-}
-.link-action i { margin-right: 4px; }
+    .link-orange:hover {
+        color: #e66a00 !important;
+    }
 
-/* Thumbnail do Design */
-.approval-thumb {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #eee;
-    background-color: #f8f9fa;
-}
+    .link-action {
+        font-size: 0.75rem;
+        color: #495057;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
+        margin-right: 12px;
+    }
 
-/* Box de Reagendamento (Canto inferior esquerdo) */
-.reschedule-box {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    padding: 16px;
-    width: 100%;
-}
+    .link-action i {
+        margin-right: 4px;
+    }
 
-/* Garante scroll na coluna direita se for muito alta */
-.scroll-col {
-    max-height: 650px;
-    overflow-y: auto;
-}
+    /* Thumbnail do Design */
+    .approval-thumb {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        background-color: #f8f9fa;
+    }
+
+    /* Box de Reagendamento (Canto inferior esquerdo) */
+    .reschedule-box {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 16px;
+        width: 100%;
+    }
+
+    /* Garante scroll na coluna direita se for muito alta */
+    .scroll-col {
+        max-height: 650px;
+        overflow-y: auto;
+    }
 </style>
 {% endblock %}
 
@@ -149,48 +159,58 @@
                 </div>
                 <span class="badge bg-light text-secondary border rounded-pill">{{ column.tasks|length }}</span>
             </div>
-            
+
             <div class="kanban-tasks-list" id="col-{{ column.id }}" data-status="{{ column.id }}">
                 {% if column.id == 'briefing' %}
-                    <button class="btn-add-ghost" onclick="openNewTaskModal()">
-                        <i class="fa-solid fa-plus me-2"></i> Novo Post
-                    </button>
+                <button class="btn-add-ghost" onclick="openNewTaskModal()">
+                    <i class="fa-solid fa-plus me-2"></i> Novo Post
+                </button>
                 {% endif %}
-                
+
                 {% for task in column.tasks %}
-                <div class="kanban-card" draggable="true" data-id="{{ task.id }}" onclick="openEditModal({{ task.id }})">
+                <div class="kanban-card" draggable="true" data-id="{{ task.id }}"
+                    onclick="openEditModal({{ task.id }})">
                     {% if task.art_url and column.id != 'briefing' and column.id != 'copy' %}
-                        <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
+                    <img src="{{ task.art_url }}" class="card-cover" alt="Arte">
                     {% endif %}
                     <div class="p-3">
-                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem; line-height: 1.4;">{{ task.title }}</h6>
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem; line-height: 1.4;">{{ task.title }}
+                        </h6>
                         {% if not task.art_url or column.id == 'briefing' or column.id == 'copy' %}
-                            <p class="text-muted small mb-3" style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
-                            </p>
+                        <p class="text-muted small mb-3"
+                            style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ task.description|default:task.briefing_text|default:"Sem descrição..." }}
+                        </p>
                         {% endif %}
-                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
+                        <div
+                            class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-light">
                             <div class="text-muted x-small d-flex align-items-center" style="font-size: 0.7rem;">
-                                <i class="fa-regular fa-calendar me-1"></i> 
-                                {% if task.scheduled_date %}{{ task.scheduled_date|slice:"8:10" }}/{{ task.scheduled_date|slice:"5:7" }}{% else %}--{% endif %}
+                                <i class="fa-regular fa-calendar me-1"></i>
+                                {% if task.scheduled_date %}{{ task.scheduled_date|slice:"8:10" }}/{{
+                                task.scheduled_date|slice:"5:7" }}{% else %}--{% endif %}
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                {% if task.social_network == 'instagram' %}<i class="fa-brands fa-instagram text-danger"></i>{% endif %}
-                                {% if task.social_network == 'facebook' %}<i class="fa-brands fa-facebook text-primary"></i>{% endif %}
+                                {% if task.social_network == 'instagram' %}<i
+                                    class="fa-brands fa-instagram text-danger"></i>{% endif %}
+                                {% if task.social_network == 'facebook' %}<i
+                                    class="fa-brands fa-facebook text-primary"></i>{% endif %}
                             </div>
                         </div>
                         <div class="mt-2 d-flex align-items-center">
                             {% if task.client_logo %}
-                                <img src="{{ task.client_logo }}" class="client-avatar-small" style="object-fit: cover; background: white;">
+                            <img src="{{ task.client_logo }}" class="client-avatar-small"
+                                style="object-fit: cover; background: white;">
                             {% else %}
-                                <div class="client-avatar-small">{{ task.client_name|slice:":2"|upper }}</div>
+                            <div class="client-avatar-small">{{ task.client_name|slice:":2"|upper }}</div>
                             {% endif %}
-                            <span class="text-muted small text-truncate ps-1" style="font-size: 0.75rem;">{{ task.client_name }}</span>
+                            <span class="text-muted small text-truncate ps-1" style="font-size: 0.75rem;">{{
+                                task.client_name }}</span>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                    {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div> {% endif %}
+                {% if column.id != 'briefing' %} <div class="text-center text-muted small py-4 opacity-50">Vazio</div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -203,20 +223,25 @@
 <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-dialog-clean">
         <div class="modal-content modal-content-clean">
-            
+
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <div class="modal-title-custom d-flex align-items-center gap-2">
-                    <span id="modalTypeDot" style="width: 12px; height: 12px; background-color: #6f42c1; border-radius: 50%; display: inline-block;"></span>
+                    <span id="modalTypeDot"
+                        style="width: 12px; height: 12px; background-color: #6f42c1; border-radius: 50%; display: inline-block;"></span>
                     <span id="modalKanbanType" class="fw-bold fs-5">Briefing</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <ul class="nav nav-pills d-none" id="taskTabs">
-                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design" data-bs-toggle="tab"></button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval" data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-briefing"
+                        data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-copy" data-bs-toggle="tab"></button>
+                </li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-design"
+                        data-bs-toggle="tab"></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-target="#tab-approval"
+                        data-bs-toggle="tab"></button></li>
             </ul>
 
             <div class="modal-body p-0">
@@ -224,28 +249,52 @@
                     {% csrf_token %}
                     <input type="hidden" name="task_id" id="task-id">
                     <input type="hidden" name="kanban_type" value="operational">
-                    
+
                     <div class="tab-content h-100">
-                        
+
                         <div class="tab-pane fade show active p-4" id="tab-briefing">
                             <div class="row g-3">
-                                <div class="col-12"><label class="small fw-bold text-muted">CLIENTE</label><select name="client" id="clientSelect" class="form-select bg-light border-0 fw-bold"><option value="">Selecione...</option>{% for c in clients %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
-                                <div class="col-12"><label class="small fw-bold text-muted">TÍTULO</label><input type="text" name="title" id="modalTitleInput" class="form-control bg-light border-0" placeholder="Ex: Post Institucional" required></div>
-                                <div class="col-md-6"><label class="small text-muted">Rede</label><select name="social_network" id="networkSelect" class="form-select bg-light border-0"><option>Instagram</option></select></div>
-                                <div class="col-md-6"><label class="small text-muted">Formato</label><select name="content_type" id="formatSelect" class="form-select bg-light border-0"><option>Reels</option></select></div>
-                                <div class="col-md-6"><label class="small text-muted">Data</label><input type="date" name="scheduled_date" id="scheduled_date" class="form-control bg-light border-0"></div>
-                                <div class="col-md-6"><label class="small text-muted">Hora</label><input type="time" name="scheduled_time" class="form-control bg-light border-0"></div>
-                                <div class="col-12"><label class="small text-muted">Briefing</label><textarea name="briefing_text" id="briefing_text" class="form-control bg-light border-0" rows="5"></textarea></div>
+                                <div class="col-12"><label class="small fw-bold text-muted">CLIENTE</label><select
+                                        name="client" id="clientSelect" class="form-select bg-light border-0 fw-bold">
+                                        <option value="">Selecione...</option>{% for c in clients %}<option
+                                            value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                                    </select></div>
+                                <div class="col-12"><label class="small fw-bold text-muted">TÍTULO</label><input
+                                        type="text" name="title" id="modalTitleInput"
+                                        class="form-control bg-light border-0" placeholder="Ex: Post Institucional"
+                                        required></div>
+                                <div class="col-md-6"><label class="small text-muted">Rede</label><select
+                                        name="social_network" id="networkSelect" class="form-select bg-light border-0">
+                                        <option>Instagram</option>
+                                    </select></div>
+                                <div class="col-md-6"><label class="small text-muted">Formato</label><select
+                                        name="content_type" id="formatSelect" class="form-select bg-light border-0">
+                                        <option>Reels</option>
+                                    </select></div>
+                                <div class="col-md-6"><label class="small text-muted">Data</label><input type="date"
+                                        name="scheduled_date" id="scheduled_date"
+                                        class="form-control bg-light border-0"></div>
+                                <div class="col-md-6"><label class="small text-muted">Hora</label><input type="time"
+                                        name="scheduled_time" class="form-control bg-light border-0"></div>
+                                <div class="col-12"><label class="small text-muted">Briefing</label><textarea
+                                        name="briefing_text" id="briefing_text" class="form-control bg-light border-0"
+                                        rows="5"></textarea></div>
                                 <div class="col-12 mt-3">
-                                    <div class="text-center py-4 bg-light rounded border border-2" style="border-style: dashed !important;">
-                                        <input type="file" name="briefing_files" class="position-absolute opacity-0 w-100 h-100 top-0 start-0" style="cursor: pointer;" onchange="updateFileName(this)">
-                                        <span class="text-muted small fw-bold" id="uploadTextMain">Anexar Referência</span>
+                                    <div class="text-center py-4 bg-light rounded border border-2"
+                                        style="border-style: dashed !important;">
+                                        <input type="file" name="briefing_files"
+                                            class="position-absolute opacity-0 w-100 h-100 top-0 start-0"
+                                            style="cursor: pointer;" onchange="updateFileName(this)">
+                                        <span class="text-muted small fw-bold" id="uploadTextMain">Anexar
+                                            Referência</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-success text-white" style="background:#00bfa5; border:none;" onclick="saveAndAdvance('copy')">Enviar para Copy</button>
+                                <button type="button" class="btn btn-success text-white"
+                                    style="background:#00bfa5; border:none;" onclick="saveAndAdvance('copy')">Enviar
+                                    para Copy</button>
                             </div>
                         </div>
 
@@ -253,22 +302,38 @@
                             <div class="row h-100">
                                 <div class="col-md-4 border-end pe-4 scroll-col">
                                     <h6 class="small fw-bold text-muted mb-3">RESUMO DO BRIEFING</h6>
-                                    <div class="mb-3"><span class="d-block small text-muted">Título</span><strong id="copyBriefTitle">--</strong></div>
-                                    <div class="mb-3"><span class="badge bg-light text-dark border" id="copyNetwork">--</span> <span class="badge bg-light text-dark border" id="copyFormat">--</span></div>
-                                    <div class="mb-3"><span class="d-block small text-muted">Data</span><span id="copyDate">--/--</span></div>
+                                    <div class="mb-3"><span class="d-block small text-muted">Título</span><strong
+                                            id="copyBriefTitle">--</strong></div>
+                                    <div class="mb-3"><span class="badge bg-light text-dark border"
+                                            id="copyNetwork">--</span> <span class="badge bg-light text-dark border"
+                                            id="copyFormat">--</span></div>
+                                    <div class="mb-3"><span class="d-block small text-muted">Data</span><span
+                                            id="copyDate">--/--</span></div>
                                     <hr>
                                     <div class="small text-secondary" id="copyBriefText">...</div>
                                     <div id="copyRefContainer" class="mt-3"></div>
                                 </div>
                                 <div class="col-md-8 ps-4 scroll-col">
-                                    <div class="mb-3"><label class="small fw-bold text-info">ROTEIRO</label><textarea name="script_content" id="script_content" class="form-control bg-light border-0" rows="5"></textarea></div>
-                                    <div class="mb-3"><label class="small fw-bold text-success">COPY (TEXTO ARTE)</label><textarea name="copy_content" id="copy_content_input" class="form-control bg-light border-0" rows="2"></textarea></div>
-                                    <div class="mb-3"><label class="small fw-bold text-warning">LEGENDA</label><textarea name="caption_content" id="inputCaption" class="form-control bg-light border-0" rows="5" oninput="updateCharCount(this)"></textarea><div class="text-end small text-muted"><span id="charCount">0</span> cars</div></div>
+                                    <div class="mb-3"><label class="small fw-bold text-info">ROTEIRO</label><textarea
+                                            name="script_content" id="script_content"
+                                            class="form-control bg-light border-0" rows="5"></textarea></div>
+                                    <div class="mb-3"><label class="small fw-bold text-success">COPY (TEXTO
+                                            ARTE)</label><textarea name="copy_content" id="copy_content_input"
+                                            class="form-control bg-light border-0" rows="2"></textarea></div>
+                                    <div class="mb-3"><label class="small fw-bold text-warning">LEGENDA</label><textarea
+                                            name="caption_content" id="inputCaption"
+                                            class="form-control bg-light border-0" rows="5"
+                                            oninput="updateCharCount(this)"></textarea>
+                                        <div class="text-end small text-muted"><span id="charCount">0</span> cars</div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-light" onclick="goToTab('tab-briefing')">Voltar</button>
-                                <button type="button" class="btn btn-success text-white" style="background:#00bfa5; border:none;" onclick="saveAndAdvance('design')">Enviar para Design</button>
+                                <button type="button" class="btn btn-light"
+                                    onclick="goToTab('tab-briefing')">Voltar</button>
+                                <button type="button" class="btn btn-success text-white"
+                                    style="background:#00bfa5; border:none;" onclick="saveAndAdvance('design')">Enviar
+                                    para Design</button>
                             </div>
                         </div>
 
@@ -276,147 +341,200 @@
                             <div class="row h-100">
                                 <div class="col-md-4 pe-3 border-end scroll-col">
                                     <div id="designFeedbackCard" class="feedback-card" style="display:none;">
-                                        <h6 class="text-danger fw-bold small"><i class="fa-solid fa-circle-exclamation me-1"></i> AJUSTE SOLICITADO</h6>
-                                        <img id="designFeedbackImg" src="" class="img-fluid rounded border mb-2 bg-white" onclick="window.open(this.src)" style="cursor: zoom-in;">
+                                        <h6 class="text-danger fw-bold small"><i
+                                                class="fa-solid fa-circle-exclamation me-1"></i> AJUSTE SOLICITADO</h6>
+                                        <img id="designFeedbackImg" src=""
+                                            class="img-fluid rounded border mb-2 bg-white"
+                                            onclick="window.open(this.src)" style="cursor: zoom-in;">
                                         <div id="designFeedbackText" class="small text-danger"></div>
                                     </div>
 
-                                    <div class="card bg-light border-0 mb-3"><div class="card-body p-3"><h6 class="small fw-bold text-primary">BRIEFING</h6><div id="designBriefTitle" class="fw-bold">--</div><div id="designBriefText" class="small text-muted mt-1">...</div></div></div>
-                                    <div class="card bg-light border-0 mb-3"><div class="card-body p-3"><h6 class="small fw-bold text-info">COPY</h6><label class="small text-muted d-block">Texto na Arte</label><div id="designCopyText" class="small p-2 bg-white rounded border mb-2">...</div><label class="small text-muted d-block">Roteiro</label><div id="designScript" class="small p-2 bg-white rounded border">...</div></div></div>
+                                    <div class="card bg-light border-0 mb-3">
+                                        <div class="card-body p-3">
+                                            <h6 class="small fw-bold text-primary">BRIEFING</h6>
+                                            <div id="designBriefTitle" class="fw-bold">--</div>
+                                            <div id="designBriefText" class="small text-muted mt-1">...</div>
+                                        </div>
+                                    </div>
+                                    <div class="card bg-light border-0 mb-3">
+                                        <div class="card-body p-3">
+                                            <h6 class="small fw-bold text-info">COPY</h6><label
+                                                class="small text-muted d-block">Texto na Arte</label>
+                                            <div id="designCopyText" class="small p-2 bg-white rounded border mb-2">...
+                                            </div><label class="small text-muted d-block">Roteiro</label>
+                                            <div id="designScript" class="small p-2 bg-white rounded border">...</div>
+                                        </div>
+                                    </div>
                                     <div id="designRefContainer"></div>
                                 </div>
                                 <div class="col-md-8 ps-4 d-flex flex-column">
                                     <h6 class="small fw-bold text-secondary mb-2">UPLOAD FINAL</h6>
-                                    <div class="upload-zone-large flex-grow-1" onclick="document.getElementById('finalArtInput').click()">
-                                        <input type="file" id="finalArtInput" name="final_art" accept="image/*" style="display:none" onchange="previewUpload(this)">
+                                    <div class="upload-zone-large flex-grow-1"
+                                        onclick="document.getElementById('finalArtInput').click()">
+                                        <input type="file" id="finalArtInput" name="final_art" accept="image/*"
+                                            style="display:none" onchange="previewUpload(this)">
                                         <div id="designUploadPlaceholder" class="text-center">
                                             <i class="fa-solid fa-cloud-arrow-up fs-1 text-muted mb-2"></i>
                                             <p class="fw-bold text-muted">Arraste o Design aqui</p>
                                         </div>
-                                        <img id="designPreviewImg" class="img-fluid" style="display:none; max-height: 100%; object-fit: contain;">
+                                        <img id="designPreviewImg" class="img-fluid"
+                                            style="display:none; max-height: 100%; object-fit: contain;">
                                     </div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-light" onclick="goToTab('tab-copy')">Voltar</button>
-                                <button type="button" class="btn btn-success text-white" style="background:#00bfa5; border:none;" onclick="saveAndAdvance('review_internal')">Enviar para Aprovação</button>
+                                <button type="button" class="btn btn-light"
+                                    onclick="goToTab('tab-copy')">Voltar</button>
+                                <button type="button" class="btn btn-success text-white"
+                                    style="background:#00bfa5; border:none;"
+                                    onclick="saveAndAdvance('review_internal')">Enviar para Aprovação</button>
                             </div>
                         </div>
 
                         <div class="tab-pane fade p-4" id="tab-approval">
                             <div class="row h-100">
-                                
+
                                 <div class="col-md-5 border-end pe-4 d-flex flex-column align-items-center">
-                                    
+
                                     <div class="col-md-5 d-flex flex-column align-items-center border-end pe-4">
-    
+
                                         <div class="phone-frame">
                                             <div class="phone-screen">
                                                 <img id="approvalImage" src="" alt="Preview">
                                                 <canvas id="annotationCanvas"></canvas>
                                             </div>
                                         </div>
-                                    
-                                        <div id="drawControls" style="display:none;" class="mb-3 w-100 text-center animate__animated animate__fadeIn">
-                                            
+
+                                        <div id="drawControls" style="display:none;"
+                                            class="mb-3 w-100 text-center animate__animated animate__fadeIn">
+
                                             <div class="palette-container">
-                                                <div class="color-btn btn-red active" onclick="changeColor('#ff0000', this)" title="Vermelho"></div>
-                                                <div class="color-btn btn-green" onclick="changeColor('#00ff00', this)" title="Verde"></div>
-                                                <div class="color-btn btn-blue" onclick="changeColor('#0099ff', this)" title="Azul"></div>
-                                                <div class="color-btn btn-yellow" onclick="changeColor('#ffeb3b', this)" title="Amarelo"></div>
-                                                <div class="color-btn btn-white" onclick="changeColor('#ffffff', this)" title="Branco"></div>
+                                                <div class="color-btn btn-red active"
+                                                    onclick="changeColor('#ff0000', this)" title="Vermelho"></div>
+                                                <div class="color-btn btn-green" onclick="changeColor('#00ff00', this)"
+                                                    title="Verde"></div>
+                                                <div class="color-btn btn-blue" onclick="changeColor('#0099ff', this)"
+                                                    title="Azul"></div>
+                                                <div class="color-btn btn-yellow" onclick="changeColor('#ffeb3b', this)"
+                                                    title="Amarelo"></div>
+                                                <div class="color-btn btn-white" onclick="changeColor('#ffffff', this)"
+                                                    title="Branco"></div>
                                             </div>
-                                    
-                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearCanvas()">
+
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                onclick="clearCanvas()">
                                                 <i class="fa-solid fa-eraser me-1"></i> Limpar Tela
                                             </button>
                                         </div>
-                                    
+
                                         <div class="reschedule-box w-100 mt-2">
                                             <h6 class="small fw-bold text-dark mb-2">Alterar Agendamento</h6>
                                             <div class="row g-2">
                                                 <div class="col-6">
-                                                    <input type="date" id="apprDateInput" name="scheduled_date" class="form-control form-control-sm border-0 bg-white">
+                                                    <input type="date" id="apprDateInput" name="scheduled_date"
+                                                        class="form-control form-control-sm border-0 bg-white">
                                                 </div>
                                                 <div class="col-6">
-                                                    <input type="time" name="scheduled_time" class="form-control form-control-sm border-0 bg-white">
+                                                    <input type="time" name="scheduled_time"
+                                                        class="form-control form-control-sm border-0 bg-white">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                        
-                                <div class="col-md-7 ps-4 scroll-col">
-                                    
-                                    <div class="approval-card d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h5 class="fw-bold mb-1 text-dark" id="apprTitle">Título do Post</h5>
-                                            <span class="text-muted small" id="apprClient">Nome do Cliente</span>
-                                            <div class="mt-3 text-muted small d-flex align-items-center">
-                                                <i class="fa-regular fa-calendar me-2"></i> <span id="apprDateDisplay">--/--</span>
-                                                <i class="fa-regular fa-clock ms-3 me-2"></i> <span id="apprTimeDisplay">--:--</span>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="badge bg-white text-dark border" id="apprNetwork">Instagram</span>
-                                            <span class="badge bg-white text-dark border ms-1" id="apprFormat">Story</span>
-                                        </div>
-                                    </div>
-                        
-                                    <div class="approval-card">
-                                        <div class="approval-card-header">
-                                            <span class="approval-label">Legenda</span>
-                                            <span class="link-orange" onclick="returnToStage('copy')">← Voltar para Copy</span>
-                                        </div>
-                                        <div id="apprCaption" class="small text-secondary">Sem legenda definida.</div>
-                                    </div>
-                        
-                                    <div class="approval-card">
-                                        <div class="approval-card-header">
-                                            <span class="approval-label">Design</span>
-                                            <div>
-                                                <span class="link-action" onclick="toggleRejectMode()"><i class="fa-solid fa-pencil"></i> Anotar</span>
-                                                <span class="link-orange" onclick="returnToStage('design')">← Voltar para Designer</span>
-                                            </div>
-                                        </div>
-                                        <img id="apprThumb" src="" class="approval-thumb mt-2">
-                                    </div>
-                        
-                                    <div class="approval-card">
-                                        <div class="approval-card-header"><span class="approval-label">Roteiro / Copy</span></div>
-                                        <div class="mb-3">
-                                            <strong class="d-block small text-dark mb-1">Roteiro:</strong>
-                                            <div id="apprScript" class="small text-secondary fst-italic">...</div>
-                                        </div>
-                                        <div>
-                                            <strong class="d-block small text-dark mb-1">Copy (Texto na Arte):</strong>
-                                            <div id="apprCopyText" class="small text-secondary">...</div>
-                                        </div>
-                                    </div>
-                        
                                 </div>
-                            </div>
-                        
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
-                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-success px-4 text-white fw-bold" style="background-color: #198754; border:none;" onclick="saveAndAdvance('approve')">
-                                    <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
-                                </button>
-                            </div>
-                        
-                            <div id="rejectPanel" class="card border-danger mt-3 shadow-sm" style="display:none; background:#fff;">
-                                <div class="card-body p-3">
-                                    <h6 class="text-danger fw-bold mb-2"><i class="fa-solid fa-circle-exclamation me-2"></i>Solicitar Ajuste</h6>
-                                    <p class="text-muted small mb-2">Faça anotações na imagem ao lado e descreva o ajuste abaixo:</p>
-                                    <textarea id="feedbackInput" class="form-control mb-3" rows="3" placeholder="Ex: Aumentar a logo e trocar a cor de fundo..."></textarea>
-                                    <div class="text-end">
-                                        <button type="button" class="btn btn-light btn-sm me-2" onclick="toggleRejectMode()">Cancelar</button>
-                                        <button type="button" class="btn btn-danger btn-sm fw-bold" onclick="saveWithAnnotation()">Confirmar Ajuste</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                    </div>
+                                    <div class="col-md-7 ps-4 scroll-col">
+
+                                        <div class="approval-card d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h5 class="fw-bold mb-1 text-dark" id="apprTitle">Título do Post</h5>
+                                                <span class="text-muted small" id="apprClient">Nome do Cliente</span>
+                                                <div class="mt-3 text-muted small d-flex align-items-center">
+                                                    <i class="fa-regular fa-calendar me-2"></i> <span
+                                                        id="apprDateDisplay">--/--</span>
+                                                    <i class="fa-regular fa-clock ms-3 me-2"></i> <span
+                                                        id="apprTimeDisplay">--:--</span>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-white text-dark border"
+                                                    id="apprNetwork">Instagram</span>
+                                                <span class="badge bg-white text-dark border ms-1"
+                                                    id="apprFormat">Story</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="approval-card">
+                                            <div class="approval-card-header">
+                                                <span class="approval-label">Legenda</span>
+                                                <span class="link-orange" onclick="returnToStage('copy')">← Voltar para
+                                                    Copy</span>
+                                            </div>
+                                            <div id="apprCaption" class="small text-secondary">Sem legenda definida.
+                                            </div>
+                                        </div>
+
+                                        <div class="approval-card">
+                                            <div class="approval-card-header">
+                                                <span class="approval-label">Design</span>
+                                                <div>
+                                                    <span class="link-action" onclick="toggleRejectMode()"><i
+                                                            class="fa-solid fa-pencil"></i> Anotar</span>
+                                                    <span class="link-orange" onclick="returnToStage('design')">← Voltar
+                                                        para Designer</span>
+                                                </div>
+                                            </div>
+                                            <img id="apprThumb" src="" class="approval-thumb mt-2">
+                                        </div>
+
+                                        <div class="approval-card">
+                                            <div class="approval-card-header"><span class="approval-label">Roteiro /
+                                                    Copy</span></div>
+                                            <div class="mb-3">
+                                                <strong class="d-block small text-dark mb-1">Roteiro:</strong>
+                                                <div id="apprScript" class="small text-secondary fst-italic">...</div>
+                                            </div>
+                                            <div>
+                                                <strong class="d-block small text-dark mb-1">Copy (Texto na
+                                                    Arte):</strong>
+                                                <div id="apprCopyText" class="small text-secondary">...</div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" id="mainActions">
+                                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-success px-4 text-white fw-bold"
+                                        style="background-color: #198754; border:none;"
+                                        onclick="saveAndAdvance('approve')">
+                                        <i class="fa-solid fa-check me-2"></i> Aprovar e Enviar ao Cliente
+                                    </button>
+                                </div>
+
+                                <div id="rejectPanel" class="card border-danger mt-3 shadow-sm"
+                                    style="display:none; background:#fff;">
+                                    <div class="card-body p-3">
+                                        <h6 class="text-danger fw-bold mb-2"><i
+                                                class="fa-solid fa-circle-exclamation me-2"></i>Solicitar Ajuste</h6>
+                                        <p class="text-muted small mb-2">Faça anotações na imagem ao lado e descreva o
+                                            ajuste abaixo:</p>
+                                        <textarea id="feedbackInput" class="form-control mb-3" rows="3"
+                                            placeholder="Ex: Aumentar a logo e trocar a cor de fundo..."></textarea>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-light btn-sm me-2"
+                                                onclick="toggleRejectMode()">Cancelar</button>
+                                            <button type="button" class="btn btn-danger btn-sm fw-bold"
+                                                onclick="saveWithAnnotation()">Confirmar Ajuste</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                 </form>
             </div>
         </div>
