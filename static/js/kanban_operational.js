@@ -176,73 +176,100 @@ document.addEventListener("DOMContentLoaded", function () {
         setText('apprNetwork', data.social_network);
         setText('apprCaption', data.caption_content || 'Sem legenda');
         setText('apprScript', data.script_content || 'Sem roteiro');
+        setText('apprCopyText', data.copy_content || 'Sem copy');
         
+        // Imagens
         const imgMobile = document.getElementById('approvalImage');
         const imgThumb = document.getElementById('apprThumb');
         
         if (data.art_url) {
-            imgMobile.src = data.art_url; 
-            imgMobile.onload = function() { initCanvas(); };
-            imgThumb.src = data.art_url;
+            if(imgMobile) { 
+                imgMobile.style.display = 'block'; // Força visibilidade
+                imgMobile.src = data.art_url; 
+                // Inicializa o canvas somente quando a imagem carregar para ter as dimensões certas
+                imgMobile.onload = function() { initCanvas(); }; 
+            }
+            if(imgThumb) { 
+                imgThumb.src = data.art_url; 
+            }
         } else {
-            imgMobile.src = "";
+            if(imgMobile) { imgMobile.src = ""; imgMobile.style.display = 'none'; }
         }
+        
+        // Limpa o canvas anterior e reseta controles
         window.clearCanvas();
+        document.getElementById('drawControls').style.display = 'none'; 
     }
 
     // --- CANVAS (CORRIGIDO) ---
     let canvas, ctx, isDrawing = false, hasAnnotation = false;
+    let currentColor = "rgba(255, 0, 0, 0.8)"; // Vermelho padrão com leve transparência
 
     function initCanvas() {
         canvas = document.getElementById('annotationCanvas');
         const img = document.getElementById('approvalImage');
 
-        // Só inicializa se a imagem estiver visível e tiver tamanho
         if (canvas && img && img.clientWidth > 0) {
-            // Define o tamanho interno do canvas igual ao tamanho visual da imagem
+            // O Canvas precisa ter EXATAMENTE o tamanho da imagem renderizada
             canvas.width = img.clientWidth;
             canvas.height = img.clientHeight;
             
             ctx = canvas.getContext('2d');
             
-            // --- CORREÇÃO 1: COR COM TRANSPARÊNCIA (RGBA) ---
-            // 0.6 no final significa 60% de visibilidade (semi-transparente)
-            ctx.strokeStyle = "rgba(255, 0, 0, 0.6)"; 
-            ctx.lineWidth = 5; // Linha um pouco mais grossa
+            // Configuração inicial do pincel
+            ctx.strokeStyle = currentColor; 
+            ctx.lineWidth = 4; 
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
 
-            // Remove listeners antigos para não duplicar
+            // Listeners de mouse e touch
             canvas.removeEventListener('mousedown', startDraw);
             canvas.removeEventListener('mousemove', draw);
             canvas.removeEventListener('mouseup', stopDraw);
-            canvas.removeEventListener('mouseout', stopDraw);
-
-            // Adiciona novos listeners
+            
             canvas.addEventListener('mousedown', startDraw);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDraw);
-            canvas.addEventListener('mouseout', stopDraw);
+            // Touch support (para celular real ou simulação)
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e.touches[0]); });
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); });
+            canvas.addEventListener('touchend', stopDraw);
         }
     }
-    
-    // Função para pegar a posição correta do mouse
+
+    // Nova função para trocar cores
+    window.changeColor = function(color, btnElement) {
+        // Define a cor (se for vermelho, mantemos transparência, senão opaco)
+        if (color === '#ff0000') {
+            currentColor = "rgba(255, 0, 0, 0.8)";
+        } else {
+            currentColor = color;
+        }
+        
+        if (ctx) ctx.strokeStyle = currentColor;
+
+        // Atualiza visual dos botões
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        if(btnElement) btnElement.classList.add('active');
+    };
+
     function getMousePos(evt) {
         const rect = canvas.getBoundingClientRect();
+        // Fator de escala caso o CSS redimensione o canvas
+        const scaleX = canvas.width / rect.width; 
+        const scaleY = canvas.height / rect.height;
+
         return {
-            x: (evt.clientX - rect.left) * (canvas.width / rect.width),
-            y: (evt.clientY - rect.top) * (canvas.height / rect.height)
+            x: (evt.clientX - rect.left) * scaleX,
+            y: (evt.clientY - rect.top) * scaleY
         };
     }
 
     function startDraw(e) {
-        isDrawing = true; 
-        hasAnnotation = true;
+        isDrawing = true; hasAnnotation = true;
         const pos = getMousePos(e);
         ctx.beginPath(); 
         ctx.moveTo(pos.x, pos.y);
-        // Mostra o botão de limpar
-        document.getElementById('drawControls').style.display = 'block';
     }
 
     function draw(e) {
@@ -252,9 +279,12 @@ document.addEventListener("DOMContentLoaded", function () {
         ctx.stroke();
     }
 
-    function stopDraw() {
-        isDrawing = false;
-    }
+    function stopDraw() { isDrawing = false; }
+    
+    window.clearCanvas = function() {
+        if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasAnnotation = false;
+    };
     
     window.clearCanvas = function() {
         if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -382,24 +412,20 @@ document.addEventListener("DOMContentLoaded", function () {
     window.toggleRejectMode = function() {
         const p = document.getElementById('rejectPanel');
         const a = document.getElementById('mainActions');
-        const feedbackInput = document.getElementById('feedbackInput');
+        const controls = document.getElementById('drawControls'); // Container das cores
 
-        if(p.style.display === 'none'){ 
-            // MOSTRAR PAINEL DE REJEIÇÃO
+        if (p.style.display === 'none') { 
+            // Entrar no modo de edição/rejeição
             p.style.display = 'block'; 
             a.style.display = 'none'; 
+            controls.style.display = 'block'; // Mostra as cores
             
-            // Inicializa o canvas agora que o layout está pronto
-            setTimeout(initCanvas, 100); 
-
-            // Foca na caixa de texto para facilitar
-            if(feedbackInput) setTimeout(() => feedbackInput.focus(), 200);
+            setTimeout(initCanvas, 100); // Garante alinhamento
         } else { 
-            // ESCONDER PAINEL
+            // Sair do modo
             p.style.display = 'none'; 
             a.style.display = 'flex'; 
-            // Opcional: limpar o canvas se cancelar
-            // clearCanvas(); 
+            controls.style.display = 'none'; // Esconde as cores
         }
     };
     
