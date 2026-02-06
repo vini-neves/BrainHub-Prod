@@ -167,6 +167,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 /* A câmera do topo (Notch) */
@@ -762,14 +763,14 @@ img.client-avatar-small {
 }
 
 #approvalImage {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block; /* Garante que aparece */
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1; /* Fica embaixo */
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 1; /* Fica atrás */
+    display: block;
 }
 
 /* O Canvas fica por cima da imagem para receber o risco */
@@ -779,36 +780,39 @@ img.client-avatar-small {
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 10; /* Fica na frente */
+    background-color: transparent !important; /* FUNDO TRANSPARENTE OBRIGATÓRIO */
     cursor: crosshair;
-    z-index: 10; /* Fica em cima */
-    touch-action: none; /* Melhora suporte a touch */
+    touch-action: none;
 }
 
 /* --- PALETA DE CORES --- */
 .palette-container {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     background: #fff;
-    padding: 8px 15px;
+    padding: 8px 12px;
     border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 8px;
+    border: 1px solid #e9ecef;
+    justify-content: center;
 }
 
 .color-btn {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     border: 2px solid #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s;
 }
 
 .color-btn:hover { transform: scale(1.2); }
-.color-btn.active { border-color: #333; transform: scale(1.2); }
+.color-btn.active { border-color: #333; transform: scale(1.1); }
 
-/* Cores específicas */
+/* Cores dos botões */
 .btn-red { background-color: #ff0000; }
 .btn-green { background-color: #00ff00; }
 .btn-blue { background-color: #0099ff; }
