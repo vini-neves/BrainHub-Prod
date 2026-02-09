@@ -11,9 +11,13 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Rotas de Redefinição de Senha
+    # --- ROTAS DE REDEFINIÇÃO DE SENHA (CORRIGIDO) ---
     path('reset-password/', 
-         auth_views.PasswordResetView.as_view(template_name="registration/password_reset_form.html"), 
+         auth_views.PasswordResetView.as_view(
+             template_name="registration/password_reset_form.html",        # Tela do Formulário (Bonita)
+             email_template_name="registration/password_reset_email.html", # Corpo do E-mail
+             subject_template_name="registration/password_reset_subject.txt" # Assunto do E-mail (CORRIGE O ERRO)
+         ), 
          name='password_reset'),
 
     path('reset-password/done/', 
