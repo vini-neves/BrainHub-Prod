@@ -11,26 +11,7 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # --- ROTAS DE REDEFINIÇÃO DE SENHA (CORRIGIDO) ---
-    path('reset-password/', 
-         auth_views.PasswordResetView.as_view(
-             template_name="registration/password_reset_form.html",        # Tela do Formulário (Bonita)
-             email_template_name="registration/password_reset_email.html", # Corpo do E-mail
-             subject_template_name="registration/password_reset_subject.txt" # Assunto do E-mail (CORRIGE O ERRO)
-         ), 
-         name='password_reset'),
-
-    path('reset-password/done/', 
-         auth_views.PasswordResetDoneView.as_view(template_name="registration/password_reset_done.html"), 
-         name='password_reset_done'),
-
-    path('reset-password/confirm/<uidb64>/<token>/', 
-         auth_views.PasswordResetConfirmView.as_view(template_name="registration/password_reset_confirm.html"), 
-         name='password_reset_confirm'),
-
-    path('reset-password/complete/', 
-         auth_views.PasswordResetCompleteView.as_view(template_name="registration/password_reset_complete.html"), 
-         name='password_reset_complete'),
+    
 
     # --- ADICIONE ESTA LINHA AQUI ---
     # Isso faz o Django ler o arquivo accounts/urls.py que você criou
