@@ -222,7 +222,14 @@ GOOGLE_OAUTH_SCOPES = [
 ]
 
 # Para desenvolvimento, imprime e-mails no console em vez de enviá-los.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.zoho.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+PASSWORD_RESET_TIMEOUT = 86400
+# Lendo do arquivo .env
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 
 
