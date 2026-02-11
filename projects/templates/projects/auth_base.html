@@ -19,6 +19,8 @@
 </head>
 <body>
     
+    <div class="login-wrapper">
+    
     <div class="login-brand-side">
         <div class="brand-content">
             <div class="brand-logo">
@@ -29,6 +31,13 @@
         </div>
         <div class="brand-overlay"></div>
     </div>
+
+    <div class="login-form-side">
+        <div class="form-container">
+            
+            <div class="mobile-logo-header">
+                <img src="{{ agency_logo.url }}" alt="Logo da Agência" class="agency-logo" style="max-height: 50px;"/> {{ request.tenant.name }}
+            </div>
     
     {% block extra_js %}{% endblock %}
 
