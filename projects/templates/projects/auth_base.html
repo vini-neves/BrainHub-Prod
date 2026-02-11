@@ -7,11 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Autenticação{% endblock %} - Minha Plataforma</title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
             --primary-color: {{ agency_primary_color|default:"#333366" }};
             --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
             --text-on-primary: #ffffff;
+            --bg-gray: #f4f6f9;
         }
     </style>
     
@@ -21,25 +24,36 @@
     
     <div class="login-wrapper">
     
-    <div class="login-brand-side">
-        <div class="brand-content">
-            <div class="brand-logo">
-                <img src="{{ agency_logo.url }}" alt="Logo da Agência" class="agency-logo" style="max-height: 200px;"/>
-                <h1>{{ request.tenant.name }}</h1>
+        <div class="login-brand-side">
+            <div class="brand-overlay"></div> <div class="brand-content">
+                <div class="brand-logo">
+                    {% if agency_logo %}
+                        <img src="{{ agency_logo.url }}" alt="Logo" style="max-height: 150px; margin-bottom: 20px;"/>
+                    {% else %}
+                        <h1 style="font-size: 3rem;">Brain.Ze</h1>
+                    {% endif %}
+                    
+                    {% if request.tenant.name %}
+                        <h1>{{ request.tenant.name }}</h1>
+                    {% endif %}
+                </div>
+                <p class="brand-tagline">Gerencie seus projetos, clientes e mídias em um único lugar.</p>
             </div>
-            <p class="brand-tagline">Gerencie seus projetos, clientes e mídias em um único lugar.</p>
         </div>
-        <div class="brand-overlay"></div>
-    </div>
 
-    <div class="login-form-side">
-        <div class="form-container">
-            
-            <div class="mobile-logo-header">
-                <img src="{{ agency_logo.url }}" alt="Logo da Agência" class="agency-logo" style="max-height: 50px;"/> {{ request.tenant.name }}
-            </div>
+        <div class="login-form-side">
+            <div class="form-container">
+                
+                <div class="mobile-logo-header">
+                    {% if agency_logo %}
+                        <img src="{{ agency_logo.url }}" alt="Logo" style="max-height: 50px;"/>
+                    {% endif %}
+                </div>
     
-    {% block extra_js %}{% endblock %}
+                {% block content %}
+                {% endblock %}
+
+            </div> </div> </div> {% block extra_js %}{% endblock %}
 
 </body>
 </html>
