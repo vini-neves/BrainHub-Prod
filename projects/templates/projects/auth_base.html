@@ -20,6 +20,7 @@
         :root {
             --primary-color: {{ agency_primary_color|default:"#333366" }};
             --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
+            --primary-hover: oklch(from var(--primary-color) calc(l - 0.1) c h);
             --text-on-primary: #ffffff;
             --bg-gray: #f4f6f9;
         }
