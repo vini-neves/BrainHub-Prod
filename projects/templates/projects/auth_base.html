@@ -2,39 +2,62 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Autenticação{% endblock %} - Minha Plataforma</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% if agency_logo %}
+    <link rel="shortcut icon" href="{{ agency_logo.url }}" />
+    {% else %}
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" />
+    {% endif %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: {{ agency_primary_color|default:"#333366" }};
-            --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
+            --primary-color: {
+                    {
+                    agency_primary_color|default: "#333366"
+                }
+            }
+
+            ;
+
+            --secondary-color: {
+                    {
+                    agency_secondary_color|default: "#007bff"
+                }
+            }
+
+            ;
             --text-on-primary: #ffffff;
             --bg-gray: #f4f6f9;
         }
     </style>
-    
+
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
+
 <body>
-    
+
     <div class="login-wrapper">
-    
+
         <div class="login-brand-side">
-            <div class="brand-overlay"></div> <div class="brand-content">
+            <div class="brand-overlay"></div>
+            <div class="brand-content">
                 <div class="brand-logo">
                     {% if agency_logo %}
-                        <img src="{{ agency_logo.url }}" alt="Logo" style="max-height: 150px; margin-bottom: 20px;"/>
+                    <img src="{{ agency_logo.url }}" alt="Logo" style="max-height: 150px; margin-bottom: 20px;" />
                     {% else %}
-                        <h1 style="font-size: 3rem;">Brain.Ze</h1>
+                    <h1 style="font-size: 3rem;">Brain.Ze</h1>
                     {% endif %}
-                    
+
                     {% if request.tenant.name %}
-                        <h1>{{ request.tenant.name }}</h1>
+                    <h1>{{ request.tenant.name }}</h1>
                     {% endif %}
                 </div>
                 <p class="brand-tagline">Gerencie seus projetos, clientes e mídias em um único lugar.</p>
@@ -43,17 +66,20 @@
 
         <div class="login-form-side">
             <div class="form-container">
-                
+
                 <div class="mobile-logo-header">
                     {% if agency_logo %}
-                        <img src="{{ agency_logo.url }}" alt="Logo" style="max-height: 50px;"/>
+                    <img src="{{ agency_logo.url }}" alt="Logo" style="max-height: 50px;" />
                     {% endif %}
                 </div>
-    
+
                 {% block content %}
                 {% endblock %}
 
-            </div> </div> </div> {% block extra_js %}{% endblock %}
+            </div>
+        </div>
+    </div> {% block extra_js %}{% endblock %}
 
 </body>
+
 </html>
