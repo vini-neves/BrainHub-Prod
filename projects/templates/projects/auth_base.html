@@ -1,57 +1,37 @@
-{# templates/projects/auth_base.html #}
+{# projects/templates/projects/auth_base.html #}
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Autenticação{% endblock %} - Brain.Ze</title>
+    <title>{% block title %}Autenticação{% endblock %} - Minha Plataforma</title>
     
     <style>
         :root {
-            --primary-color: {{ agency_primary_color|default:"#d93025" }}; /* Vermelho BrainZe */
-            --secondary-color: {{ agency_secondary_color|default:"#8c1c15" }};
+            --primary-color: {{ agency_primary_color|default:"#333366" }};
+            --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
             --text-on-primary: #ffffff;
-            --bg-gray: #f4f6f9;
         }
     </style>
     
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     
-    <div class="login-wrapper">
-        
-        <div class="login-brand-side">
-            <div class="brand-overlay"></div>
-            <div class="brand-content">
-                <div class="brand-logo">
-                    {% if agency_logo %}
-                        <img src="{{ agency_logo.url }}" alt="Logo" style="max-width: 200px;">
-                    {% else %}
-                        <img src="{% static 'img/logo_brainze_branca.png' %}" alt="Brain.Ze" style="max-width: 250px;">
-                    {% endif %}
-                </div>
-                <div class="brand-tagline">
-                    <p>Gerencie suas campanhas em um só lugar.</p>
-                </div>
-            </div>
+    <div class="auth-container">
+        <div class="auth-brand-side">
+            {% if agency_logo %}
+                <img src="{{ agency_logo.url }}" alt="Logo da Agência" class="auth-logo">
+            {% endif %}
+            <h1>Bem-vindo à sua plataforma</h1>
+            <p>Gerencie suas campanhas em um só lugar.</p>
         </div>
         
-        <div class="login-form-side">
-            <div class="form-container">
-                
-                <div class="mobile-logo-header">
-                    <img src="{% static 'img/logo_brainze.png' %}" alt="Brain.Ze" style="max-width: 150px;">
-                </div>
-
-                {% block content %}
+        <div class="auth-form-side">
+            {% block content %}
                 {% endblock %}
-                
-            </div>
         </div>
-
     </div>
     
     {% block extra_js %}{% endblock %}
