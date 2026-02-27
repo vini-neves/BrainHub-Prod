@@ -1030,7 +1030,7 @@ def meta_auth_callback(request):
     code = request.GET.get('code')
     state = request.GET.get('state')
     
-    # ... (Validações de segurança CSRF iguais) ...
+    # Validações de segurança CSRF
     if not state or state != request.session.get('meta_oauth_state'):
         messages.error(request, "Erro CSRF Meta.")
         return redirect('social_dashboard')
@@ -1045,7 +1045,29 @@ def meta_auth_callback(request):
     token_data = service.exchange_code_for_token(code, redirect_uri=settings.META_REDIRECT_URI)
     
     if 'access_token' in token_data:
-        access_token = token_data['access_token']
+        short_lived_token = token_data['access_token']
+        
+        # ==========================================
+        # 1. TROCAR POR TOKEN DE LONGA DURAÇÃO (60 DIAS)
+        # ==========================================
+        import requests
+        long_lived_url = "https://graph.facebook.com/v18.0/oauth/access_token"
+        params = {
+            'grant_type': 'fb_exchange_token',
+            'client_id': settings.META_APP_ID,
+            'client_secret': settings.META_APP_SECRET,
+            'fb_exchange_token': short_lived_token
+        }
+        
+        long_lived_response = requests.get(long_lived_url, params=params).json()
+        access_token = long_lived_response.get('access_token', short_lived_token) # Usa o longo, ou o curto como fallback
+        
+        # ==========================================
+        # 2. SALVAR O TOKEN NO BANCO DE DADOS AQUI!
+        # ==========================================
+        client.meta_access_token = access_token # Verifique se o nome do campo é esse mesmo no seu models.py
+        client.save()
+        
         count = 0
         
         # DECIDE QUAL FUNÇÃO CHAMAR

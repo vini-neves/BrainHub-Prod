@@ -81,6 +81,10 @@ class Client(models.Model):
     logo = models.ImageField(upload_to='logos_clientes/', verbose_name="Logo do Cliente", blank=True, null=True)
     is_active = models.BooleanField(default=True, verbose_name="Cliente Ativo?")
 
+    # Campos para salvar a conexão da Meta
+    meta_access_token = models.CharField(max_length=500, blank=True, null=True)
+    meta_user_id = models.CharField(max_length=100, blank=True, null=True)
+
     def __str__(self):
         return self.name
 

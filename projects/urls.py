@@ -8,27 +8,21 @@ urlpatterns = [
     path('login/', views.TenantLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='projects/logout.html'), name='logout'),
 
-    # --- ESQUECI A SENHA ---
-   # --- ROTAS DE REDEFINIÇÃO DE SENHA (CORRIGIDO) ---
-    path('reset-password/', 
-         auth_views.PasswordResetView.as_view(
-             template_name="registration/password_reset_form.html",        # Tela do Formulário (Bonita)
-             email_template_name="registration/password_reset_email.html", # Corpo do E-mail
-             subject_template_name="registration/password_reset_subject.txt" # Assunto do E-mail (CORRIGE O ERRO)
-         ), 
-         name='password_reset'),
-
-    path('reset-password/done/', 
-         auth_views.PasswordResetDoneView.as_view(template_name="registration/password_reset_done.html"), 
-         name='password_reset_done'),
-
-    path('reset-password/confirm/<uidb64>/<token>/', 
-         auth_views.PasswordResetConfirmView.as_view(template_name="registration/password_reset_confirm.html"), 
-         name='password_reset_confirm'),
-
-    path('reset-password/complete/', 
-         auth_views.PasswordResetCompleteView.as_view(template_name="registration/password_reset_complete.html"), 
-         name='password_reset_complete'),
+   # --- ESQUECI A SENHA ---
+    path('password_reset/', auth_views.PasswordResetView.as_view(
+        template_name='projects/password_reset_form.html',
+        email_template_name='projects/password_reset_email.html',
+        subject_template_name='projects/password_reset_subject.txt'
+    ), name='password_reset'),
+    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(
+        template_name='projects/password_reset_done.html'
+    ), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='projects/password_reset_confirm.html'
+    ), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='projects/password_reset_complete.html'
+    ), name='password_reset_complete'),
 
     # --- KANBAN UNIFICADO (GERAL & OPERACIONAL) ---
     # Rotas de Visualização

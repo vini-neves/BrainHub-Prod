@@ -222,7 +222,8 @@ GOOGLE_OAUTH_SCOPES = [
 ]
 
 # Para desenvolvimento, imprime e-mails no console em vez de enviá-los.
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtppro.zoho.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
