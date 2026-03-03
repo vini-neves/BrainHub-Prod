@@ -218,6 +218,9 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
+{{ donut_data|json_script:"donutData" }}
+
 <script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
