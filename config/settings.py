@@ -83,6 +83,14 @@ TENANT_APPS = [
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
+SESSION_COOKIE_AGE = 1800
+
+# Expira ao fechar o navegador (opcional, sobrescreve o tempo acima)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Salva a sessão a cada requisição (atualiza o tempo de inatividade)
+SESSION_SAVE_EVERY_REQUEST = True
+
 MIDDLEWARE = [
     'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
