@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: ['Publicados', 'Aprovados', 'Em Revisão', 'Reprovados'],
             datasets: [{
-                data: [57, 25, 7, 11],
+                data: statusData,
                 backgroundColor: ['#1cc88a', '#4e73df', '#f6c23e', '#e74a3b'],
                 borderWidth: 0,
                 hoverOffset: 4

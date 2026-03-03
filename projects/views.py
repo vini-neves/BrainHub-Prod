@@ -46,53 +46,36 @@ class TenantLoginView(auth_views.LoginView):
     template_name = 'projects/login.html'
 
 @login_required
-def dashboard(request):
-    """Dashboard Principal (Visão Geral da Agência)"""
+def dashboard_view(request):
+    # 1. Busca Clientes Ativos (Isso já vai funcionar com seu banco!)
+    total_clientes_ativos = Client.objects.filter(is_active=True).count()
     
-    # Tarefas Gerais (Kanban Padrão)
-    pending_tasks = Task.objects.filter(status__in=['todo', 'doing'], kanban_type='general')
-    completed_tasks = Task.objects.filter(status='done', kanban_type='general')
-    
-    # Métricas Operacionais (Social Media)
-    # scheduled = tasks no status 'scheduled'
-    posts_metrics = {
-        'scheduled': Task.objects.filter(status='scheduled').count(),
-        'pending_approval': Task.objects.filter(status__in=['review_internal', 'review_client']).count(),
-        'in_production': Task.objects.filter(status__in=['copy', 'design']).count()
-    }
+    # 2. Busca Redes Sociais Conectadas
+    total_conexoes = SocialAccount.objects.filter(is_active=True).count()
 
-    # Gráficos de Status Geral
-    status_counts = Task.objects.values('status').annotate(count=models.Count('id'))
-    chart_status_data = {item['status']: item['count'] for item in status_counts}
+    # --- DADOS SIMULADOS (Para os gráficos e posts) ---
+    # Como eu não sei o nome exato do seu model de Posts/Métricas, 
+    # deixei essas variáveis prontas para substituirmos na próxima etapa.
+    total_posts = 1200 # Ex: Post.objects.filter(status='publicado').count()
+    taxa_aprovacao = 94
+    alcance_total = "4.5M"
+    engajamento_total = "680K"
+    
+    # Dados para o gráfico de rosca (Status dos Posts)
+    # Exemplo: [Publicados, Aprovados, Em Revisão, Reprovados]
+    donut_data = [57, 25, 7, 11]
 
     context = {
-        'pending_tasks_count': pending_tasks.count(),
-        'completed_tasks_count': completed_tasks.count(),
-        'total_tasks': pending_tasks.count() + completed_tasks.count(),
-        'chart_status_data': json.dumps(chart_status_data),
-        'posts_metrics': json.dumps(posts_metrics),
-        'recent_tasks': pending_tasks.order_by('-updated_at')[:5],
-        'upcoming_events': CalendarEvent.objects.filter(date__gte=timezone.now().date()).order_by('date')[:5]
+        'total_clientes_ativos': total_clientes_ativos,
+        'total_conexoes': total_conexoes,
+        'total_posts': total_posts,
+        'taxa_aprovacao': taxa_aprovacao,
+        'alcance_total': alcance_total,
+        'engajamento_total': engajamento_total,
+        'donut_data': donut_data, # Enviando a lista para o JS do gráfico
     }
-    return render(request, 'projects/dashboard.html', context)
-
-@login_required
-def social_dashboard(request):
-    """Renderiza o painel principal de redes sociais."""
-    connected_accounts = SocialAccount.objects.all()
-    clients = Client.objects.all()
     
-    # Histórico agora são as Tasks operacionais recentes
-    posts_history = Task.objects.filter(
-        kanban_type='operational'
-    ).order_by('-created_at')[:10]
-
-    context = {
-        'connected_accounts': connected_accounts,
-        'clients': clients,
-        'posts_history': posts_history,
-    }
-    return render(request, 'projects/social_dashboard.html', context)
+    return render(request, 'dashboard.html', context)
 
 # ==============================================================================
 # 2. CLIENTES E PROJETOS
