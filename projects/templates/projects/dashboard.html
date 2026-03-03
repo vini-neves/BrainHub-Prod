@@ -1,9 +1,23 @@
-{# projects/templates/projects/dashboard.html #}
 {% extends "projects/base.html" %}
-{% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+    /* Estilos base para o Dashboard (Inline para evitar erro 500 de static) */
+    .dashboard-bg { background-color: #f8f9fc; padding: 20px; font-family: 'Inter', sans-serif; }
+    .card-dash { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.05); margin-bottom: 20px; background: #fff; }
+    .card-dash-body { padding: 1.25rem; }
+    .text-title-dash { font-weight: 600; color: #4e73df; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .text-value-big { font-size: 2rem; font-weight: 700; color: #202428; }
+    .text-value-small { font-size: 1.5rem; font-weight: 700; color: #202428; }
+    .badge-positive { background-color: #e3fbed; color: #1cc88a; font-weight: 600; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
+    .badge-negative { background-color: #fce4e4; color: #e74a3b; font-weight: 600; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
+    .icon-circle { height: 40px; width: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #f1f3f9; color: #4e73df; font-size: 1.2rem; margin-bottom: 10px; }
+    .progress-custom { height: 8px; border-radius: 10px; background-color: #eaecf4; margin-bottom: 15px; }
+    .progress-bar-custom { background-color: #4e73df; border-radius: 10px; }
+    .insight-box { border: 1px solid #e3e6f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fafbfc; border-left: 4px solid #f6c23e;}
+    .insight-box.blue { border-left-color: #4e73df; }
+    .insight-box.green { border-left-color: #1cc88a; }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
@@ -11,15 +25,13 @@
 <div class="dashboard-bg">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="page-title"id="dynamic-greeting" data-username="{{ user.first_name }}">Olá, {{ user.first_name }}!</h1>
+            <h1 class="page-title" id="dynamic-greeting" data-username="{{ user.first_name }}">Olá, {{ user.first_name }}!</h1>
             <p class="text-muted mb-0" style="font-size: 0.9rem;">Visão geral da performance dos clientes</p>
         </div>
         <div>
             <button class="btn btn-outline-secondary btn-sm me-2"><i class="fa-regular fa-eye"></i></button>
-            <button class="btn btn-outline-secondary btn-sm me-2"><i class="fa-solid fa-desktop"></i> Modo
-                Apresentação</button>
-            <button class="btn btn-outline-secondary btn-sm"><i class="fa-regular fa-calendar"></i> Últimos 30 dias <i
-                    class="fa-solid fa-chevron-down ms-1"></i></button>
+            <button class="btn btn-outline-secondary btn-sm me-2"><i class="fa-solid fa-desktop"></i> Modo Apresentação</button>
+            <button class="btn btn-outline-secondary btn-sm"><i class="fa-regular fa-calendar"></i> Últimos 30 dias <i class="fa-solid fa-chevron-down ms-1"></i></button>
         </div>
     </div>
 
@@ -29,11 +41,10 @@
                 <div class="card-dash-body d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-muted mb-1" style="font-size: 0.9rem;">Alcance Total Gerado</div>
-                        <div class="text-value-big">4.5M</div>
+                        <div class="text-value-big">{{ alcance_total }}</div>
                     </div>
                     <div class="text-end">
-                        <span class="badge-positive"><i class="fa-solid fa-arrow-trend-up"></i> +18% vs mês
-                            passado</span>
+                        <span class="badge-positive"><i class="fa-solid fa-arrow-trend-up"></i> +18% vs mês passado</span>
                         <div style="height: 40px; width: 100px; margin-top: 10px;"><canvas id="spark1"></canvas></div>
                     </div>
                 </div>
@@ -44,11 +55,10 @@
                 <div class="card-dash-body d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-muted mb-1" style="font-size: 0.9rem;">Engajamento Total</div>
-                        <div class="text-value-big">680K</div>
+                        <div class="text-value-big">{{ engajamento_total }}</div>
                     </div>
                     <div class="text-end">
-                        <span class="badge-positive"><i class="fa-solid fa-arrow-trend-up"></i> +24% vs mês
-                            passado</span>
+                        <span class="badge-positive"><i class="fa-solid fa-arrow-trend-up"></i> +24% vs mês passado</span>
                         <div style="height: 40px; width: 100px; margin-top: 10px;"><canvas id="spark2"></canvas></div>
                     </div>
                 </div>
@@ -85,8 +95,7 @@
             <div class="card card-dash">
                 <div class="card-dash-body d-flex justify-content-between">
                     <div>
-                        <div class="icon-circle" style="color: #e74a3b; background: #fce4e4;"><i
-                                class="fa-solid fa-bullhorn"></i></div>
+                        <div class="icon-circle" style="color: #e74a3b; background: #fce4e4;"><i class="fa-solid fa-bullhorn"></i></div>
                         <div class="text-value-small">47</div>
                         <div class="text-muted" style="font-size: 0.8rem;">Campanhas</div>
                     </div>
@@ -98,9 +107,8 @@
             <div class="card card-dash">
                 <div class="card-dash-body d-flex justify-content-between">
                     <div>
-                        <div class="icon-circle" style="color: #1cc88a; background: #e3fbed;"><i
-                                class="fa-solid fa-check-circle"></i></div>
-                                <div class="text-value-small">{{ taxa_aprovacao }}%</div>
+                        <div class="icon-circle" style="color: #1cc88a; background: #e3fbed;"><i class="fa-solid fa-check-circle"></i></div>
+                        <div class="text-value-small">{{ taxa_aprovacao }}%</div>
                         <div class="text-muted" style="font-size: 0.8rem;">Taxa de Aprovação</div>
                     </div>
                     <span class="badge-positive h-100">+2%</span>
@@ -130,18 +138,10 @@
                         <canvas id="donutChart"></canvas>
                     </div>
                     <div class="mt-3" style="font-size: 0.85rem;">
-                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i
-                                    class="fa-solid fa-circle text-success me-2"></i>Publicados (64)</span>
-                            <strong>57%</strong></div>
-                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i
-                                    class="fa-solid fa-circle text-primary me-2"></i>Aprovados (28)</span>
-                            <strong>25%</strong></div>
-                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i
-                                    class="fa-solid fa-circle text-warning me-2"></i>Em Revisão (8)</span>
-                            <strong>7%</strong></div>
-                        <div class="d-flex justify-content-between"><span class="text-muted"><i
-                                    class="fa-solid fa-circle text-danger me-2"></i>Reprovados (12)</span>
-                            <strong>11%</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i class="fa-solid fa-circle text-success me-2"></i>Publicados (64)</span> <strong>57%</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i class="fa-solid fa-circle text-primary me-2"></i>Aprovados (28)</span> <strong>25%</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i class="fa-solid fa-circle text-warning me-2"></i>Em Revisão (8)</span> <strong>7%</strong></div>
+                        <div class="d-flex justify-content-between"><span class="text-muted"><i class="fa-solid fa-circle text-danger me-2"></i>Reprovados (12)</span> <strong>11%</strong></div>
                     </div>
                 </div>
             </div>
@@ -154,63 +154,35 @@
                 <div class="card-dash-body">
                     <h6 class="text-gray-800 fw-bold mb-1">Top Performing Formats</h6>
                     <p class="text-muted mb-4" style="font-size: 0.8rem;">Taxa de engajamento por formato</p>
-
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span><i class="fa-brands fa-instagram me-2"></i> Reels</span>
-                            <strong>48%</strong>
-                        </div>
-                        <div class="progress progress-custom">
-                            <div class="progress-bar progress-bar-custom" style="width: 48%"></div>
-                        </div>
+                        <div class="d-flex justify-content-between mb-1"><span><i class="fa-brands fa-instagram me-2"></i> Reels</span><strong>48%</strong></div>
+                        <div class="progress progress-custom"><div class="progress-bar progress-bar-custom" style="width: 48%"></div></div>
                     </div>
-
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span><i class="fa-regular fa-image me-2"></i> Estático</span>
-                            <strong>40%</strong>
-                        </div>
-                        <div class="progress progress-custom">
-                            <div class="progress-bar progress-bar-custom" style="width: 40%"></div>
-                        </div>
+                        <div class="d-flex justify-content-between mb-1"><span><i class="fa-regular fa-image me-2"></i> Estático</span><strong>40%</strong></div>
+                        <div class="progress progress-custom"><div class="progress-bar progress-bar-custom" style="width: 40%"></div></div>
                     </div>
-
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span><i class="fa-solid fa-layer-group me-2"></i> Carrossel</span>
-                            <strong>12%</strong>
-                        </div>
-                        <div class="progress progress-custom">
-                            <div class="progress-bar progress-bar-custom" style="width: 12%"></div>
-                        </div>
+                        <div class="d-flex justify-content-between mb-1"><span><i class="fa-solid fa-layer-group me-2"></i> Carrossel</span><strong>12%</strong></div>
+                        <div class="progress progress-custom"><div class="progress-bar progress-bar-custom" style="width: 12%"></div></div>
                     </div>
-                    <p class="text-muted" style="font-size: 0.75rem;">* Baseado em 1.200 posts dos últimos 30 dias</p>
                 </div>
             </div>
         </div>
-
         <div class="col-lg-6">
             <div class="card card-dash h-100">
                 <div class="card-dash-body">
                     <h6 class="text-gray-800 fw-bold mb-1">Insights Rápidos</h6>
                     <p class="text-muted mb-4" style="font-size: 0.8rem;">Destaques do período</p>
-
                     <div class="insight-box blue">
                         <div class="text-muted fw-bold mb-1" style="font-size: 0.8rem;">🔥 Melhor dia para postar</div>
                         <div class="fs-5 fw-bold text-primary">Terças-feiras às 19h</div>
                         <div class="text-muted" style="font-size: 0.8rem;">32% mais engajamento que a média.</div>
                     </div>
-
                     <div class="insight-box green">
                         <div class="text-muted fw-bold mb-1" style="font-size: 0.8rem;">⭐ Cliente destaque</div>
                         <div class="fs-5 fw-bold text-success">@restaurante_sabor</div>
                         <div class="text-muted" style="font-size: 0.8rem;">+148% de alcance neste mês.</div>
-                    </div>
-
-                    <div class="insight-box">
-                        <div class="text-muted fw-bold mb-1" style="font-size: 0.8rem;">💡 Sugestão</div>
-                        <div class="text-muted" style="font-size: 0.85rem;">Reels estão gerando 2.5x mais engajamento.
-                            Considere aumentar a produção de vídeos curtos.</div>
                     </div>
                 </div>
             </div>
@@ -221,10 +193,8 @@
 
 {% block extra_js %}
 {{ donut_data|json_script:"donutData" }}
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Saudação
     const greetingElement = document.getElementById('dynamic-greeting');
     if (greetingElement) {
         const hour = new Date().getHours();
@@ -233,33 +203,23 @@ document.addEventListener('DOMContentLoaded', function () {
         greetingElement.textContent = `${greeting}, ${username}!`;
     }
 
-    // 2. Lendo os Dados do Django
     let statusData = [0, 0, 0, 0];
     const donutDataElement = document.getElementById('donutData');
-    if (donutDataElement) {
-        statusData = JSON.parse(donutDataElement.textContent);
-    }
+    if (donutDataElement) { statusData = JSON.parse(donutDataElement.textContent); }
 
-    // 3. Gráficos de Linha
     const ctxLine = document.getElementById('lineChart');
     if (ctxLine) {
         new Chart(ctxLine.getContext('2d'), {
             type: 'line',
             data: {
                 labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-                datasets: [{
-                    label: 'Alcance', data: [30, 38, 40, 38, 48, 52, 55, 60, 58, 65, 75, 80],
-                    borderColor: '#4e73df', backgroundColor: 'rgba(78, 115, 223, 0.05)', tension: 0.4, borderWidth: 3, fill: true
-                }, {
-                    label: 'Engajamento', data: [5, 6, 8, 7, 9, 10, 11, 10, 12, 13, 14, 15],
-                    borderColor: '#36b9cc', borderWidth: 2, tension: 0.4
-                }]
+                datasets: [{ label: 'Alcance', data: [30, 38, 40, 38, 48, 52, 55, 60, 58, 65, 75, 80], borderColor: '#4e73df', backgroundColor: 'rgba(78, 115, 223, 0.05)', tension: 0.4, borderWidth: 3, fill: true },
+                           { label: 'Engajamento', data: [5, 6, 8, 7, 9, 10, 11, 10, 12, 13, 14, 15], borderColor: '#36b9cc', borderWidth: 2, tension: 0.4 }]
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
         });
     }
 
-    // 4. Gráfico de Rosca (Donut)
     const ctxDonut = document.getElementById('donutChart');
     if (ctxDonut) {
         new Chart(ctxDonut.getContext('2d'), {
@@ -269,10 +229,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 5. Sparklines
     const sparkOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { point: { radius: 0 } } };
-    if (document.getElementById('spark1')) new Chart(document.getElementById('spark1').getContext('2d'), { type: 'line', data: { labels: [1, 2, 3, 4, 5, 6], datasets: [{ data: [10, 15, 12, 20, 18, 25], borderColor: '#4e73df', tension: 0.4, borderWidth: 2 }] }, options: sparkOptions });
-    if (document.getElementById('spark2')) new Chart(document.getElementById('spark2').getContext('2d'), { type: 'line', data: { labels: [1, 2, 3, 4, 5, 6], datasets: [{ data: [5, 8, 6, 10, 9, 15], borderColor: '#4e73df', tension: 0.4, borderWidth: 2 }] }, options: sparkOptions });
+    if (document.getElementById('spark1')) new Chart(document.getElementById('spark1').getContext('2d'), { type: 'line', data: { labels: [1,2,3,4,5,6], datasets: [{ data: [10, 15, 12, 20, 18, 25], borderColor: '#4e73df', tension: 0.4, borderWidth: 2 }] }, options: sparkOptions });
+    if (document.getElementById('spark2')) new Chart(document.getElementById('spark2').getContext('2d'), { type: 'line', data: { labels: [1,2,3,4,5,6], datasets: [{ data: [5, 8, 6, 10, 9, 15], borderColor: '#4e73df', tension: 0.4, borderWidth: 2 }] }, options: sparkOptions });
 });
 </script>
 {% endblock %}
