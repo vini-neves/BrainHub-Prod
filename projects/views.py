@@ -76,7 +76,7 @@ def dashboard_view(request):
         'donut_data': donut_data, # Enviando a lista para o JS do gráfico
     }
     
-    return render(request, 'dashboard.html', context)
+    return render(request, 'projects/dashboard.html', context)
 
 # ==============================================================================
 # 2. CLIENTES E PROJETOS
