@@ -19,6 +19,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import views as auth_views
 from django.core.files.base import ContentFile
+from projects.models import Client, SocialAccount
 
 # --- IMPORTS LOCAIS ---
 from .models import (
