@@ -4,7 +4,7 @@ import datetime
 import requests
 import zipfile
 import io
-
+from django.utils.text import slugify
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -48,27 +48,33 @@ class TenantLoginView(auth_views.LoginView):
 
 @login_required
 def dashboard_view(request):
-    total_clientes_ativos = Client.objects.filter(is_active=True).count()
-    total_conexoes = SocialAccount.objects.filter(is_active=True).count()
+    # Usando o bloco try/except. Se algo quebrar, ele te mostra na tela ao invés de ficar branco!
+    try:
+        total_clientes_ativos = Client.objects.filter(is_active=True).count()
+        total_conexoes = SocialAccount.objects.filter(is_active=True).count()
 
-    total_posts = 1200 
-    taxa_aprovacao = 94
-    alcance_total = "4.5M"
-    engajamento_total = "680K"
-    donut_data = [57, 25, 7, 11]
+        total_posts = 1200 
+        taxa_aprovacao = 94
+        alcance_total = "4.5M"
+        engajamento_total = "680K"
+        donut_data = [57, 25, 7, 11]
 
-    context = {
-        'total_clientes_ativos': total_clientes_ativos,
-        'total_conexoes': total_conexoes,
-        'total_posts': total_posts,
-        'taxa_aprovacao': taxa_aprovacao,
-        'alcance_total': alcance_total,
-        'engajamento_total': engajamento_total,
-        'donut_data': donut_data,
-    }
-    
-    return render(request, 'projects/dashboard.html', context)
-
+        context = {
+            'total_clientes_ativos': total_clientes_ativos,
+            'total_conexoes': total_conexoes,
+            'total_posts': total_posts,
+            'taxa_aprovacao': taxa_aprovacao,
+            'alcance_total': alcance_total,
+            'engajamento_total': engajamento_total,
+            'donut_data': donut_data,
+        }
+        
+        return render(request, 'projects/dashboard.html', context)
+        
+    except Exception as e:
+        import traceback
+        erro_completo = traceback.format_exc()
+        return HttpResponse(f"<h1>Erro encontrado:</h1><pre style='background:#f4f4f4; padding:20px;'>{erro_completo}</pre>")
 # ==============================================================================
 # 2. CLIENTES E PROJETOS
 # ==============================================================================
