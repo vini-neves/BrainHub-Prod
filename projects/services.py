@@ -36,7 +36,14 @@ class MetaService:
         response = requests.get(url)
         data = response.json()
         
-        if 'data' not in data: return 0
+        # DEBUG: Imprime no console o que a Meta retornou para te ajudar a investigar
+        print("====== RETORNO META FACEBOOK ======")
+        print(data) 
+        
+        if 'data' not in data or not data['data']:
+             # Se der erro ou a lista vier vazia, avise no terminal
+             print("❌ Nenhuma página retornada pela Meta.")
+             return 0
         
         count = 0
         for page in data['data']:
@@ -55,17 +62,21 @@ class MetaService:
 
     def save_only_instagram_accounts(self, user_access_token, client_obj):
         """ Salva APENAS contas do Instagram (Ignora Páginas soltas) """
-        # Aqui pedimos o campo instagram_business_account
         url = f"{self.BASE_URL}/me/accounts?access_token={user_access_token}&fields=id,name,access_token,instagram_business_account"
         response = requests.get(url)
         data = response.json()
         
-        if 'data' not in data: return 0
+        # DEBUG: Imprime no console o que a Meta retornou
+        print("====== RETORNO META INSTAGRAM ======")
+        print(data)
+
+        if 'data' not in data or not data['data']:
+            return 0
         
         count = 0
         for page in data['data']:
-            # Só entra se tiver Instagram vinculado
-            if 'instagram_business_account' in page:
+            # Só entra se tiver Instagram vinculado E ID válido
+            if 'instagram_business_account' in page and 'id' in page['instagram_business_account']:
                 ig_data = page['instagram_business_account']
                 ig_details = self.get_instagram_details(ig_data['id'], user_access_token)
                 
@@ -74,7 +85,7 @@ class MetaService:
                     client=client_obj,
                     defaults={
                         'platform': 'instagram', # <--- Força Instagram
-                        'account_name': ig_details.get('username', 'Instagram User'),
+                        'account_name': ig_details.get('username', f"Instagram da pág: {page.get('name')}"),
                         'access_token': page['access_token'], # Token da página que gerencia o insta
                         'is_active': True
                     }
