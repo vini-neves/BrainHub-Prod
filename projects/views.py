@@ -36,10 +36,10 @@ from .services import MetaService, LinkedInService, TikTokService, PinterestServ
 from django.shortcuts import render
 
 def termos_de_servico(request):
-    return render(request, 'termos.html')
+    return render(request, 'projects/termos.html')
 
 def politica_privacidade(request):
-    return render(request, 'privacidade.html')
+    return render(request, 'projects/privacidade.html')
 
 class TenantLoginView(auth_views.LoginView):
     form_class = TenantAuthenticationForm
