@@ -233,14 +233,14 @@ document.addEventListener('DOMContentLoaded', function () {
         greetingElement.textContent = `${greeting}, ${username}!`;
     }
 
-    // 2. Dados do Django
+    // 2. Lendo os Dados do Django
     let statusData = [0, 0, 0, 0];
     const donutDataElement = document.getElementById('donutData');
     if (donutDataElement) {
         statusData = JSON.parse(donutDataElement.textContent);
     }
 
-    // 3. Gráficos
+    // 3. Gráficos de Linha
     const ctxLine = document.getElementById('lineChart');
     if (ctxLine) {
         new Chart(ctxLine.getContext('2d'), {
@@ -259,6 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 4. Gráfico de Rosca (Donut)
     const ctxDonut = document.getElementById('donutChart');
     if (ctxDonut) {
         new Chart(ctxDonut.getContext('2d'), {
@@ -268,6 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 5. Sparklines
     const sparkOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { point: { radius: 0 } } };
     if (document.getElementById('spark1')) new Chart(document.getElementById('spark1').getContext('2d'), { type: 'line', data: { labels: [1, 2, 3, 4, 5, 6], datasets: [{ data: [10, 15, 12, 20, 18, 25], borderColor: '#4e73df', tension: 0.4, borderWidth: 2 }] }, options: sparkOptions });
     if (document.getElementById('spark2')) new Chart(document.getElementById('spark2').getContext('2d'), { type: 'line', data: { labels: [1, 2, 3, 4, 5, 6], datasets: [{ data: [5, 8, 6, 10, 9, 15], borderColor: '#4e73df', tension: 0.4, borderWidth: 2 }] }, options: sparkOptions });
