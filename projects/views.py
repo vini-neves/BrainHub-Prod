@@ -33,6 +33,14 @@ from .services import MetaService, LinkedInService, TikTokService, PinterestServ
 # 1. DASHBOARDS E VISÕES GERAIS
 # ==============================================================================
 
+from django.shortcuts import render
+
+def termos_de_servico(request):
+    return render(request, 'accounts/termos.html')
+
+def politica_privacidade(request):
+    return render(request, 'accounts/privacidade.html')
+
 class TenantLoginView(auth_views.LoginView):
     form_class = TenantAuthenticationForm
     template_name = 'projects/login.html'

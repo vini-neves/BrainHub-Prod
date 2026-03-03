@@ -1,0 +1,15 @@
+{% extends "projects/auth_base.html" %} {% block content %}
+<div style="max-width: 800px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h1>Termos de Serviço</h1>
+    <p>Última atualização: {% now "j \d\e F \d\e Y" %}</p>
+    
+    <hr>
+    
+    <h3>1. Aceitação dos Termos</h3>
+    <p>Ao acessar e usar a plataforma BrainZe, você concorda em cumprir estes termos de serviço...</p>
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'login' %}" style="color: #007bff; text-decoration: none;">&larr; Voltar para o Login</a>
+    </div>
+</div>
+{% endblock %}

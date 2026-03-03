@@ -3,6 +3,10 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+
+    path('termos/', views.termos_de_servico, name='termos_de_servico'),
+    path('privacidade/', views.politica_privacidade, name='politica_privacidade'),
+    
     # --- DASHBOARD & LOGIN ---
     path('', views.dashboard, name='dashboard'),
     path('login/', views.TenantLoginView.as_view(), name='login'),
