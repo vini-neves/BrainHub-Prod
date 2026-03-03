@@ -12,10 +12,8 @@ let activeInputId = null;
 document.addEventListener('DOMContentLoaded', function() {
 
     const linkedinSwitch = document.getElementById('toggleLinkedin');
-    
     if (linkedinSwitch) {
         linkedinSwitch.addEventListener('change', function() {
-            // 1. Verifica se está sendo marcado (ativado)
             if (this.checked) {
                 // 2. Pega o ID do cliente do formulário
                 const clientId = document.getElementById('clientId').value;
@@ -417,7 +415,7 @@ function editClient(buttonElement) {
             // Preenche Redes Sociais
             const platforms = data.connected_platforms || [];
             setCheck('toggleInstagram', platforms.includes('instagram'));
-            setCheck('toggleLinkedin', platforms.includes('linkedin-oauth2'));
+            setCheck('toggleLinkedin', platforms.includes('linkedin'));
             setCheck('toggleTiktok', platforms.includes('tiktok'));
             setCheck('toggleFacebook', platforms.includes('facebook'));
             
