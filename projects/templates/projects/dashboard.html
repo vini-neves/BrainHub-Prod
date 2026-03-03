@@ -3,60 +3,221 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
-
-{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-
-<div class="page-container">
-    
-    <div class="header-wrapper">
+<div class="dashboard-bg">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="page-title"id="dynamic-greeting" data-username="{{ user.first_name }}">Olá, {{ user.first_name }}!</h1>
-            <p class="page-subtitle">Aqui está um resumo da sua agência hoje.</p>
+            <h3 class="mb-0 text-gray-800" style="font-weight: 700;">Impacto Total da Agência</h3>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">Visão geral da performance dos clientes</p>
         </div>
+        <div>
+            <button class="btn btn-outline-secondary btn-sm me-2"><i class="fa-regular fa-eye"></i></button>
+            <button class="btn btn-outline-secondary btn-sm me-2"><i class="fa-solid fa-desktop"></i> Modo
+                Apresentação</button>
+            <button class="btn btn-outline-secondary btn-sm"><i class="fa-regular fa-calendar"></i> Últimos 30 dias <i
+                    class="fa-solid fa-chevron-down ms-1"></i></button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6 col-md-6">
+            <div class="card card-dash">
+                <div class="card-dash-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted mb-1" style="font-size: 0.9rem;">Alcance Total Gerado</div>
+                        <div class="text-value-big">4.5M</div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge-positive"><i class="fa-solid fa-arrow-trend-up"></i> +18% vs mês
+                            passado</span>
+                        <div style="height: 40px; width: 100px; margin-top: 10px;"><canvas id="spark1"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-md-6">
+            <div class="card card-dash">
+                <div class="card-dash-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted mb-1" style="font-size: 0.9rem;">Engajamento Total</div>
+                        <div class="text-value-big">680K</div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge-positive"><i class="fa-solid fa-arrow-trend-up"></i> +24% vs mês
+                            passado</span>
+                        <div style="height: 40px; width: 100px; margin-top: 10px;"><canvas id="spark2"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-dash">
+                <div class="card-dash-body d-flex justify-content-between">
+                    <div>
+                        <div class="icon-circle"><i class="fa-solid fa-users"></i></div>
+                        <div class="text-value-small">24</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">Clientes Ativos</div>
+                    </div>
+                    <span class="badge-positive h-100">+8%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-dash">
+                <div class="card-dash-body d-flex justify-content-between">
+                    <div>
+                        <div class="icon-circle"><i class="fa-solid fa-file-lines"></i></div>
+                        <div class="text-value-small">1.2K</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">Posts Publicados</div>
+                    </div>
+                    <span class="badge-positive h-100">+12%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-dash">
+                <div class="card-dash-body d-flex justify-content-between">
+                    <div>
+                        <div class="icon-circle" style="color: #e74a3b; background: #fce4e4;"><i
+                                class="fa-solid fa-bullhorn"></i></div>
+                        <div class="text-value-small">47</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">Campanhas</div>
+                    </div>
+                    <span class="badge-negative h-100">-3%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-dash">
+                <div class="card-dash-body d-flex justify-content-between">
+                    <div>
+                        <div class="icon-circle" style="color: #1cc88a; background: #e3fbed;"><i
+                                class="fa-solid fa-check-circle"></i></div>
+                        <div class="text-value-small">94%</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">Taxa de Aprovação</div>
+                    </div>
+                    <span class="badge-positive h-100">+2%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card card-dash h-100">
+                <div class="card-dash-body">
+                    <h6 class="text-gray-800 fw-bold mb-1">Alcance vs Engajamento</h6>
+                    <p class="text-muted mb-4" style="font-size: 0.8rem;">Evolução anual das métricas principais</p>
+                    <div style="height: 300px;">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-dash h-100">
+                <div class="card-dash-body">
+                    <h6 class="text-gray-800 fw-bold mb-1">Status de Conteúdo</h6>
+                    <p class="text-muted mb-4" style="font-size: 0.8rem;">Fluxo de aprovação dos posts</p>
+                    <div style="height: 250px; display: flex; justify-content: center;">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                    <div class="mt-3" style="font-size: 0.85rem;">
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i
+                                    class="fa-solid fa-circle text-success me-2"></i>Publicados (64)</span>
+                            <strong>57%</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i
+                                    class="fa-solid fa-circle text-primary me-2"></i>Aprovados (28)</span>
+                            <strong>25%</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted"><i
+                                    class="fa-solid fa-circle text-warning me-2"></i>Em Revisão (8)</span>
+                            <strong>7%</strong></div>
+                        <div class="d-flex justify-content-between"><span class="text-muted"><i
+                                    class="fa-solid fa-circle text-danger me-2"></i>Reprovados (12)</span>
+                            <strong>11%</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card card-dash h-100">
+                <div class="card-dash-body">
+                    <h6 class="text-gray-800 fw-bold mb-1">Top Performing Formats</h6>
+                    <p class="text-muted mb-4" style="font-size: 0.8rem;">Taxa de engajamento por formato</p>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><i class="fa-brands fa-instagram me-2"></i> Reels</span>
+                            <strong>48%</strong>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom" style="width: 48%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><i class="fa-regular fa-image me-2"></i> Estático</span>
+                            <strong>40%</strong>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom" style="width: 40%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><i class="fa-solid fa-layer-group me-2"></i> Carrossel</span>
+                            <strong>12%</strong>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom" style="width: 12%"></div>
+                        </div>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.75rem;">* Baseado em 1.200 posts dos últimos 30 dias</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card card-dash h-100">
+                <div class="card-dash-body">
+                    <h6 class="text-gray-800 fw-bold mb-1">Insights Rápidos</h6>
+                    <p class="text-muted mb-4" style="font-size: 0.8rem;">Destaques do período</p>
+
+                    <div class="insight-box blue">
+                        <div class="text-muted fw-bold mb-1" style="font-size: 0.8rem;">🔥 Melhor dia para postar</div>
+                        <div class="fs-5 fw-bold text-primary">Terças-feiras às 19h</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">32% mais engajamento que a média.</div>
+                    </div>
+
+                    <div class="insight-box green">
+                        <div class="text-muted fw-bold mb-1" style="font-size: 0.8rem;">⭐ Cliente destaque</div>
+                        <div class="fs-5 fw-bold text-success">@restaurante_sabor</div>
+                        <div class="text-muted" style="font-size: 0.8rem;">+148% de alcance neste mês.</div>
+                    </div>
+
+                    <div class="insight-box">
+                        <div class="text-muted fw-bold mb-1" style="font-size: 0.8rem;">💡 Sugestão</div>
+                        <div class="text-muted" style="font-size: 0.85rem;">Reels estão gerando 2.5x mais engajamento.
+                            Considere aumentar a produção de vídeos curtos.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-    
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-card-info">
-                <h3>{{ project_count }}</h3>
-                <p>Projetos Ativos</p>
-            </div>
-            <i data-feather="briefcase" style="width: 32px; height: 32px; color: var(--primary-color);"></i>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-card-info">
-                <h3>{{ pending_tasks_count }}</h3>
-                <p>Tarefas Pendentes</p>
-            </div>
-            <i data-feather="clock" style="width: 32px; height: 32px; color: #ffc107;"></i>
-        </div>
-
-        <div class="stat-card" style="align-items: center;">
-            <div class="stat-card-info">
-                <h3>{{ completed_tasks_count }} / {{ total_tasks }}</h3>
-                <p>Tarefas Concluídas</p>
-            </div>
-            <div class="progress-circle" 
-                 style="--progress-value: {{ completion_percent }}%;" 
-                 data-progress="{{ completion_percent }}%">
-            </div>
-        </div>
-    </div>
-
-    
-
-        
-
-    </div>
-
 {% endblock %}
-
 {% block extra_js %}
-    <script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
