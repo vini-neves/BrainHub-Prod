@@ -48,22 +48,13 @@ class TenantLoginView(auth_views.LoginView):
 
 @login_required
 def dashboard_view(request):
-    # 1. Busca Clientes Ativos (Isso já vai funcionar com seu banco!)
     total_clientes_ativos = Client.objects.filter(is_active=True).count()
-    
-    # 2. Busca Redes Sociais Conectadas
     total_conexoes = SocialAccount.objects.filter(is_active=True).count()
 
-    # --- DADOS SIMULADOS (Para os gráficos e posts) ---
-    # Como eu não sei o nome exato do seu model de Posts/Métricas, 
-    # deixei essas variáveis prontas para substituirmos na próxima etapa.
-    total_posts = 1200 # Ex: Post.objects.filter(status='publicado').count()
+    total_posts = 1200 
     taxa_aprovacao = 94
     alcance_total = "4.5M"
     engajamento_total = "680K"
-    
-    # Dados para o gráfico de rosca (Status dos Posts)
-    # Exemplo: [Publicados, Aprovados, Em Revisão, Reprovados]
     donut_data = [57, 25, 7, 11]
 
     context = {
@@ -73,7 +64,7 @@ def dashboard_view(request):
         'taxa_aprovacao': taxa_aprovacao,
         'alcance_total': alcance_total,
         'engajamento_total': engajamento_total,
-        'donut_data': donut_data, # Enviando a lista para o JS do gráfico
+        'donut_data': donut_data,
     }
     
     return render(request, 'projects/dashboard.html', context)
