@@ -1,45 +1,59 @@
 {% extends "projects/auth_base.html" %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 40px auto; padding: 40px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; line-height: 1.6;">
-    
+<div
+    style="max-width: 800px; margin: 40px auto; padding: 40px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; line-height: 1.6;">
+
     <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #1a1a1a; margin-bottom: 10px;">Política de Privacidade</h1>
         <p style="color: #6c757d; font-size: 0.9em;">Última atualização: {% now "j \d\e F \d\e Y" %}</p>
     </div>
-    
+
     <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 30px;">
-    
+
     <h3 style="color: #2c3e50; margin-top: 25px;">1. Introdução</h3>
-    <p>A sua privacidade é importante para nós. É política do <strong>BrainZe</strong> respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no nosso site e em outros sites ou sistemas que possuímos e operamos.</p>
-    
+    <p>A sua privacidade é importante para nós. É política do <strong>BrainZe</strong> respeitar a sua privacidade em
+        relação a qualquer informação sua que possamos coletar no nosso site e em outros sites ou sistemas que possuímos
+        e operamos.</p>
+
     <h3 style="color: #2c3e50; margin-top: 25px;">2. Coleta de Dados Pessoais</h3>
-    <p>Solicitamos informações pessoais apenas quando realmente precisamos delas para lhe fornecer um serviço. Fazemo-lo por meios justos e legais, com o seu conhecimento e consentimento. Os dados coletados podem incluir:</p>
+    <p>Solicitamos informações pessoais apenas quando realmente precisamos delas para lhe fornecer um serviço. Fazemo-lo
+        por meios justos e legais, com o seu conhecimento e consentimento. Os dados coletados podem incluir:</p>
     <ul style="margin-bottom: 15px; padding-left: 20px;">
         <li>Nome e e-mail para criação de conta e autenticação.</li>
         <li>Dados de faturamento (quando aplicável).</li>
-        <li>Tokens de acesso de plataformas terceiras (como Facebook e Instagram), fornecidos voluntariamente por você para a prestação dos serviços de agência.</li>
+        <li>Tokens de acesso de plataformas terceiras (como Facebook e Instagram), fornecidos voluntariamente por você
+            para a prestação dos serviços de agência.</li>
     </ul>
 
     <h3 style="color: #2c3e50; margin-top: 25px;">3. Uso de Dados e Integração com a Meta (Facebook/Instagram)</h3>
-    <p>Para fornecer funcionalidades de gerenciamento de redes sociais, nossa plataforma permite a conexão com a API da Meta. Ao conectar sua conta:</p>
+    <p>Para fornecer funcionalidades de gerenciamento de redes sociais, nossa plataforma permite a conexão com a API da
+        Meta. Ao conectar sua conta:</p>
     <ul style="margin-bottom: 15px; padding-left: 20px;">
         <li>Armazenamos tokens de acesso seguros para agir em seu nome de acordo com as permissões concedidas.</li>
         <li>Não armazenamos as suas senhas do Facebook ou Instagram.</li>
-        <li>Você pode revogar o acesso do BrainZe a qualquer momento diretamente nas configurações de segurança do seu Facebook.</li>
+        <li>Você pode revogar o acesso do BrainZe a qualquer momento diretamente nas configurações de segurança do seu
+            Facebook.</li>
     </ul>
 
     <h3 style="color: #2c3e50; margin-top: 25px;">4. Compartilhamento de Dados</h3>
-    <p>Não compartilhamos informações de identificação pessoal publicamente ou com terceiros, exceto quando exigido por lei ou para a prestação direta do serviço (ex: provedores de hospedagem em nuvem e gateways de pagamento), os quais também estão sujeitos a rigorosas normas de segurança.</p>
+    <p>Não compartilhamos informações de identificação pessoal publicamente ou com terceiros, exceto quando exigido por
+        lei ou para a prestação direta do serviço (ex: provedores de hospedagem em nuvem e gateways de pagamento), os
+        quais também estão sujeitos a rigorosas normas de segurança.</p>
 
     <h3 style="color: #2c3e50; margin-top: 25px;">5. Retenção e Exclusão de Dados (LGPD)</h3>
-    <p>Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem o direito de solicitar a exclusão total dos seus dados dos nossos servidores a qualquer momento. Retemos as informações coletadas apenas pelo tempo necessário para fornecer o serviço solicitado.</p>
+    <p>Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem o direito de solicitar a
+        exclusão total dos seus dados dos nossos servidores a qualquer momento. Retemos as informações coletadas apenas
+        pelo tempo necessário para fornecer o serviço solicitado.</p>
 
     <h3 style="color: #2c3e50; margin-top: 25px;">6. Segurança</h3>
-    <p>Adotamos medidas de proteção comercialmente aceitáveis para evitar perdas e roubos, bem como acesso, divulgação, cópia, uso ou modificação não autorizados dos seus dados.</p>
+    <p>Adotamos medidas de proteção comercialmente aceitáveis para evitar perdas e roubos, bem como acesso, divulgação,
+        cópia, uso ou modificação não autorizados dos seus dados.</p>
 
     <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
-        <a href="{% url 'login' %}" style="display: inline-block; padding: 10px 20px; background-color: #f8f9fa; color: #333; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid #ddd;">&larr; Voltar para o Login</a>
+        <a href="{% url 'login' %}"
+            style="display: inline-block; padding: 10px 20px; background-color: #f8f9fa; color: #333; text-decoration: none; border-radius: 6px; font-weight: bold; border: 1px solid #ddd;">&larr;
+            Voltar para o Login</a>
     </div>
 </div>
 {% endblock %}
