@@ -8,7 +8,7 @@ urlpatterns = [
     path('privacidade/', views.politica_privacidade, name='politica_privacidade'),
 
     # --- DASHBOARD & LOGIN ---
-    path('', views.dashboard, name='dashboard'),
+    path('', views.dashboard_view, name='dashboard'),
     path('login/', views.TenantLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='projects/logout.html'), name='logout'),
 
