@@ -78,28 +78,79 @@ def dashboard_view(request):
         import traceback
         erro_completo = traceback.format_exc()
         return HttpResponse(f"<h1>Erro encontrado:</h1><pre style='background:#f4f4f4; padding:20px;'>{erro_completo}</pre>")
-
 @login_required
 def ads_dashboard_view(request):
     """
-    Dashboard de visualização de performance de Ads (Portfolio de Clientes)
+    Dashboard de Ads integrado com o banco de dados real.
+    Mostra apenas clientes que possuem contas conectadas.
     """
-    # Dados simulados (Mock) baseados no seu print para testar o design
-    summary = {
-        'ativos': '5 / 6',
-        'investimento': 'R$ 197.500',
-        'roas': '4.3x',
-        'alertas': '9',
-    }
+    # Pega todos os clientes ativos
+    all_active_clients = Client.objects.filter(is_active=True)
     
-    ads_clients = [
-        {'initials': 'TE', 'name': 'TechVida Educação', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'Google Ads', 'GA4'], 'invest': 'R$ 45.000', 'roas': '4.2x', 'alerts': 2, 'critical': 0},
-        {'initials': 'BE', 'name': 'Bella Cosméticos', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'Google Ads', 'TikTok Ads', 'GMN'], 'invest': 'R$ 78.000', 'roas': '5.8x', 'alerts': 3, 'critical': 1},
-        {'initials': 'AU', 'name': 'AutoParts Express', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'Google Ads', 'GMN'], 'invest': 'R$ 32.000', 'roas': '3.1x', 'alerts': 1, 'critical': 0},
-        {'initials': 'FI', 'name': 'FitLife Academia', 'status': 'Pausa', 'status_color': 'warning', 'platforms': ['Meta Ads', 'TikTok Ads'], 'invest': 'R$ 12.000', 'roas': '2.1x', 'alerts': 2, 'critical': 1},
-        {'initials': 'NE', 'name': 'Nexus Consultoria', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['LinkedIn Ads', 'Google Ads', 'GA4'], 'invest': 'R$ 22.000', 'roas': '6.5x', 'alerts': 1, 'critical': 0},
-        {'initials': 'SA', 'name': 'Sabor & Arte Restaurante', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'GMN'], 'invest': 'R$ 8.500', 'roas': '3.8x', 'alerts': 0, 'critical': 0},
-    ]
+    ads_clients = []
+    
+    for client in all_active_clients:
+        # Busca as contas conectadas do cliente com segurança (compatível com seu related_name)
+        qs = getattr(client, 'social_accounts', getattr(client, 'socialaccount_set', None))
+        if not qs: continue
+        
+        active_accounts = qs.filter(is_active=True)
+        if not active_accounts.exists():
+            continue  # Pula clientes que não conectaram nenhuma conta
+
+        # Mapeamento inteligente de plataformas para nomes de Ads
+        raw_platforms = set(active_accounts.values_list('platform', flat=True))
+        platforms_display = []
+        
+        if 'facebook' in raw_platforms or 'instagram' in raw_platforms:
+            platforms_display.append('Meta Ads')
+        if 'tiktok' in raw_platforms:
+            platforms_display.append('TikTok Ads')
+        if 'linkedin' in raw_platforms:
+            platforms_display.append('LinkedIn Ads')
+        if 'youtube' in raw_platforms or 'google' in raw_platforms:
+            platforms_display.append('Google Ads')
+        if 'x' in raw_platforms:
+            platforms_display.append('X Ads')
+            
+        if not platforms_display:
+            platforms_display = ['Outros'] # Fallback
+
+        # Gera as iniciais do cliente dinamicamente (Ex: "TechVida Educacional" -> "TE")
+        words = client.name.strip().split()
+        if len(words) >= 2:
+            initials = f"{words[0][0]}{words[1][0]}".upper()
+        elif len(words) == 1:
+            initials = f"{words[0][:2]}".upper()
+        else:
+            initials = "CL"
+
+        # Monta o dicionário com os dados REAIS do cliente
+        ads_clients.append({
+            'initials': initials,
+            'name': client.name,
+            'status': 'Ativo' if client.is_active else 'Pausa',
+            'status_color': 'success' if client.is_active else 'warning',
+            'platforms': platforms_display,
+            
+            # --- Placeholders Financeiros ---
+            # Aqui os dados reais virão de integrações de relatórios (Insights API)
+            'invest': 'R$ 0,00',
+            'roas': '0.0x',
+            'alerts': 0,
+            'critical': 0
+        })
+
+    # Resumo do Topo da Página
+    total_com_ads = len(ads_clients)
+    total_clientes = all_active_clients.count()
+    
+    summary = {
+        'ativos': f'{total_com_ads} / {total_clientes}',
+        'investimento': 'R$ 0,00',
+        'roas': '0.0x',
+        'alertas': '0',
+    }
 
     context = {
         'summary': summary,
