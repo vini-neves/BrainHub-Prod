@@ -37,7 +37,8 @@ def sidebar_menu(request):
 
     if schema_name in SUPER_SCHEMAS:
         # REGRA: 'brainz' e 'public' têm acesso total a tudo
-        allowed_modules = ['gestao', 'producao', 'social', 'arquivos', 'admin']
+        # Adicionado o 'ads' aqui:
+        allowed_modules = ['gestao', 'producao', 'social', 'arquivos', 'admin', 'ads']
     else:
         # Outros tenants dependem do que contrataram (JSON no banco)
         config = getattr(tenant, 'menu_config', {})
