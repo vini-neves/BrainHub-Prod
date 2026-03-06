@@ -20,7 +20,7 @@
 
 .text-title-dash {
     font-weight: 600;
-    color: #4e73df;
+    color: var(--primary-color);;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -65,7 +65,7 @@
     align-items: center;
     justify-content: center;
     background-color: #f1f3f9;
-    color: #4e73df;
+    color: var(--primary-color);;
     font-size: 1.2rem;
     margin-bottom: 10px;
 }
@@ -79,7 +79,7 @@
 }
 
 .progress-bar-custom {
-    background-color: #4e73df;
+    background-color: var(--secundary-color);
     border-radius: 10px;
 }
 
@@ -94,7 +94,7 @@
 }
 
 .insight-box.blue {
-    border-left-color: #4e73df;
+    border-left-color: var(--primary-color);;
 }
 
 .insight-box.green {
