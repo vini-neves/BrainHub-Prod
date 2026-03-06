@@ -39,7 +39,7 @@
 
 .badge-positive {
     background-color: #e3fbed;
-    color: var(--secundary-color);
+    color: var(--secondary-color)73;
     font-weight: 600;
     padding: 5px 10px;
     border-radius: 6px;
@@ -78,7 +78,7 @@
 }
 
 .progress-bar-custom {
-    background-color: var(--secundary-color);
+    background-color: var(--secondary-color);
     border-radius: 10px;
 }
 
