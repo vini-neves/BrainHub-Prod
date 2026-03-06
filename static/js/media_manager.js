@@ -233,7 +233,7 @@ async function uploadInBatch(inputElement) {
         try {
             if (index > 0) await sleep(200);
 
-            const response = await fetch('/api/upload/photo/', {
+            const response = await fetch('/api/media/upload/', {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrfToken },
                 body: formData
