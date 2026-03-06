@@ -979,6 +979,12 @@ def download_batch(request):
         return response
     return redirect('/')
 
+@login_required
+def social_dashboard(request):
+    """ View do Dashboard de Redes Sociais """
+    clients = Client.objects.filter(is_active=True)
+    return render(request, 'projects/social_dashboard.html', {'clients': clients})
+
 # ==============================================================================
 # 6. AUTH SOCIAL (OAUTH)
 # ==============================================================================
