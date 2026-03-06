@@ -93,8 +93,7 @@
                                     {% elif 'LinkedIn' in plat %}<span class="pt-tag pt-linkedin">{{ plat }}</span>
                                     {% elif 'GMN' in plat %}<span class="pt-tag pt-gmn">{{ plat }}</span>
                                     {% else %}<span class="pt-tag pt-tiktok">{{ plat }}</span>{% endif %}
-                                {% endendfor %}
-                            </div>
+                                {% endfor %}  </div>
                         </div>
                     </div>
                     <span class="status-badge status-{{ c.status_color }}">{{ c.status }}</span>
