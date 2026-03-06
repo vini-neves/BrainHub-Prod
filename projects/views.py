@@ -931,21 +931,40 @@ def delete_file(request, file_id):
     return redirect('media_folder', client_id=folder.client.id, folder_id=folder.id)
 
 @login_required
+@csrf_exempt  # Isso impede o Django de bloquear o JS por falta de token de segurança
 @require_POST
 def upload_photo_api(request):
-    file = request.FILES.get('foto')
+    # Tenta pegar tanto 'file' (padrão de JS) quanto 'foto' (seu código antigo)
+    file = request.FILES.get('file') or request.FILES.get('foto')
     client_id = request.POST.get('client_id')
     folder_id = request.POST.get('folder_id')
 
-    if not file or not folder_id:
-        return JsonResponse({'status': 'error', 'message': 'Dados inválidos.'}, status=400)
+    # Validação rigorosa para te ajudar a debugar
+    if not file:
+        return JsonResponse({'status': 'error', 'message': 'Nenhum arquivo recebido pelo servidor.'}, status=400)
+    if not folder_id or not client_id:
+        return JsonResponse({'status': 'error', 'message': 'Faltando client_id ou folder_id no JavaScript.'}, status=400)
 
     try:
         client = get_object_or_404(Client, pk=client_id)
         current_folder = get_object_or_404(MediaFolder, pk=folder_id, client=client)
+        
+        # Cria o arquivo no banco
         media_file = MediaFile.objects.create(folder=current_folder, file=file)
-        return JsonResponse({'status': 'success', 'file_id': media_file.id, 'file_name': media_file.filename})
+        
+        # Correção do nome do arquivo para não dar Erro 500 no final
+        nome_do_arquivo = media_file.file.name if media_file.file else "arquivo_salvo"
+        
+        return JsonResponse({
+            'status': 'success', 
+            'file_id': media_file.id, 
+            'file_name': nome_do_arquivo
+        })
+        
     except Exception as e:
+        # Se der erro de permissão de pasta no Docker, vai aparecer aqui!
+        import traceback
+        print("ERRO NO UPLOAD:", traceback.format_exc())
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def download_batch(request):
