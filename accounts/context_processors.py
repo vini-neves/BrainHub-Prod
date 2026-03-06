@@ -2,6 +2,8 @@
 
 from django.urls import reverse
 
+from projects.views import ads_dashboard_view
+
 def agency_config(request):
     # O middleware do django-tenants já nos dá o "tenant"
     # (a agência) no objeto 'request'.
@@ -116,6 +118,19 @@ def sidebar_menu(request):
                     "only_super_schema": True # Flag customizada
                 }
             ]
+        },
+        {
+            "label": "Ads",
+                "icon": "fa-solid fa-chart-pie",
+                "module_id": "ads",
+                "perms": None,
+                "submenu": [
+                    {
+                        "label": "Dashboard",
+                        "url_name": "ads_dashboard",
+                        "perms": None,
+                    },
+                ]
         },
     ]
 

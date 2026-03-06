@@ -1,0 +1,164 @@
+{% extends "projects/base.html" %}
+
+{% block extra_css %}
+<style>
+    .ads-bg { background-color: #f8f9fa; padding: 20px; font-family: 'Inter', sans-serif; min-height: 100vh; }
+    .ads-card { background: #fff; border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 20px; height: 100%; transition: transform 0.2s; }
+    .ads-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+    
+    /* Top Summary Cards */
+    .summary-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: #6b7280; letter-spacing: 0.5px; }
+    .summary-value { font-size: 2rem; font-weight: 700; color: #111827; margin-top: 5px; }
+    .trend-up { color: #10b981; font-size: 0.85rem; font-weight: 600; }
+    .trend-down { color: #ef4444; font-size: 0.85rem; font-weight: 600; }
+    .icon-wrapper { width: 35px; height: 35px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6b7280; }
+
+    /* Client Cards */
+    .client-initials { width: 45px; height: 45px; background: #f3f4f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #374151; font-size: 1.1rem; }
+    .client-name { font-weight: 700; color: #111827; font-size: 1.05rem; margin-bottom: 2px; }
+    
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+    .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .status-success { background: #ecfdf5; color: #10b981; }
+    .status-success::before { background: #10b981; }
+    .status-warning { background: #fffbeb; color: #f59e0b; }
+    .status-warning::before { background: #f59e0b; }
+
+    /* Tags das Plataformas */
+    .platform-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .pt-tag { padding: 2px 8px; border-radius: 4px; border: 1px solid; font-size: 0.7rem; font-weight: 600; }
+    .pt-meta { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+    .pt-google { color: #ef4444; border-color: #fecaca; background: #fef2f2; }
+    .pt-ga4 { color: #f97316; border-color: #fed7aa; background: #fff7ed; }
+    .pt-tiktok { color: #111827; border-color: #e5e7eb; background: #f3f4f6; }
+    .pt-linkedin { color: #0284c7; border-color: #bae6fd; background: #f0f9ff; }
+    .pt-gmn { color: #10b981; border-color: #a7f3d0; background: #ecfdf5; }
+
+    /* Metric Rows */
+    .metric-box { background: #f9fafb; border-radius: 8px; padding: 12px; flex: 1; text-align: left; }
+    .metric-label { font-size: 0.7rem; color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+    .metric-val { font-size: 1.1rem; font-weight: 700; color: #111827; }
+    .alert-text { color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-left: 5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ads-bg">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-0" style="color: #111827;">Portfolio de Clientes</h1>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">Visão geral de todos os clientes da agência</p>
+        </div>
+        <div class="d-flex">
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar cliente...">
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="ads-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="summary-title">Clientes Ativos</div>
+                        <div class="summary-value d-flex align-items-baseline gap-2">
+                            {{ summary.ativos }} <span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +2 este mês</span>
+                        </div>
+                    </div>
+                    <div class="icon-wrapper"><i class="fa-regular fa-user"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="ads-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="summary-title">Investimento Total</div>
+                        <div class="summary-value d-flex align-items-baseline gap-2">
+                            {{ summary.investimento }} <span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +12.5%</span>
+                        </div>
+                    </div>
+                    <div class="icon-wrapper"><i class="fa-solid fa-dollar-sign"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="ads-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="summary-title">ROAS Médio</div>
+                        <div class="summary-value d-flex align-items-baseline gap-2">
+                            {{ summary.roas }} <span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +0.3x</span>
+                        </div>
+                    </div>
+                    <div class="icon-wrapper"><i class="fa-solid fa-chart-line"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="ads-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="summary-title">Alertas IA</div>
+                        <div class="summary-value d-flex align-items-baseline gap-2">
+                            {{ summary.alertas }} <span class="trend-down"><i class="fa-solid fa-arrow-trend-down"></i> 3 críticos</span>
+                        </div>
+                    </div>
+                    <div class="icon-wrapper"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for c in ads_clients %}
+        <div class="col-lg-4 col-md-6">
+            <div class="ads-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="client-initials">{{ c.initials }}</div>
+                        <div>
+                            <div class="client-name">{{ c.name }}</div>
+                            <div class="platform-tags">
+                                {% for plat in c.platforms %}
+                                    {% if 'Meta' in plat %}<span class="pt-tag pt-meta">{{ plat }}</span>
+                                    {% elif 'Google' in plat %}<span class="pt-tag pt-google">{{ plat }}</span>
+                                    {% elif 'GA4' in plat %}<span class="pt-tag pt-ga4">{{ plat }}</span>
+                                    {% elif 'TikTok' in plat %}<span class="pt-tag pt-tiktok">{{ plat }}</span>
+                                    {% elif 'LinkedIn' in plat %}<span class="pt-tag pt-linkedin">{{ plat }}</span>
+                                    {% elif 'GMN' in plat %}<span class="pt-tag pt-gmn">{{ plat }}</span>
+                                    {% else %}<span class="pt-tag pt-tiktok">{{ plat }}</span>{% endif %}
+                                {% endendfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-badge status-{{ c.status_color }}">{{ c.status }}</span>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <div class="metric-box">
+                        <div class="metric-label"><i class="fa-solid fa-dollar-sign"></i> Investimento</div>
+                        <div class="metric-val">{{ c.invest }}</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label"><i class="fa-solid fa-bullseye"></i> ROAS</div>
+                        <div class="metric-val">{{ c.roas }}</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label"><i class="fa-solid fa-triangle-exclamation"></i> Alertas</div>
+                        <div class="metric-val">
+                            {{ c.alerts }}
+                            {% if c.critical > 0 %}
+                                <span class="alert-text">{{ c.critical }} crítico</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -78,6 +78,34 @@ def dashboard_view(request):
         import traceback
         erro_completo = traceback.format_exc()
         return HttpResponse(f"<h1>Erro encontrado:</h1><pre style='background:#f4f4f4; padding:20px;'>{erro_completo}</pre>")
+
+@login_required
+def ads_dashboard_view(request):
+    """
+    Dashboard de visualização de performance de Ads (Portfolio de Clientes)
+    """
+    # Dados simulados (Mock) baseados no seu print para testar o design
+    summary = {
+        'ativos': '5 / 6',
+        'investimento': 'R$ 197.500',
+        'roas': '4.3x',
+        'alertas': '9',
+    }
+    
+    ads_clients = [
+        {'initials': 'TE', 'name': 'TechVida Educação', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'Google Ads', 'GA4'], 'invest': 'R$ 45.000', 'roas': '4.2x', 'alerts': 2, 'critical': 0},
+        {'initials': 'BE', 'name': 'Bella Cosméticos', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'Google Ads', 'TikTok Ads', 'GMN'], 'invest': 'R$ 78.000', 'roas': '5.8x', 'alerts': 3, 'critical': 1},
+        {'initials': 'AU', 'name': 'AutoParts Express', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'Google Ads', 'GMN'], 'invest': 'R$ 32.000', 'roas': '3.1x', 'alerts': 1, 'critical': 0},
+        {'initials': 'FI', 'name': 'FitLife Academia', 'status': 'Pausa', 'status_color': 'warning', 'platforms': ['Meta Ads', 'TikTok Ads'], 'invest': 'R$ 12.000', 'roas': '2.1x', 'alerts': 2, 'critical': 1},
+        {'initials': 'NE', 'name': 'Nexus Consultoria', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['LinkedIn Ads', 'Google Ads', 'GA4'], 'invest': 'R$ 22.000', 'roas': '6.5x', 'alerts': 1, 'critical': 0},
+        {'initials': 'SA', 'name': 'Sabor & Arte Restaurante', 'status': 'Ativo', 'status_color': 'success', 'platforms': ['Meta Ads', 'GMN'], 'invest': 'R$ 8.500', 'roas': '3.8x', 'alerts': 0, 'critical': 0},
+    ]
+
+    context = {
+        'summary': summary,
+        'ads_clients': ads_clients
+    }
+    return render(request, 'projects/ads_dashboard.html', context)
 # ==============================================================================
 # 2. CLIENTES E PROJETOS
 # ==============================================================================

@@ -9,6 +9,7 @@ urlpatterns = [
 
     # --- DASHBOARD & LOGIN ---
     path('', views.dashboard_view, name='dashboard'),
+    path('ads/', views.ads_dashboard_view, name='ads_dashboard'),
     path('login/', views.TenantLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='projects/logout.html'), name='logout'),
 

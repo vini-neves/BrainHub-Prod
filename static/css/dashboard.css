@@ -38,8 +38,7 @@
 }
 
 .badge-positive {
-    background-color: #e3fbed;
-    color: var(--secondary-color)73;
+    background-color: color-mix(in srgb, var(--secondary-color), transparent 45%);
     font-weight: 600;
     padding: 5px 10px;
     border-radius: 6px;
