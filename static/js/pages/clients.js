@@ -101,6 +101,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const ytSwitch = document.getElementById('toggleYoutube');
+    if (ytSwitch) {
+        const newYtSwitch = ytSwitch.cloneNode(true);
+        ytSwitch.parentNode.replaceChild(newYtSwitch, ytSwitch);
+
+        newYtSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false; return;
+                }
+                // Rota que criamos no urls.py
+                window.location.href = `/auth/youtube/start/${clientId}/`;
+            }
+        });
+    }
+
     // 1. Configuração do Modal
     const modalElement = document.getElementById('clientModal');
     if (modalElement) {
@@ -418,6 +436,7 @@ function editClient(buttonElement) {
             setCheck('toggleLinkedin', platforms.includes('linkedin'));
             setCheck('toggleTiktok', platforms.includes('tiktok'));
             setCheck('toggleFacebook', platforms.includes('facebook'));
+            setCheck('toggleYoutube', platforms.includes('youtube'));
             
             if(data.anexo_contrato_url) {
                 currentFileUrls['id_anexo_contrato'] = data.anexo_contrato_url;

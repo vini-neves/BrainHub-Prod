@@ -91,6 +91,10 @@ urlpatterns = [
     path('auth/tiktok/start/<int:client_id>/', views.tiktok_auth_start, name='tiktok_auth_start'),
     path('tiktok-callback/', views.tiktok_auth_callback, name='tiktok_auth_callback'),
 
+    # --- YOUTUBE ---
+    path('auth/youtube/start/<int:client_id>/', views.youtube_auth_start, name='youtube_auth_start'),
+    path('auth/youtube/callback/', views.youtube_auth_callback, name='youtube_auth_callback'),
+
     # --- GESTÃO DE MÍDIA (DRIVE) ---
     path('media-center/', views.media_dashboard, name='media_dashboard'),
     path('client/<int:client_id>/media/', views.media_manager, name='media_root'),

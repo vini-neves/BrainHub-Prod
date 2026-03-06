@@ -28,7 +28,7 @@ from .models import (
 )
 from .forms import ClientForm, TenantAuthenticationForm, MediaFileForm, FolderForm
 from accounts.models import CustomUser
-from .services import MetaService, LinkedInService, TikTokService, PinterestService
+from .services import MetaService, LinkedInService, TikTokService, PinterestService, YouTubeService
 
 # ==============================================================================
 # 1. DASHBOARDS E VISÕES GERAIS
@@ -1249,6 +1249,52 @@ def pinterest_auth_callback(request):
         messages.error(request, "Falha na comunicação com Pinterest.")
 
     # Retorna ao tenant
+    origin_url = request.session.get('social_auth_origin', '/social/')
+    return redirect(origin_url)
+
+# --- YOUTUBE ---
+
+@login_required
+def youtube_auth_start(request, client_id):
+    request.session['youtube_client_id'] = client_id
+    state = secrets.token_urlsafe(16)
+    request.session['youtube_oauth_state'] = state
+    
+    # Salva de onde o usuário veio
+    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
+    
+    service = YouTubeService()
+    return redirect(service.get_auth_url(state, redirect_uri=settings.YOUTUBE_REDIRECT_URI))
+
+@login_required
+def youtube_auth_callback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    error = request.GET.get('error')
+
+    if error:
+        messages.error(request, "Conexão com YouTube cancelada.")
+        return redirect(request.session.get('social_auth_origin', '/social/'))
+    
+    if not state or state != request.session.get('youtube_oauth_state'):
+        messages.error(request, "Erro CSRF YouTube.")
+        return redirect('social_dashboard')
+
+    client_id = request.session.get('youtube_client_id')
+    client = get_object_or_404(Client, pk=client_id)
+    
+    service = YouTubeService()
+    token_data = service.exchange_code_for_token(code, redirect_uri=settings.YOUTUBE_REDIRECT_URI)
+
+    if token_data and 'access_token' in token_data:
+        account = service.save_account(token_data, client)
+        if account:
+            messages.success(request, f"YouTube conectado: {account.account_name}")
+        else:
+            messages.error(request, "Nenhum canal encontrado nesta conta do Google.")
+    else:
+        messages.error(request, "Falha na comunicação com YouTube.")
+
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)
 

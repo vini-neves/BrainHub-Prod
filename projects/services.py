@@ -361,3 +361,67 @@ class PinterestService:
             }
         )
         return account
+
+class YouTubeService:
+    def get_auth_url(self, state, redirect_uri):
+        base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        params = {
+            "client_id": settings.YOUTUBE_CLIENT_ID,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "https://www.googleapis.com/auth/youtube.readonly",
+            "state": state,
+            "access_type": "offline", # Importante para receber o Refresh Token
+            "prompt": "consent"
+        }
+        return f"{base_url}?{urllib.parse.urlencode(params)}"
+
+    def exchange_code_for_token(self, code, redirect_uri):
+        url = "https://oauth2.googleapis.com/token"
+        data = {
+            "client_id": settings.YOUTUBE_CLIENT_ID,
+            "client_secret": settings.YOUTUBE_CLIENT_SECRET,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": redirect_uri,
+        }
+        response = requests.post(url, data=data)
+        return response.json()
+
+    def save_account(self, token_data, client):
+        access_token = token_data.get('access_token')
+        refresh_token = token_data.get('refresh_token') # Opcional, mas útil
+        
+        if not access_token:
+            return None
+
+        # Busca os dados do canal do YouTube logado
+        channel_url = "https://youtube.googleapis.com/youtube/v3/channels"
+        params = {
+            "part": "snippet",
+            "mine": "true"
+        }
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        
+        response = requests.get(channel_url, headers=headers, params=params)
+        channel_data = response.json()
+
+        if 'items' in channel_data and len(channel_data['items']) > 0:
+            channel_info = channel_data['items'][0]['snippet']
+            channel_name = channel_info.get('title', 'Canal do YouTube')
+            
+            # Salva ou atualiza no seu banco de dados
+            account, created = SocialAccount.objects.update_or_create(
+                client=client,
+                platform='youtube',
+                defaults={
+                    'account_name': channel_name,
+                    'access_token': access_token,
+                    'refresh_token': refresh_token,
+                    'is_active': True
+                }
+            )
+            return account
+        return None
