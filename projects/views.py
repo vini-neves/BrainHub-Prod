@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import views as auth_views
 from django.core.files.base import ContentFile
-from projects.models import Client, SocialAccount
+from projects.models import Client, SocialAccount, Campaign
 
 # --- IMPORTS LOCAIS ---
 from .models import (
@@ -157,8 +157,54 @@ def ads_dashboard_view(request):
         'ads_clients': ads_clients
     }
     return render(request, 'projects/ads_dashboard.html', context)
+
 # ==============================================================================
-# 2. CLIENTES E PROJETOS
+# 2. CAMPANHAS ADAS
+# ==============================================================================
+
+from .models import Campaign # Adicione isso nos seus imports no topo!
+
+@login_required
+def campaign_management_view(request):
+    """ View da tabela de Gestão de Campanhas """
+    # Busca todas as campanhas, trazendo também os dados do cliente para otimizar
+    campaigns = Campaign.objects.select_related('client').all()
+    clients = Client.objects.filter(is_active=True)
+    
+    context = {
+        'campaigns': campaigns,
+        'clients': clients
+    }
+    return render(request, 'projects/campaign_management.html', context)
+
+@login_required
+@require_POST
+def add_campaign_api(request):
+    """ API para receber os dados do Modal e criar nova campanha """
+    client_id = request.POST.get('client_id')
+    name = request.POST.get('name')
+    channel = request.POST.get('channel')
+    daily_budget = request.POST.get('daily_budget', 0)
+
+    if not all([client_id, name, channel]):
+        return JsonResponse({'status': 'error', 'message': 'Preencha os campos obrigatórios.'}, status=400)
+
+    try:
+        client = get_object_or_404(Client, pk=client_id)
+        campaign = Campaign.objects.create(
+            client=client,
+            name=name,
+            channel=channel,
+            daily_budget=daily_budget,
+            status='active', # Começa ativa por padrão
+            fatigue='low'    # Fadiga baixa no início
+        )
+        return JsonResponse({'status': 'success', 'message': 'Campanha criada!'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+# ==============================================================================
+# 3. CLIENTES E PROJETOS
 # ==============================================================================
 
 @login_required
@@ -280,7 +326,7 @@ def delete_client_api(request, pk):
 
 
 # ==============================================================================
-# 3. KANBAN E TAREFAS (CORE DO SISTEMA)
+# 4. KANBAN E TAREFAS (CORE DO SISTEMA)
 # ==============================================================================
 
 @login_required

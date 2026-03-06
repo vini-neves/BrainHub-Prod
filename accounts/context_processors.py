@@ -131,6 +131,11 @@ def sidebar_menu(request):
                         "url_name": "ads_dashboard",
                         "perms": None,
                     },
+                    {
+                    "label": "Gestão de Campanhas",
+                    "url_name": "campaign_management", # <- A nova rota
+                    "perms": None,
+                    },
                 ]
         },
     ]

@@ -1,0 +1,34 @@
+.camp-bg { background-color: #f8f9fa; padding: 20px; font-family: 'Inter', sans-serif; min-height: 100vh; }
+    .table-card { background: #fff; border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.03); overflow: hidden; }
+    
+    /* Table Styling */
+    .camp-table { width: 100%; margin-bottom: 0; color: #374151; }
+    .camp-table th { font-size: 0.7rem; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; padding: 15px 20px; font-weight: 600; }
+    .camp-table td { padding: 15px 20px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; font-size: 0.9rem; }
+    .camp-table tr:hover { background-color: #f9fafb; }
+    
+    .camp-name { font-weight: 700; color: #111827; margin-bottom: 2px; font-size: 0.95rem; }
+    .camp-client { font-size: 0.75rem; color: #6b7280; }
+
+    /* Badges Canal */
+    .pt-tag { padding: 4px 10px; border-radius: 20px; border: 1px solid; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+    .pt-meta { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+    .pt-google { color: #ef4444; border-color: #fecaca; background: #fef2f2; }
+    .pt-tiktok { color: #374151; border-color: #e5e7eb; background: #f3f4f6; }
+    .pt-linkedin { color: #0284c7; border-color: #bae6fd; background: #f0f9ff; }
+
+    /* Status Dot */
+    .status-dot { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.8rem; }
+    .status-dot::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+    .st-active { color: #10b981; } .st-active::before { background: #10b981; }
+    .st-paused { color: #f59e0b; } .st-paused::before { background: #f59e0b; }
+
+    /* Fadiga */
+    .fatigue-low { color: #10b981; font-weight: 600; }
+    .fatigue-med { color: #f59e0b; font-weight: 600; }
+    .fatigue-high { color: #ef4444; font-weight: 600; }
+
+    /* Botão Action */
+    .btn-action { background: none; border: none; color: #f59e0b; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
+    .btn-action:hover { opacity: 0.7; }
+    .btn-play { color: #10b981; }

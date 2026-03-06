@@ -13,6 +13,10 @@ urlpatterns = [
     path('login/', views.TenantLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='projects/logout.html'), name='logout'),
 
+    # --- CAMPANHAS ADS ---
+    path('ads/campaigns/', views.campaign_management_view, name='campaign_management'),
+    path('api/ads/campaigns/add/', views.add_campaign_api, name='add_campaign_api'),
+
    # --- ESQUECI A SENHA ---
     path('password_reset/', auth_views.PasswordResetView.as_view(
         template_name='projects/password_reset_form.html',

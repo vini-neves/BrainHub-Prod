@@ -419,3 +419,41 @@ class CalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.client.name} - {self.date}"
+
+class Campaign(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Ativa'),
+        ('paused', 'Pausada')
+    ]
+    CHANNEL_CHOICES = [
+        ('meta', 'Meta Ads'),
+        ('google', 'Google Ads'),
+        ('tiktok', 'TikTok Ads'),
+        ('linkedin', 'LinkedIn Ads')
+    ]
+    FATIGUE_CHOICES = [
+        ('low', 'Baixa'),
+        ('medium', 'Média'),
+        ('high', 'Alta')
+    ]
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='campaigns')
+    name = models.CharField("Nome da Campanha", max_length=255)
+    channel = models.CharField("Canal", max_length=50, choices=CHANNEL_CHOICES)
+    status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='active')
+    
+    daily_budget = models.DecimalField("Verba/Dia", max_digits=10, decimal_places=2, default=0.00)
+    total_spend = models.DecimalField("Gasto", max_digits=10, decimal_places=2, default=0.00)
+    
+    clicks = models.IntegerField("Cliques", default=0)
+    conversions = models.IntegerField("Conversões", default=0)
+    ctr = models.DecimalField("CTR (%)", max_digits=5, decimal_places=2, default=0.00)
+    
+    fatigue = models.CharField("Fadiga", max_length=20, choices=FATIGUE_CHOICES, default='low')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.client.name}"

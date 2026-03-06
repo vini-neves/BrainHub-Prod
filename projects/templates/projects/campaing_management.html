@@ -1,0 +1,176 @@
+{% extends "projects/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/campaing_management.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="camp-bg">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-0" style="color: #111827;">Gestão de Campanhas</h1>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">Gerencie todas as campanhas ativas em tempo real</p>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-3">
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar campanha...">
+            </div>
+            <select class="form-select" style="width: 180px;">
+                <option>Todos os Canais</option>
+                <option>Meta Ads</option>
+                <option>Google Ads</option>
+            </select>
+            <select class="form-select" style="width: 150px;">
+                <option>Todos</option>
+                <option>Ativas</option>
+                <option>Pausadas</option>
+            </select>
+        </div>
+        <button class="btn btn-primary fw-bold px-4" data-bs-toggle="modal" data-bs-target="#newCampaignModal">
+            + Nova Campanha
+        </button>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table camp-table">
+                <thead>
+                    <tr>
+                        <th>Campanha</th>
+                        <th>Canal</th>
+                        <th>Status</th>
+                        <th>Verba/Dia</th>
+                        <th>Gasto</th>
+                        <th>Cliques</th>
+                        <th>Conv.</th>
+                        <th>CTR</th>
+                        <th>Fadiga</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in campaigns %}
+                    <tr>
+                        <td>
+                            <div class="camp-name">{{ c.name }}</div>
+                            <div class="camp-client">{{ c.client.name }}</div>
+                        </td>
+                        <td>
+                            <span class="pt-tag pt-{{ c.channel }}">{{ c.get_channel_display }}</span>
+                        </td>
+                        <td>
+                            <span class="status-dot st-{{ c.status }}">{{ c.get_status_display }}</span>
+                        </td>
+                        <td class="fw-bold">R$ {{ c.daily_budget }}</td>
+                        <td>R$ {{ c.total_spend }}</td>
+                        <td>{{ c.clicks }}</td>
+                        <td class="fw-bold">{{ c.conversions }}</td>
+                        <td>{{ c.ctr }}%</td>
+                        <td>
+                            {% if c.fatigue == 'low' %}<span class="fatigue-low">Baixa</span>
+                            {% elif c.fatigue == 'medium' %}<span class="fatigue-med">Média</span>
+                            {% else %}<span class="fatigue-high"><i class="fa-solid fa-triangle-exclamation"></i> Alta</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if c.status == 'active' %}
+                                <button class="btn-action"><i class="fa-solid fa-pause"></i></button>
+                            {% else %}
+                                <button class="btn-action btn-play"><i class="fa-solid fa-play"></i></button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            Nenhuma campanha cadastrada. Clique em "Nova Campanha" para começar.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newCampaignModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius: 12px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Criar Nova Campanha</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <form id="campaignForm">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Cliente</label>
+                <select class="form-select" name="client_id" required>
+                    <option value="">Selecione o Cliente</option>
+                    {% for client in clients %}
+                        <option value="{{ client.id }}">{{ client.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Nome da Campanha</label>
+                <input type="text" class="form-control" name="name" placeholder="Ex: Lançamento Verão 2026" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Canal</label>
+                    <select class="form-select" name="channel" required>
+                        <option value="meta">Meta Ads</option>
+                        <option value="google">Google Ads</option>
+                        <option value="tiktok">TikTok Ads</option>
+                        <option value="linkedin">LinkedIn Ads</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Verba Diária (R$)</label>
+                    <input type="number" step="0.01" class="form-control" name="daily_budget" placeholder="0.00" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold mt-2 py-2">Salvar Campanha</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('campaignForm');
+    if(form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch("{% url 'add_campaign_api' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                
+                const data = await response.json();
+                if(data.status === 'success') {
+                    // Recarrega a página para mostrar a nova campanha na tabela
+                    window.location.reload(); 
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            } catch(error) {
+                alert('Erro de conexão com o servidor.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
