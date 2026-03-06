@@ -119,6 +119,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const xSwitch = document.getElementById('toggleX'); // Ou toggleTwitter
+    if (xSwitch) {
+        const newXSwitch = xSwitch.cloneNode(true);
+        xSwitch.parentNode.replaceChild(newXSwitch, xSwitch);
+
+        newXSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                const clientId = document.getElementById('clientId').value;
+                if (!clientId) {
+                    Swal.fire('Atenção', 'Salve o cliente primeiro.', 'warning');
+                    this.checked = false; return;
+                }
+                window.location.href = `/auth/x/start/${clientId}/`;
+            }
+        });
+    }
+
     // 1. Configuração do Modal
     const modalElement = document.getElementById('clientModal');
     if (modalElement) {
@@ -437,6 +454,7 @@ function editClient(buttonElement) {
             setCheck('toggleTiktok', platforms.includes('tiktok'));
             setCheck('toggleFacebook', platforms.includes('facebook'));
             setCheck('toggleYoutube', platforms.includes('youtube'));
+            setCheck('toggleX', platforms.includes('x'));
             
             if(data.anexo_contrato_url) {
                 currentFileUrls['id_anexo_contrato'] = data.anexo_contrato_url;

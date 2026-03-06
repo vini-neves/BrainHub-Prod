@@ -4,6 +4,9 @@ import datetime
 import requests
 import zipfile
 import io
+import base64
+import hashlib
+import os
 from django.utils.text import slugify
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
@@ -28,7 +31,7 @@ from .models import (
 )
 from .forms import ClientForm, TenantAuthenticationForm, MediaFileForm, FolderForm
 from accounts.models import CustomUser
-from .services import MetaService, LinkedInService, TikTokService, PinterestService, YouTubeService
+from .services import MetaService, LinkedInService, TikTokService, PinterestService, YouTubeService, XService
 
 # ==============================================================================
 # 1. DASHBOARDS E VISÕES GERAIS
@@ -1294,6 +1297,60 @@ def youtube_auth_callback(request):
             messages.error(request, "Nenhum canal encontrado nesta conta do Google.")
     else:
         messages.error(request, "Falha na comunicação com YouTube.")
+
+    origin_url = request.session.get('social_auth_origin', '/social/')
+    return redirect(origin_url)
+
+# --- X / TWITTER ---
+
+@login_required
+def x_auth_start(request, client_id):
+    request.session['x_client_id'] = client_id
+    state = secrets.token_urlsafe(16)
+    request.session['x_oauth_state'] = state
+    request.session['social_auth_origin'] = request.META.get('HTTP_REFERER', '/social/')
+    
+    # GERADOR DE PKCE (A exigência de segurança do X)
+    code_verifier = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    ).decode('utf-8').rstrip('=')
+    
+    # Salva o verifier na sessão para usar depois
+    request.session['x_code_verifier'] = code_verifier
+    
+    service = XService()
+    return redirect(service.get_auth_url(state, settings.X_REDIRECT_URI, code_challenge))
+
+@login_required
+def x_auth_callback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    error = request.GET.get('error')
+
+    if error:
+        messages.error(request, "Conexão com X cancelada.")
+        return redirect(request.session.get('social_auth_origin', '/social/'))
+
+    if not state or state != request.session.get('x_oauth_state'):
+        messages.error(request, "Erro CSRF no X.")
+        return redirect('social_dashboard')
+
+    client_id = request.session.get('x_client_id')
+    code_verifier = request.session.get('x_code_verifier') # Pega a senha gerada antes
+    client = get_object_or_404(Client, pk=client_id)
+    
+    service = XService()
+    token_data = service.exchange_code_for_token(code, settings.X_REDIRECT_URI, code_verifier)
+
+    if token_data and 'access_token' in token_data:
+        account = service.save_account(token_data, client)
+        if account:
+            messages.success(request, f"X conectado: {account.account_name}")
+        else:
+            messages.error(request, "Erro ao salvar perfil do X.")
+    else:
+        messages.error(request, "Falha na comunicação com o X.")
 
     origin_url = request.session.get('social_auth_origin', '/social/')
     return redirect(origin_url)

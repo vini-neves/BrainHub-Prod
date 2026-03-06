@@ -425,3 +425,64 @@ class YouTubeService:
             )
             return account
         return None
+
+class XService:
+    def get_auth_url(self, state, redirect_uri, code_challenge):
+        base_url = "https://twitter.com/i/oauth2/authorize"
+        params = {
+            "response_type": "code",
+            "client_id": settings.X_CLIENT_ID,
+            "redirect_uri": redirect_uri,
+            # Permissões: Ler posts, ler conta, postar e manter acesso (offline)
+            "scope": "tweet.read users.read tweet.write offline.access", 
+            "state": state,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+        }
+        return f"{base_url}?{urllib.parse.urlencode(params)}"
+
+    def exchange_code_for_token(self, code, redirect_uri, code_verifier):
+        url = "https://api.twitter.com/2/oauth2/token"
+        data = {
+            "code": code,
+            "grant_type": "authorization_code",
+            "client_id": settings.X_CLIENT_ID,
+            "redirect_uri": redirect_uri,
+            "code_verifier": code_verifier,
+        }
+        # O X exige autenticação básica com o ID e Secret na hora de pegar o token
+        auth = HTTPBasicAuth(settings.X_CLIENT_ID, settings.X_CLIENT_SECRET)
+        response = requests.post(url, data=data, auth=auth)
+        return response.json()
+
+    def save_account(self, token_data, client):
+        access_token = token_data.get('access_token')
+        refresh_token = token_data.get('refresh_token')
+        
+        if not access_token:
+            return None
+
+        # Pega os dados do perfil do X logado
+        user_url = "https://api.twitter.com/2/users/me"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        
+        response = requests.get(user_url, headers=headers)
+        user_data = response.json()
+
+        if 'data' in user_data:
+            account_info = user_data['data']
+            # Usa o @username ou o Nome de exibição
+            account_name = f"@{account_info.get('username', 'usuario_x')}"
+            
+            account, created = SocialAccount.objects.update_or_create(
+                client=client,
+                platform='x', # Exatamente como está no seu template HTML
+                defaults={
+                    'account_name': account_name,
+                    'access_token': access_token,
+                    'refresh_token': refresh_token,
+                    'is_active': True
+                }
+            )
+            return account
+        return None

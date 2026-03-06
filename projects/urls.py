@@ -95,6 +95,10 @@ urlpatterns = [
     path('auth/youtube/start/<int:client_id>/', views.youtube_auth_start, name='youtube_auth_start'),
     path('auth/youtube/callback/', views.youtube_auth_callback, name='youtube_auth_callback'),
 
+    # --- X ---
+    path('auth/x/start/<int:client_id>/', views.x_auth_start, name='x_auth_start'),
+    path('auth/x/callback/', views.x_auth_callback, name='x_auth_callback'),
+
     # --- GESTÃO DE MÍDIA (DRIVE) ---
     path('media-center/', views.media_dashboard, name='media_dashboard'),
     path('client/<int:client_id>/media/', views.media_manager, name='media_root'),
