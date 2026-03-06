@@ -1,24 +1,8 @@
 {% extends "projects/base.html" %}
 
 {% block extra_css %}
-<style>
-    /* Estilos base para o Dashboard (Inline para evitar erro 500 de static) */
-    .dashboard-bg { background-color: #f8f9fc; padding: 20px; font-family: 'Inter', sans-serif; }
-    .card-dash { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.05); margin-bottom: 20px; background: #fff; }
-    .card-dash-body { padding: 1.25rem; }
-    .text-title-dash { font-weight: 600; color: #4e73df; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .text-value-big { font-size: 2rem; font-weight: 700; color: #202428; }
-    .text-value-small { font-size: 1.5rem; font-weight: 700; color: #202428; }
-    .badge-positive { background-color: #e3fbed; color: #1cc88a; font-weight: 600; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
-    .badge-negative { background-color: #fce4e4; color: #e74a3b; font-weight: 600; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
-    .icon-circle { height: 40px; width: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #f1f3f9; color: #4e73df; font-size: 1.2rem; margin-bottom: 10px; }
-    .progress-custom { height: 8px; border-radius: 10px; background-color: #eaecf4; margin-bottom: 15px; }
-    .progress-bar-custom { background-color: #4e73df; border-radius: 10px; }
-    .insight-box { border: 1px solid #e3e6f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fafbfc; border-left: 4px solid #f6c23e;}
-    .insight-box.blue { border-left-color: #4e73df; }
-    .insight-box.green { border-left-color: #1cc88a; }
-</style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
