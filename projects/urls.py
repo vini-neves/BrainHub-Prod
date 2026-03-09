@@ -79,6 +79,7 @@ urlpatterns = [
 
     # --- SOCIAL DASHBOARD & AUTH ---
     path('social/', views.social_dashboard, name='social_dashboard'),
+    path('social/studio/', views.create_post_studio, name='create_post_studio'),
     
     # --- META (FACEBOOK & INSTAGRAM) ---
     # Início Separado (Novas Funções)

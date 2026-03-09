@@ -1132,6 +1132,13 @@ def social_dashboard(request):
     clients = Client.objects.filter(is_active=True)
     return render(request, 'projects/social_dashboard.html', {'clients': clients})
 
+@login_required
+def create_post_studio(request):
+    """ View da tela do Estúdio de Criação de Posts """
+    client_id = request.GET.get('client_id')
+    # Por enquanto, apenas retorna uma mensagem mostrando que a rota funcionou
+    return HttpResponse(f"<h1>Estúdio de Criação 🚀</h1><p>Em breve: Criação de posts para o cliente ID: {client_id}</p>")
+
 # ==============================================================================
 # 6. AUTH SOCIAL (OAUTH)
 # ==============================================================================
