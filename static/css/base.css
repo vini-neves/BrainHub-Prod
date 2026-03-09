@@ -1,5 +1,14 @@
 /* static/css/base.css */
-
+:root {
+    --c-blue: #0099ff;
+    --c-dark: #1f2937;
+    --c-green: #10b981;
+    --c-red: #ef4444;
+    --c-gray: #6b7280;
+    --c-bg: #f3f4f6;
+    --c-border: #e5e7eb;
+    
+}
 /* Base e Layout Principal */
 body {
     font-family: 'SN Pro', sans-serif;
@@ -26,18 +35,8 @@ body {
     margin-bottom: 24px;
 }
 
-.page-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0;
-}
-
-.page-subtitle {
-    color: #6b7280;
-    font-size: 0.875rem;
-    margin-top: 4px;
-}
+.page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--c-dark); margin: 0; }
+.page-title p { color: var(--c-gray); margin: 5px 0 0 0; }
 
 .app-container {
     display: flex;
