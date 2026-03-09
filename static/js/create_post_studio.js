@@ -1,210 +1,240 @@
-// static/js/create_post_studio.js
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. CONFIGURAÇÃO DO CLIENTE E ESTILO DE IMAGEM GLOBAL
+    const clientName = "{{ selected_client.name|default:'Cliente'|escapejs }}";
+    let currentObjectFit = 'cover'; // Padrão: Preencher
 
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Inicializa ícones do Feather se disponível
-    if (typeof feather !== 'undefined') feather.replace();
+    document.querySelectorAll('.client-name-slot').forEach(slot => {
+        slot.textContent = clientName;
+    });
 
-    // --- ELEMENTOS DO DOM ---
-    const clientSelect = document.getElementById('post-client');
-    const channelBar = document.getElementById('channel-bar-container');
-    const captionInput = document.getElementById('input-caption');
-    const mediaInput = document.getElementById('input-media');
-    
-    // --- LISTA MESTRA DE PLATAFORMAS (Fixa) ---
-    // O JS vai desenhar ESSA lista, não importa o que venha do banco.
-    const SUPPORTED_PLATFORMS = [
-        { id: 'facebook', name: 'Facebook', icon: 'facebook-f', type: 'brands' },
-        { id: 'instagram', name: 'Instagram', icon: 'instagram', type: 'brands' },
-        { id: 'linkedin', name: 'LinkedIn', icon: 'linkedin-in', type: 'brands' },
-        { id: 'youtube', name: 'YouTube', icon: 'youtube', type: 'brands' },
-        { id: 'tiktok', name: 'TikTok', icon: 'tiktok', type: 'brands' },
-        { id: 'x', name: 'X (Twitter)', icon: 'x-twitter', type: 'brands' },
-        { id: 'threads', name: 'Threads', icon: 'threads', type: 'brands' },
-        { id: 'pinterest', name: 'Pinterest', icon: 'pinterest-p', type: 'brands' }
-    ];
+    // 2. TROCA DE PLATAFORMA (E INICIALIZAÇÃO)
+    const platformRadios = document.querySelectorAll('input[name="platform"]');
+    const platformLayouts = document.querySelectorAll('.platform-layout');
+    const previewLabelName = document.getElementById('preview-platform-name');
 
-    // --- FUNÇÃO DE RENDERIZAÇÃO ---
-    function renderChannelBar(clientId) {
-        channelBar.innerHTML = ''; 
-        
-        if (!clientId) {
-            channelBar.innerHTML = '<p style="color:#999; font-size:0.9em; width:100%; text-align:center;">Selecione um cliente acima para ver os canais.</p>';
-            return;
-        }
+    function activatePlatform(selectedPlatform) {
+        platformLayouts.forEach(layout => layout.classList.remove('active'));
+        const targetLayout = document.querySelector(`.layout-${selectedPlatform}`);
+        if (targetLayout) targetLayout.classList.add('active');
+        previewLabelName.textContent = selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1);
+    }
 
-        const clientAccounts = (typeof CLIENTS_MAP !== 'undefined' && CLIENTS_MAP[clientId]) ? CLIENTS_MAP[clientId] : {};
+    platformRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            activatePlatform(this.getAttribute('data-platform'));
+        });
+    });
 
-        SUPPORTED_PLATFORMS.forEach(platform => {
-            const account = clientAccounts[platform.id]; 
-            const isConnected = !!account;
+    // Ativa a primeira plataforma ao carregar a página
+    if(platformRadios.length > 0) {
+        platformRadios[0].checked = true;
+        activatePlatform(platformRadios[0].getAttribute('data-platform'));
+    }
 
-            const label = document.createElement('label');
-            label.className = 'channel-select-item';
-            
-            // Definimos o tipo de ícone (padrão 'brands' se não especificado)
-            const iconType = platform.type || 'brands';
+    // 3. SINCRONIZAÇÃO DA LEGENDA
+    const captionInput = document.getElementById('caption-input');
+    const charCounter = document.getElementById('char-counter');
+    const captionSlots = document.querySelectorAll('.caption-slot');
 
-            if (isConnected) {
-                // --- CONECTADO ---
-                label.title = `${platform.name}: ${account.name}`;
-                label.innerHTML = `
-                    <input type="checkbox" name="accounts" value="${account.id}" data-platform="${platform.id}">
-                    <div class="channel-icon-lg bg-${platform.id}">
-                        <i class="fa-${iconType} fa-${platform.icon}"></i>
-                    </div>
-                    <span class="channel-name-label">${platform.name}</span>
-                `;
-                
-                const checkbox = label.querySelector('input');
-                checkbox.addEventListener('change', () => {
-                    if (window.updateTabs) window.updateTabs();
-                });
-
+    function updateCaptionPreview(text) {
+        charCounter.textContent = `${text.length}/2200`;
+        captionSlots.forEach(slot => {
+            if (text.trim() === "") {
+                slot.textContent = "Sua legenda...";
+                slot.style.color = "#9ca3af";
             } else {
-                // --- DESCONECTADO ---
-                label.title = `Conectar ${platform.name}`;
-                label.innerHTML = `
-                    <div class="channel-icon-lg disconnected" onclick="redirectToConnect('${platform.name}')">
-                        <i class="fa-${iconType} fa-${platform.icon}"></i>
-                        <span class="plus-badge">+</span>
-                    </div>
-                    <span class="channel-name-label">${platform.name}</span>
-                `;
-            }
-
-            channelBar.appendChild(label);
-        });
-    
-
-        // Atualiza os ícones SVG
-        if (typeof feather !== 'undefined') feather.replace();
-    }
-
-    // --- FUNÇÃO PARA CONECTAR (Redirecionamento) ---
-    window.redirectToConnect = function(platformName) {
-        const targetUrl = (typeof SOCIAL_DASHBOARD_URL !== 'undefined') ? SOCIAL_DASHBOARD_URL : '/social/';
-        
-        Swal.fire({
-            title: `Conectar ${platformName}?`,
-            text: `Nenhuma conta vinculada. Deseja ir para a tela de conexões?`,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Ir para Conexões',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: 'var(--primary-color)'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.open(targetUrl, '_blank');
+                slot.textContent = text;
+                slot.style.color = ""; 
             }
         });
-    };
-
-    // --- INICIALIZAÇÃO DA TELA ---
-    
-    // 1. Verifica se veio cliente pré-selecionado da URL
-    if (typeof PRE_SELECTED_CLIENT_ID !== 'undefined' && PRE_SELECTED_CLIENT_ID && PRE_SELECTED_CLIENT_ID !== 'None') {
-        if(clientSelect) clientSelect.value = PRE_SELECTED_CLIENT_ID;
-        renderChannelBar(PRE_SELECTED_CLIENT_ID);
-        // Atualiza avatar
-        updateClientPreviewInfo(clientSelect);
     }
+    captionInput.addEventListener('input', (e) => updateCaptionPreview(e.target.value));
 
-    // 2. Listener para troca manual de cliente
-    if (clientSelect) {
-        clientSelect.addEventListener('change', function() {
-            renderChannelBar(this.value);
-            updateClientPreviewInfo(this);
+    // 4. CONTROLE DE AJUSTE DE IMAGEM (FIT)
+    const fitBtns = document.querySelectorAll('.fit-btn');
+    fitBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            fitBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentObjectFit = this.getAttribute('data-fit');
+            applyObjectFitToAllMedia();
+        });
+    });
+
+    function applyObjectFitToAllMedia() {
+        document.querySelectorAll('.mockup-carousel-item img, .mockup-carousel-item video').forEach(media => {
+            media.style.objectFit = currentObjectFit;
+            // Se for contain, coloca um fundo escuro elegante para preencher as bordas
+            media.style.backgroundColor = currentObjectFit === 'contain' ? '#111827' : 'transparent';
         });
     }
 
-    // --- (RESTO DO CÓDIGO: PREVIEW, UPLOAD, ETC.) ---
-    
-    function updateClientPreviewInfo(selectElement) {
-        if (selectElement.selectedIndex > -1) {
-            const opt = selectElement.options[selectElement.selectedIndex];
-            const name = opt.text;
-            const logo = opt.dataset.logo || "https://ui-avatars.com/api/?name=" + name + "&background=random";
+    // 5. UPLOAD DE MÍDIA E DRAG & DROP APRIMORADO
+    let selectedFiles = [];
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const emptyState = document.getElementById('dropzone-empty-state');
+    const thumbnailsGrid = document.getElementById('thumbnails-grid');
+
+    dropZone.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'LABEL' && !e.target.closest('.media-thumbnail') && !e.target.closest('.btn-remove-media')) {
+             fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const newFiles = Array.from(e.target.files);
+        if (newFiles.length > 0) {
+            emptyState.style.display = 'none';
+            thumbnailsGrid.style.display = 'flex';
+            document.getElementById('image-fit-controls').style.display = 'flex'; // Mostra os botões de ajuste
             
-            document.querySelectorAll('.client-name').forEach(el => el.innerText = name);
-            document.querySelectorAll('.client-avatar').forEach(el => el.src = logo);
+            newFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    selectedFiles.push({
+                        id: Date.now() + Math.random(),
+                        file: file,
+                        url: ev.target.result,
+                        type: file.type.startsWith('video/') ? 'video' : 'image'
+                    });
+                    renderThumbnails();
+                    renderMockup();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        fileInput.value = ''; 
+    });
+
+    function renderThumbnails() {
+        const items = thumbnailsGrid.querySelectorAll('.media-thumbnail');
+        items.forEach(i => i.remove());
+        const addBtn = thumbnailsGrid.querySelector('.btn-add-more-media');
+
+        selectedFiles.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'media-thumbnail';
+            div.draggable = true;
+            div.dataset.index = index;
+            
+            let content = item.type === 'video' 
+                ? `<video src="${item.url}" style="width:100%; height:100%; object-fit:cover;"></video>` 
+                : `<img src="${item.url}" alt="thumb" style="width:100%; height:100%; object-fit:cover;">`;
+
+            div.innerHTML = `
+                ${content}
+                <div class="drag-handle-overlay"><i class="fa-solid fa-arrows-up-down-left-right"></i></div>
+                <div class="btn-remove-media" onclick="removeFile(${index})"><i class="fa-solid fa-xmark"></i></div>
+            `;
+
+            // Eventos de Drag & Drop Melhorados
+            div.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.target.closest('.media-thumbnail').classList.add('dragging');
+            });
+
+            div.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const draggingItem = document.querySelector('.dragging');
+                const currentItem = e.target.closest('.media-thumbnail');
+                if(currentItem && currentItem !== draggingItem) {
+                    currentItem.classList.add('drag-over');
+                }
+            });
+
+            div.addEventListener('dragleave', (e) => {
+                const currentItem = e.target.closest('.media-thumbnail');
+                if(currentItem) currentItem.classList.remove('drag-over');
+            });
+
+            div.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const draggingItem = document.querySelector('.dragging');
+                const currentItem = e.target.closest('.media-thumbnail');
+                
+                if(draggingItem && currentItem && draggingItem !== currentItem) {
+                    currentItem.classList.remove('drag-over');
+                    const fromIndex = +draggingItem.dataset.index;
+                    const toIndex = +currentItem.dataset.index;
+                    
+                    // Troca os itens no array
+                    const itemToMove = selectedFiles[fromIndex];
+                    selectedFiles.splice(fromIndex, 1);
+                    selectedFiles.splice(toIndex, 0, itemToMove);
+                    
+                    renderThumbnails();
+                    renderMockup();
+                }
+            });
+
+            div.addEventListener('dragend', (e) => {
+                e.target.closest('.media-thumbnail').classList.remove('dragging');
+                document.querySelectorAll('.media-thumbnail').forEach(el => el.classList.remove('drag-over'));
+            });
+
+            thumbnailsGrid.insertBefore(div, addBtn);
+        });
+
+        if (selectedFiles.length === 0) {
+            emptyState.style.display = 'flex';
+            thumbnailsGrid.style.display = 'none';
+            document.getElementById('image-fit-controls').style.display = 'none';
         }
     }
 
-    if(captionInput) {
-        captionInput.addEventListener('input', function() {
-            const text = this.value || "Sua legenda...";
-            document.querySelectorAll('.caption-text').forEach(el => el.innerText = text);
-        });
-    }
-    
-    if(mediaInput) {
-        mediaInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const objectUrl = URL.createObjectURL(file);
-                const isVideo = file.type.startsWith('video/');
-                document.querySelectorAll('.placeholder-media').forEach(el => el.style.display = 'none');
-                
-                if (isVideo) {
-                    document.querySelectorAll('.preview-img').forEach(el => el.style.display = 'none');
-                    document.querySelectorAll('.preview-video').forEach(el => {
-                        el.src = objectUrl; el.style.display = 'block';
-                    });
-                } else {
-                    document.querySelectorAll('.preview-video').forEach(el => el.style.display = 'none');
-                    document.querySelectorAll('.preview-img').forEach(el => {
-                        el.src = objectUrl; el.style.display = 'block';
-                    });
-                }
-                const fileNameDisplay = document.getElementById('file-name-display');
-                if(fileNameDisplay) fileNameDisplay.innerText = file.name;
-            }
-        });
+    window.removeFile = function(index) {
+        selectedFiles.splice(index, 1);
+        renderThumbnails();
+        renderMockup();
     }
 
-    // SUBMIT FORM
-    const form = document.getElementById('create-post-form');
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            // Valida se tem conta selecionada
-            if(document.querySelectorAll('input[name="accounts"]:checked').length === 0) {
-                Swal.fire('Atenção', 'Selecione pelo menos uma rede social para publicar.', 'warning');
+    function renderMockup() {
+        document.querySelectorAll('.mock-media-container').forEach(container => {
+            if (selectedFiles.length === 0) {
+                container.style.display = 'flex';
+                container.innerHTML = `<span class="mock-media-placeholder-text" style="color:#9ca3af">Sua mídia aqui</span>`;
                 return;
             }
-            
-            const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerText = "Salvando...";
-            btn.disabled = true;
 
-            const formData = new FormData(this);
+            container.style.display = 'block'; 
+            let innerHTML = `<div class="mockup-carousel">`;
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': CSRF_TOKEN },
-                    body: formData
-                });
-                const result = await response.json();
-
-                if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sucesso!',
-                        text: 'Post agendado e enviado para o Kanban!'
-                    }).then(() => {
-                        window.location.href = KANBAN_URL;
-                    });
+            selectedFiles.forEach(item => {
+                innerHTML += `<div class="mockup-carousel-item">`;
+                if (item.type === 'video') {
+                    innerHTML += `<video src="${item.url}" controls playsinline style="width:100%; height:100%; object-fit:${currentObjectFit}; background-color:${currentObjectFit === 'contain' ? '#111827' : 'transparent'};"></video>`;
                 } else {
-                    Swal.fire('Erro', result.message, 'error');
+                    innerHTML += `<img src="${item.url}" style="width:100%; height:100%; object-fit:${currentObjectFit}; background-color:${currentObjectFit === 'contain' ? '#111827' : 'transparent'};">`;
                 }
-            } catch (error) {
-                Swal.fire('Erro', 'Falha na conexão.', 'error');
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                innerHTML += `</div>`;
+            });
+            innerHTML += `</div>`;
+
+            if (selectedFiles.length > 1) {
+                innerHTML += `<div class="carousel-counter-pill">1/${selectedFiles.length}</div>`;
+                innerHTML += `<div class="carousel-indicators">`;
+                selectedFiles.forEach((_, i) => innerHTML += `<div class="carousel-dot ${i===0 ? 'active' : ''}"></div>`);
+                innerHTML += `</div>`;
+            }
+
+            container.innerHTML = innerHTML;
+
+            if (selectedFiles.length > 1) {
+                const track = container.querySelector('.mockup-carousel');
+                const pill = container.querySelector('.carousel-counter-pill');
+                const dots = container.querySelectorAll('.carousel-dot');
+
+                if (track) {
+                    track.addEventListener('scroll', () => {
+                        const index = Math.round(track.scrollLeft / track.offsetWidth);
+                        if (index >= 0 && index < selectedFiles.length) {
+                            if(pill) pill.textContent = `${index + 1}/${selectedFiles.length}`;
+                            dots.forEach(d => d.classList.remove('active'));
+                            if (dots[index]) dots[index].classList.add('active');
+                        }
+                    });
+                }
             }
         });
     }

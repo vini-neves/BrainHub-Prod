@@ -1,50 +1,38 @@
 {% extends 'projects/base.html' %} 
 {% load static %}
 
-{% block content %} <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% block content %} 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/create_post.css' %}">
     
-    <style>
-        /* Suas variáveis de cor dinâmicas ficam aqui */
-        :root {
-        --primary-color: {{ agency_primary_color|default:"#333366" }};
-        --secondary-color: {{ agency_secondary_color|default:"#007bff" }};
-        --bg-light: #f3f4f6;
-        --text-dark: #1f2937;
-        --text-gray: #6b7280;
-        --border-color: #e5e7eb;
-        /* Cores das Marcas */
-        --fb-color: #1877F2; --insta-color: #E1306C; --x-color: #000000;
-        --linkedin-color: #0077B5; --pinterest-color: #E60023;
-        --youtube-color: #FF0000; --tiktok-color: #000000;
-    }
 
-   
-</style>
 
 <div class="create-post-container">
-    
     <div class="left-column">
         <div class="card-panel">
             <div class="section-header">
                 <div class="header-icon-box"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                 <div class="section-title">
                     <h2>Criar Postagem</h2>
-                    <p>Crie seu conteúdo perfeito para redes sociais</p>
+                    <p>Crie seu conteúdo perfeito para <strong style="color: var(--primary-color);">{{ selected_client.name }}</strong></p>
                 </div>
             </div>
 
             <div style="margin-bottom: 30px;">
+                <div class="input-label-row">
+                    <span>Mídia da Postagem</span>
+                    <div class="image-fit-controls" id="image-fit-controls">
+                        <button type="button" class="fit-btn active" data-fit="cover" title="Preencher espaço"><i class="fa-solid fa-expand"></i> Preencher</button>
+                        <button type="button" class="fit-btn" data-fit="contain" title="Mostrar imagem inteira"><i class="fa-solid fa-compress"></i> Ajustar</button>
+                    </div>
+                </div>
+
                 <div class="media-upload-area" id="drop-zone">
                     <label for="file-input" class="media-dropzone-empty" id="dropzone-empty-state">
                         <div class="dd-icon"><i class="fa-regular fa-image"></i></div>
                         <div class="dd-text">
                             <h4>Arraste sua mídia aqui</h4>
-                            <p>ou clique para navegar (múltiplos arquivos)</p>
-                        </div>
-                        <div class="dd-supported">
-                            <span><i class="fa-regular fa-file-image"></i> Imagens</span>
-                            <span><i class="fa-solid fa-video"></i> Vídeos</span>
+                            <p>ou clique para selecionar (múltiplos arquivos)</p>
                         </div>
                     </label>
                     <input type="file" id="file-input" multiple hidden accept="image/*,video/*">
@@ -56,6 +44,7 @@
                         </label>
                     </div>
                 </div>
+                <p style="font-size: 0.75rem; color: var(--text-gray); margin-top: 8px;">Dica: Arraste as miniaturas para reordenar a galeria.</p>
             </div>
 
             <div style="margin-bottom: 30px;">
@@ -79,558 +68,174 @@
                     <span class="hashtag-pill">#redessociais</span>
                     <span class="hashtag-pill">#conteudo</span>
                     <span class="hashtag-pill">#branding</span>
-                    <span class="hashtag-pill">#empreendedorismo</span>
-                    <span class="hashtag-pill">#smallbusiness</span>
-                    <span class="hashtag-pill">#startup</span>
                 </div>
             </div>
-        </div> </div>
+        </div> 
+    </div>
 
     <div class="right-column">
         <div class="platform-selector-bar">
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="facebook" class="platform-radio"><span class="platform-dot dot-fb"></span>Facebook</label>
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="instagram" class="platform-radio" checked><span class="platform-dot dot-insta"></span>Instagram</label>
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="x" class="platform-radio"><span class="platform-dot dot-x"></span>X</label>
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="linkedin" class="platform-radio"><span class="platform-dot dot-linkedin"></span>LinkedIn</label>
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="pinterest" class="platform-radio"><span class="platform-dot dot-pinterest"></span>Pinterest</label>
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="youtube" class="platform-radio"><span class="platform-dot dot-youtube"></span>YouTube</label>
-            <label class="platform-pill-label"><input type="radio" name="platform" data-platform="tiktok" class="platform-radio"><span class="platform-dot dot-tiktok"></span>TikTok</label>
+            {% for account in social_accounts %}
+                <label class="platform-pill-label">
+                    <input type="radio" name="platform" data-platform="{{ account.platform }}" class="platform-radio" {% if forloop.first %}checked{% endif %}>
+                    <span class="platform-dot dot-{{ account.platform }}"></span>{{ account.get_platform_display|default:account.platform|title }}
+                </label>
+            {% empty %}
+                <span class="platform-pill-label text-muted">Nenhuma rede social conectada para este cliente.</span>
+            {% endfor %}
         </div>
 
-        <div class="phone-frame">
-            <div class="phone-notch"></div>
-            <div class="phone-status-bar">
-                <span>9:41</span>
-                <span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-full"></i></span>
-            </div>
-
-            <div id="mockup-dynamic-content">
-                
-                <div class="platform-layout layout-instagram active">
-                    <div class="insta-header">
-                        <div class="user-block">
-                            <div class="mock-avatar"></div>
-                            <span class="mock-client-name client-name-slot">Nome do Cliente</span>
-                        </div>
-                        <i class="fa-solid fa-ellipsis"></i>
-                    </div>
-                    <div class="mock-media-container instagram-media">
-                        <img src="" alt="Preview" class="mock-media-image">
-                        <span class="mock-media-placeholder-text">Sua mídia aqui</span>
-                    </div>
-                    <div class="insta-actions">
-                        <i class="fa-regular fa-heart"></i>
-                        <i class="fa-regular fa-comment"></i>
-                        <i class="fa-regular fa-paper-plane"></i>
-                        <i class="fa-regular fa-bookmark" style="margin-left: auto;"></i>
-                    </div>
-                    <div class="insta-footer">
-                        <div class="likes-count">1,234 curtidas</div>
-                        <div>
-                            <span class="caption-user-prefix client-name-slot">Nome do Cliente</span>
-                            <span class="mock-caption-text caption-slot">Sua legenda...</span>
-                        </div>
-                    </div>
+        <div class="phone-frame-wrapper">
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-status-bar">
+                    <span>9:41</span>
+                    <span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-full"></i></span>
                 </div>
 
-                <div class="platform-layout layout-facebook">
-                    <div class="fb-header">
-                        <div class="fb-top-bar">facebook <i class="fa-solid fa-magnifying-glass"></i></div>
-                    </div>
-                    <div style="padding: 15px;">
-                         <div class="user-block-fb">
-                            <div class="mock-avatar"></div>
-                            <div>
-                                <span class="mock-client-name client-name-slot" style="display: block;">Nome do Cliente</span>
-                                <div class="meta-info">2h · <i class="fa-solid fa-earth-americas"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="fb-caption-area">
-                         <span class="mock-caption-text caption-slot">Sua legenda...</span>
-                    </div>
-                     <div class="mock-media-container facebook-media">
-                        <img src="" alt="Preview" class="mock-media-image">
-                        <span class="mock-media-placeholder-text">Sua mídia aqui</span>
-                    </div>
-                    <div class="fb-engagement-stats">
-                        <span><i class="fa-solid fa-thumbs-up" style="color: var(--fb-color)"></i> 42</span>
-                        <span>12 comentários · 5 compartilhamentos</span>
-                    </div>
-                    <div class="fb-actions-bar">
-                        <div class="fb-action-btn"><i class="fa-regular fa-thumbs-up"></i> Curtir</div>
-                        <div class="fb-action-btn"><i class="fa-regular fa-comment-alt"></i> Comentar</div>
-                        <div class="fb-action-btn"><i class="fa-solid fa-share"></i> Compartilhar</div>
-                    </div>
-                </div>
-
-                <div class="platform-layout layout-tiktok">
-                    <div class="mock-media-container tiktok-media">
-                        <img src="" alt="Preview" class="mock-media-image" style="object-fit: cover;">
-                        <span class="mock-media-placeholder-text" style="color: #fff;">Vídeo vertical aqui</span>
-                    </div>
+                <div id="mockup-dynamic-content">
                     
-                    <div class="tiktok-overlay-ui">
-                        <div style="text-align: center; font-weight: 700; margin-top: 10px;">Seguindo | Para Você</div>
-                        
-                        <div class="right-sidebar-actions">
-                            <div class="action-item">
-                                <div class="mock-avatar" style="border: 2px solid #fff;"></div>
-                            </div>
-                             <div class="action-item">
-                                <div class="action-icon-circle"><i class="fa-solid fa-heart" style="color: #fe2c55;"></i></div>
-                                <span>1.2K</span>
-                            </div>
-                            <div class="action-item">
-                                <div class="action-icon-circle"><i class="fa-solid fa-comment-dots"></i></div>
-                                <span>42</span>
-                            </div>
-                             <div class="action-item">
-                                <div class="action-icon-circle"><i class="fa-solid fa-bookmark"></i></div>
-                                <span>12</span>
-                            </div>
-                             <div class="action-item">
-                                <div class="action-icon-circle"><i class="fa-solid fa-share"></i></div>
-                                <span>Share</span>
-                            </div>
-                        </div>
-
-                        <div class="bottom-info-area">
-                            <span class="tiktok-username">@<span class="client-name-slot">Nome do Cliente</span></span>
-                            <span class="mock-caption-text caption-slot">Sua legenda...</span>
-                            <div style="margin-top: 10px; font-size: 0.8rem;"><i class="fa-solid fa-music"></i> Som original - <span class="client-name-slot">Nome do Cliente</span></div>
-                        </div>
-                    </div>
-
-                    <div class="tiktok-nav-bar">
-                        <div class="nav-item active"><i class="fa-solid fa-house"></i><br>Início</div>
-                        <div class="nav-item"><i class="fa-regular fa-compass"></i><br>Descobrir</div>
-                        <div class="plus-btn-nav"><i class="fa-solid fa-plus"></i></div>
-                        <div class="nav-item"><i class="fa-regular fa-message"></i><br>Caixa de Entrada</div>
-                        <div class="nav-item"><i class="fa-regular fa-user"></i><br>Perfil</div>
-                    </div>
-                </div>
-
-                <div class="platform-layout layout-x">
-                     <div class="x-header">
-                        <div class="mock-avatar"></div>
-                        <i class="fa-brands fa-x-twitter x-logo"></i>
-                        <i class="fa-solid fa-gear" style="color: transparent;"></i> </div>
-                    <div class="x-body">
-                        <div class="mock-avatar"></div>
-                        <div class="x-content-col">
-                            <div class="x-user-row">
+                    <div class="platform-layout layout-instagram">
+                        <div class="insta-header">
+                            <div class="user-block">
+                                <div class="mock-avatar"></div>
                                 <span class="mock-client-name client-name-slot">Nome do Cliente</span>
-                                <span class="x-handle">@<span class="client-name-slot">cliente</span></span>
-                                <span class="x-time">· 2h</span>
                             </div>
-                            <div class="mock-caption-text caption-slot" style="margin-bottom: 10px;">Sua legenda...</div>
-                            <div class="mock-media-container x-media">
-                                <img src="" alt="Preview" class="mock-media-image">
-                                <span class="mock-media-placeholder-text">Mídia</span>
-                            </div>
-                            <div class="x-actions-bar">
-                                <span class="x-action"><i class="fa-regular fa-comment"></i> 42</span>
-                                <span class="x-action"><i class="fa-solid fa-retweet"></i> 128</span>
-                                <span class="x-action"><i class="fa-regular fa-heart"></i> 1.2K</span>
-                                <span class="x-action"><i class="fa-solid fa-arrow-up-from-bracket"></i></span>
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </div>
+                        <div class="mock-media-container instagram-media">
+                            <span class="mock-media-placeholder-text">Sua mídia aqui</span>
+                        </div>
+                        <div class="insta-actions">
+                            <i class="fa-regular fa-heart"></i>
+                            <i class="fa-regular fa-comment"></i>
+                            <i class="fa-regular fa-paper-plane"></i>
+                            <i class="fa-regular fa-bookmark" style="margin-left: auto;"></i>
+                        </div>
+                        <div class="insta-footer">
+                            <div class="likes-count">1,234 curtidas</div>
+                            <div>
+                                <span class="caption-user-prefix client-name-slot">Nome do Cliente</span>
+                                <span class="mock-caption-text caption-slot">Sua legenda...</span>
                             </div>
                         </div>
                     </div>
-                     <div class="x-footer-nav">
-                        <i class="fa-solid fa-house"></i>
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <i class="fa-brands fa-x-twitter"></i>
-                        <i class="fa-regular fa-bell"></i>
-                        <i class="fa-regular fa-envelope"></i>
-                    </div>
-                </div>
 
-                 <div class="platform-layout layout-linkedin">
-                    <div class="li-header">
-                        <div class="mock-avatar"></div>
-                        <i class="fa-brands fa-linkedin"></i>
-                        <i class="fa-solid fa-magnifying-glass" style="color: var(--text-gray); font-size: 1.1rem;"></i>
-                    </div>
-                     <div class="user-block-li">
-                        <div class="mock-avatar" style="width: 48px; height: 48px;"></div>
-                        <div class="li-user-details">
-                            <span class="mock-client-name client-name-slot">Nome do Cliente</span>
-                            <span>1,234 seguidores</span>
-                            <span>2h · <i class="fa-solid fa-earth-americas"></i></span>
+                    <div class="platform-layout layout-facebook">
+                        <div class="fb-header">
+                            <div class="fb-top-bar">facebook <i class="fa-solid fa-magnifying-glass"></i></div>
                         </div>
-                        <i class="fa-solid fa-ellipsis" style="margin-left: auto; color: var(--text-gray);"></i>
-                    </div>
-                    <div class="li-caption-area">
-                         <span class="mock-caption-text caption-slot">Sua legenda...</span>
-                    </div>
-                     <div class="mock-media-container linkedin-media">
-                        <img src="" alt="Preview" class="mock-media-image">
-                        <span class="mock-media-placeholder-text">Mídia da postagem</span>
-                    </div>
-                     <div class="li-stats">
-                        <span><i class="fa-solid fa-thumbs-up" style="color: var(--linkedin-color)"></i> <i class="fa-solid fa-heart" style="color: var(--pinterest-color)"></i> 42</span>
-                        <span style="margin-left: auto;">12 comentários</span>
-                    </div>
-                     <div class="li-actions-bar">
-                        <div class="fb-action-btn"><i class="fa-regular fa-thumbs-up"></i> Gostei</div>
-                        <div class="fb-action-btn"><i class="fa-regular fa-comment-dots"></i> Comentar</div>
-                        <div class="fb-action-btn"><i class="fa-solid fa-share-nodes"></i> Compartilhar</div>
-                        <div class="fb-action-btn"><i class="fa-solid fa-paper-plane"></i> Enviar</div>
-                    </div>
-                </div>
-
-                 <div class="platform-layout layout-youtube">
-                     <div class="yt-header">
-                        <i class="fa-brands fa-youtube"></i>
-                        <div style="display: flex; gap: 15px; color: var(--text-dark);">
-                             <i class="fa-solid fa-cast"></i>
-                             <i class="fa-regular fa-bell"></i>
-                             <i class="fa-solid fa-magnifying-glass"></i>
+                        <div style="padding: 15px;">
+                             <div class="user-block-fb">
+                                <div class="mock-avatar"></div>
+                                <div>
+                                    <span class="mock-client-name client-name-slot" style="display: block;">Nome do Cliente</span>
+                                    <div class="meta-info">2h · <i class="fa-solid fa-earth-americas"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fb-caption-area">
+                             <span class="mock-caption-text caption-slot">Sua legenda...</span>
+                        </div>
+                         <div class="mock-media-container facebook-media">
+                            <span class="mock-media-placeholder-text">Sua mídia aqui</span>
+                        </div>
+                        <div class="fb-engagement-stats">
+                            <span><i class="fa-solid fa-thumbs-up" style="color: var(--facebook-color)"></i> 42</span>
+                            <span>12 comentários · 5 compart.</span>
+                        </div>
+                        <div class="fb-actions-bar">
+                            <div class="fb-action-btn"><i class="fa-regular fa-thumbs-up"></i> Curtir</div>
+                            <div class="fb-action-btn"><i class="fa-regular fa-comment-alt"></i> Comentar</div>
+                            <div class="fb-action-btn"><i class="fa-solid fa-share"></i> Compartilhar</div>
                         </div>
                     </div>
-                    <div class="mock-media-container youtube-media">
-                        <img src="" alt="Preview" class="mock-media-image">
-                        <span class="mock-media-placeholder-text" style="color: #fff;">Vídeo (16:9)</span>
-                        <i class="fa-solid fa-play" style="position: absolute; color: #fff; font-size: 3rem; opacity: 0.8;"></i>
-                    </div>
-                    <div class="yt-body">
-                         <div class="yt-video-title caption-slot">Título do seu vídeo...</div>
-                         <div class="yt-meta">
-                            <span class="client-name-slot">Nome do Cliente</span> · 1.2K visualizações · há 2 horas
-                         </div>
-                         <div class="yt-actions">
-                             <div class="yt-action-btn"><i class="fa-regular fa-thumbs-up"></i> 42</div>
-                             <div class="yt-action-btn"><i class="fa-regular fa-thumbs-down"></i> Não gostei</div>
-                             <div class="yt-action-btn"><i class="fa-solid fa-share"></i> Compartilhar</div>
-                             <div class="yt-action-btn"><i class="fa-solid fa-download"></i> Download</div>
-                         </div>
-                    </div>
-                     <div class="yt-footer-nav">
-                        <div class="yt-nav-item"><i class="fa-solid fa-house yt-nav-icon"></i>Início</div>
-                        <div class="yt-nav-item"><i class="fa-brands fa-youtube yt-nav-icon"></i>Shorts</div>
-                        <i class="fa-solid fa-circle-plus yt-plus-btn"></i>
-                        <div class="yt-nav-item"><i class="fa-solid fa-photo-film yt-nav-icon"></i>Inscrições</div>
-                        <div class="yt-nav-item"><i class="fa-regular fa-circle-user yt-nav-icon"></i>Você</div>
-                    </div>
-                </div>
-                
-                 </div> <div class="phone-home-indicator"></div>
-        </div> <div class="live-preview-label">Preview ao vivo • <span id="preview-platform-name">Instagram</span></div>
 
+                    <div class="platform-layout layout-tiktok">
+                        <div class="mock-media-container tiktok-media">
+                            <span class="mock-media-placeholder-text" style="color: #fff;">Vídeo vertical aqui</span>
+                        </div>
+                        <div class="tiktok-overlay-ui">
+                            <div style="text-align: center; font-weight: 700; margin-top: 10px;">Seguindo | Para Você</div>
+                            <div class="right-sidebar-actions">
+                                <div class="action-item"><div class="mock-avatar" style="border: 2px solid #fff;"></div></div>
+                                 <div class="action-item"><div class="action-icon-circle"><i class="fa-solid fa-heart" style="color: #fe2c55;"></i></div><span>1.2K</span></div>
+                                <div class="action-item"><div class="action-icon-circle"><i class="fa-solid fa-comment-dots"></i></div><span>42</span></div>
+                                 <div class="action-item"><div class="action-icon-circle"><i class="fa-solid fa-bookmark"></i></div><span>12</span></div>
+                                 <div class="action-item"><div class="action-icon-circle"><i class="fa-solid fa-share"></i></div><span>Share</span></div>
+                            </div>
+                            <div class="bottom-info-area">
+                                <span class="tiktok-username">@<span class="client-name-slot">cliente</span></span>
+                                <span class="mock-caption-text caption-slot">Sua legenda...</span>
+                                <div style="margin-top: 10px; font-size: 0.8rem;"><i class="fa-solid fa-music"></i> Som original - <span class="client-name-slot">cliente</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-layout layout-x">
+                         <div class="x-header">
+                            <div class="mock-avatar"></div>
+                            <i class="fa-brands fa-x-twitter x-logo"></i>
+                            <i class="fa-solid fa-gear" style="color: transparent;"></i> 
+                        </div>
+                        <div class="x-body">
+                            <div class="mock-avatar"></div>
+                            <div class="x-content-col">
+                                <div class="x-user-row">
+                                    <span class="mock-client-name client-name-slot">Nome do Cliente</span>
+                                    <span class="x-handle">@<span class="client-name-slot">cliente</span></span>
+                                    <span class="x-time">· 2h</span>
+                                </div>
+                                <div class="mock-caption-text caption-slot" style="margin-bottom: 10px;">Sua legenda...</div>
+                                <div class="mock-media-container x-media">
+                                    <span class="mock-media-placeholder-text">Mídia</span>
+                                </div>
+                                <div class="x-actions-bar">
+                                    <span class="x-action"><i class="fa-regular fa-comment"></i> 42</span>
+                                    <span class="x-action"><i class="fa-solid fa-retweet"></i> 128</span>
+                                    <span class="x-action"><i class="fa-regular fa-heart"></i> 1.2K</span>
+                                    <span class="x-action"><i class="fa-solid fa-arrow-up-from-bracket"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div class="platform-layout layout-linkedin">
+                        <div class="li-header">
+                            <div class="mock-avatar"></div>
+                            <i class="fa-brands fa-linkedin"></i>
+                            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-gray); font-size: 1.1rem;"></i>
+                        </div>
+                         <div class="user-block-li">
+                            <div class="mock-avatar" style="width: 48px; height: 48px;"></div>
+                            <div class="li-user-details">
+                                <span class="mock-client-name client-name-slot">Nome do Cliente</span>
+                                <span>1,234 seguidores</span>
+                                <span>2h · <i class="fa-solid fa-earth-americas"></i></span>
+                            </div>
+                            <i class="fa-solid fa-ellipsis" style="margin-left: auto; color: var(--text-gray);"></i>
+                        </div>
+                        <div class="li-caption-area">
+                             <span class="mock-caption-text caption-slot">Sua legenda...</span>
+                        </div>
+                         <div class="mock-media-container linkedin-media">
+                            <span class="mock-media-placeholder-text">Mídia da postagem</span>
+                        </div>
+                         <div class="li-stats">
+                            <span><i class="fa-solid fa-thumbs-up" style="color: var(--linkedin-color)"></i> <i class="fa-solid fa-heart" style="color: var(--pinterest-color)"></i> 42</span>
+                            <span style="margin-left: auto;">12 comentários</span>
+                        </div>
+                    </div>
+
+                </div> 
+                <div class="phone-home-indicator"></div>
+            </div> 
+            <div class="live-preview-label">Preview ao vivo • <span id="preview-platform-name">Instagram</span></div>
+        </div>
     </div>
 </div>
 
+{% block extra_js %}
+    <script src="{% static 'js/create_post_studio.js' %}"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // =================================================================
-        // 1. CONFIGURAÇÃO INICIAL (Nome do Cliente)
-        // =================================================================
-        // IMPORTANTE: Substitua a string abaixo pela variável do seu template Django.
-        // Exemplo: const clientName = "{{ current_client.name|escapejs }}";
-        const clientName = "{{ selected_client.name|default:'Cliente Genérico'|escapejs }}";
-
-        // Atualiza todos os lugares no mockup que mostram o nome do cliente
-        document.querySelectorAll('.client-name-slot').forEach(slot => {
-            slot.textContent = clientName;
-        });
-
-
-        // =================================================================
-        // 2. TROCA DE PLATAFORMA (Layouts do Mockup)
-        // =================================================================
-        const platformRadios = document.querySelectorAll('input[name="platform"]');
-        const platformLayouts = document.querySelectorAll('.platform-layout');
-        const previewLabelName = document.getElementById('preview-platform-name');
-
-        platformRadios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                const selectedPlatform = this.getAttribute('data-platform');
-                
-                // 1. Esconde todos os layouts
-                platformLayouts.forEach(layout => layout.classList.remove('active'));
-                
-                // 2. Mostra o layout selecionado
-                const targetLayout = document.querySelector(`.layout-${selectedPlatform}`);
-                if (targetLayout) {
-                    targetLayout.classList.add('active');
-                }
-
-                // 3. Atualiza o texto abaixo do celular
-                // Capitaliza a primeira letra (ex: facebook -> Facebook)
-                previewLabelName.textContent = selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1);
-            });
-        });
-
-
-        // =================================================================
-        // 3. SINCRONIZAÇÃO DA LEGENDA
-        // =================================================================
-        const captionInput = document.getElementById('caption-input');
-        const charCounter = document.getElementById('char-counter');
-        const maxChars = 2200;
-        const captionSlots = document.querySelectorAll('.caption-slot');
-        const defaultCaptionText = "Sua legenda...";
-
-        function updateCaptionPreview(text) {
-            // Atualiza o contador
-            charCounter.textContent = `${text.length}/${maxChars}`;
-
-            // Atualiza o texto em todos os layouts de mockup
-            captionSlots.forEach(slot => {
-                if (text.trim() === "") {
-                    slot.textContent = defaultCaptionText;
-                    slot.style.color = "#9ca3af"; // Cinza se vazio
-                } else {
-                    // Mantém quebras de linha
-                    slot.textContent = text;
-                    // Reseta a cor (alguns layouts usam branco, outros preto)
-                    slot.style.color = ""; 
-                }
-            });
-        }
-
-        captionInput.addEventListener('input', (e) => updateCaptionPreview(e.target.value));
-
-        // Inserir Hashtag ao clicar
-        document.querySelectorAll('.hashtag-pill').forEach(pill => {
-            pill.addEventListener('click', function() {
-                const currentText = captionInput.value;
-                // Adiciona espaço se já houver texto e não terminar com espaço
-                const spacing = (currentText.length > 0 && !currentText.endsWith(' ')) ? ' ' : '';
-                captionInput.value += spacing + this.textContent;
-                // Dispara o evento de input para atualizar o preview
-                captionInput.dispatchEvent(new Event('input'));
-            });
-        });
-
-
-        // =================================================================
-        // 4. UPLOAD DE MÍDIA E PREVIEW (Thumbnails)
-        // =================================================================
-        let selectedFiles = []; // Armazena objetos { file: File, id: uniqueId, url: string }
-
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const emptyState = document.getElementById('dropzone-empty-state');
-    const thumbnailsGrid = document.getElementById('thumbnails-grid');
-    
-    // Seleciona os containers de mídia de todos os layouts
-    const mockupContainers = document.querySelectorAll('.mock-media-container');
-
-    // --- Listeners de Upload ---
-    dropZone.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'LABEL' && !e.target.closest('.media-thumbnail') && !e.target.closest('.btn-remove-media')) {
-             fileInput.click();
-        }
-    });
-
-    fileInput.addEventListener('change', handleFilesSelect);
-
-    function handleFilesSelect(e) {
-        const newFiles = Array.from(e.target.files);
-        processFiles(newFiles);
-        // Limpa o input para permitir selecionar o mesmo arquivo novamente se quiser
-        fileInput.value = ''; 
-    }
-
-    function processFiles(files) {
-        if (files.length === 0) return;
-
-        // Esconde estado vazio
-        emptyState.style.display = 'none';
-        thumbnailsGrid.style.display = 'flex';
-
-        files.forEach(file => {
-            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                // Adiciona ao array global
-                selectedFiles.push({
-                    id: Date.now() + Math.random(), // ID único para reordenação
-                    file: file,
-                    url: e.target.result,
-                    type: file.type.startsWith('video/') ? 'video' : 'image'
-                });
-                
-                // Atualiza tudo
-                renderThumbnails();
-                renderMockup();
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // --- Renderiza as Thumbnails (Esquerda) com Drag & Drop ---
-    function renderThumbnails() {
-        // Limpa thumbnails atuais (mas mantém o botão de adicionar)
-        const items = thumbnailsGrid.querySelectorAll('.media-thumbnail');
-        items.forEach(i => i.remove());
-
-        const addBtn = thumbnailsGrid.querySelector('.btn-add-more-media');
-
-        selectedFiles.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'media-thumbnail';
-            div.draggable = true; // Habilita arrastar
-            div.dataset.index = index; // Guarda a posição original
-
-            // Conteúdo visual
-            let content = '';
-            if (item.type === 'video') {
-                content = `<video src="${item.url}" style="width:100%; height:100%; object-fit:cover;"></video>`;
-            } else {
-                content = `<img src="${item.url}" alt="thumb" style="width:100%; height:100%; object-fit:cover;">`;
-            }
-
-            div.innerHTML = `
-                ${content}
-                <div class="btn-remove-media" onclick="removeFile(${index})"><i class="fa-solid fa-xmark"></i></div>
-            `;
-
-            // Eventos de Drag & Drop
-            addDragEvents(div);
-
-            // Insere antes do botão "Adicionar"
-            thumbnailsGrid.insertBefore(div, addBtn);
-        });
-
-        // Se não tiver arquivos, volta o estado vazio
-        if (selectedFiles.length === 0) {
-            emptyState.style.display = 'flex';
-            thumbnailsGrid.style.display = 'none';
-        }
-    }
-
-    // --- Lógica de Arrastar (Reordenação) ---
-    let dragStartIndex;
-
-    function addDragEvents(element) {
-        element.addEventListener('dragstart', (e) => {
-            dragStartIndex = +e.target.closest('.media-thumbnail').dataset.index;
-            e.target.classList.add('dragging');
-        });
-
-        element.addEventListener('dragover', (e) => {
-            e.preventDefault(); // Necessário para permitir o drop
-        });
-
-        element.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const dragEndIndex = +e.target.closest('.media-thumbnail').dataset.index;
-            swapItems(dragStartIndex, dragEndIndex);
-            e.target.classList.remove('dragging');
-        });
-
-        element.addEventListener('dragend', (e) => {
-            e.target.classList.remove('dragging');
-        });
-    }
-
-    function swapItems(fromIndex, toIndex) {
-        if (fromIndex === undefined || toIndex === undefined || fromIndex === toIndex) return;
-        
-        // Troca os itens no array
-        const itemToMove = selectedFiles[fromIndex];
-        selectedFiles.splice(fromIndex, 1);
-        selectedFiles.splice(toIndex, 0, itemToMove);
-
-        // Re-renderiza tudo
-        renderThumbnails();
-        renderMockup();
-    }
-
-    // --- Função para remover arquivo ---
-    window.removeFile = function(index) {
-        // Stop propagation se necessário, mas aqui o onclick direto resolve
-        selectedFiles.splice(index, 1);
-        renderThumbnails();
-        renderMockup();
-    }
-
-
-    // --- Renderiza o Mockup do Celular (Direita) ---
-    function renderMockup() {
-        // Seleciona todos os containers de mídia (Instagram, Facebook, etc)
-        const mockupContainers = document.querySelectorAll('.mock-media-container');
-
-        mockupContainers.forEach(container => {
-            // 1. Limpa tudo
-            container.innerHTML = ''; 
-            
-            // 2. Verifica se está vazio
-            if (selectedFiles.length === 0) {
-                // Restaura o estado de placeholder
-                container.style.display = 'flex'; // Volta a ser flex para centralizar o texto
-                container.style.alignItems = 'center';
-                container.style.justifyContent = 'center';
-                container.innerHTML = `
-                    <span class="mock-media-placeholder-text" style="color:#9ca3af">Sua mídia aqui</span>
-                `;
-                return;
-            }
-
-            // 3. Monta o conteúdo (Carrossel ou Único)
-            // Removemos o estilo flex do container pai para o carrossel funcionar
-            container.style.display = 'block'; 
-
-            let innerHTML = `<div class="mockup-carousel">`;
-
-            selectedFiles.forEach(item => {
-                innerHTML += `<div class="mockup-carousel-item">`;
-                if (item.type === 'video') {
-                    // Adicionei playsinline para evitar que o vídeo abra em tela cheia no mobile/mockup
-                    innerHTML += `<video src="${item.url}" controls playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
-                } else {
-                    innerHTML += `<img src="${item.url}" style="width:100%; height:100%; object-fit:cover;">`;
-                }
-                innerHTML += `</div>`;
-            });
-
-            innerHTML += `</div>`; // Fecha .mockup-carousel
-
-            // Adiciona UI de Carrossel apenas se tiver mais de 1 arquivo
-            if (selectedFiles.length > 1) {
-                // Contador (1/X)
-                innerHTML += `<div class="carousel-counter-pill">1/${selectedFiles.length}</div>`;
-                
-                // Bolinhas
-                innerHTML += `<div class="carousel-indicators">`;
-                selectedFiles.forEach((_, i) => {
-                    innerHTML += `<div class="carousel-dot ${i===0 ? 'active' : ''}"></div>`;
-                });
-                innerHTML += `</div>`;
-            }
-
-            // Injeta o HTML
-            container.innerHTML = innerHTML;
-
-            // --- Lógica de Scroll (Para atualizar as bolinhas) ---
-            if (selectedFiles.length > 1) {
-                const track = container.querySelector('.mockup-carousel');
-                const pill = container.querySelector('.carousel-counter-pill');
-                const dots = container.querySelectorAll('.carousel-dot');
-
-                if (track) {
-                    track.addEventListener('scroll', () => {
-                        const width = track.offsetWidth;
-                        // Calcula qual slide está visível (scrollLeft / largura)
-                        const index = Math.round(track.scrollLeft / width);
-                        
-                        // Atualiza se o índice mudou e é válido
-                        if (index >= 0 && index < selectedFiles.length) {
-                            if(pill) pill.textContent = `${index + 1}/${selectedFiles.length}`;
-                            
-                            dots.forEach(d => d.classList.remove('active'));
-                            if (dots[index]) dots[index].classList.add('active');
-                        }
-                    });
-                }
-            }
-        });
-    }
-})
-</script>
 {% endblock %}
