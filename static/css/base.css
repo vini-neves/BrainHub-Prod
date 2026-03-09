@@ -81,6 +81,21 @@ body {
     margin-bottom: 20px;
 }
 
+.btn-add {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+.btn-add:hover { background-color: var(--secondary-color); color: white; }
+
 .nav-link {
     display: flex; /* Alinha ícone e texto */
     align-items: center;
