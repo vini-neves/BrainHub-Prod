@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 1. CONFIGURAÇÃO DO CLIENTE E ESTILO DE IMAGEM GLOBAL
-    const clientName = "{{ selected_client.name|default:'Cliente'|escapejs }}";
-    let currentObjectFit = 'cover'; // Padrão: Preencher
+    const clientName = window.CLIENT_NAME_FROM_DJANGO || "Cliente";
+    let currentObjectFit = 'cover'; 
 
     document.querySelectorAll('.client-name-slot').forEach(slot => {
         slot.textContent = clientName;
@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
         platformLayouts.forEach(layout => layout.classList.remove('active'));
         const targetLayout = document.querySelector(`.layout-${selectedPlatform}`);
         if (targetLayout) targetLayout.classList.add('active');
-        previewLabelName.textContent = selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1);
+        if(previewLabelName) {
+            previewLabelName.textContent = selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1);
+        }
     }
 
     platformRadios.forEach(radio => {
@@ -31,13 +33,13 @@ document.addEventListener('DOMContentLoaded', function() {
         activatePlatform(platformRadios[0].getAttribute('data-platform'));
     }
 
-    // 3. SINCRONIZAÇÃO DA LEGENDA
+    // 3. SINCRONIZAÇÃO DA LEGENDA (COM TRAVA DE SEGURANÇA)
     const captionInput = document.getElementById('caption-input');
     const charCounter = document.getElementById('char-counter');
     const captionSlots = document.querySelectorAll('.caption-slot');
 
     function updateCaptionPreview(text) {
-        charCounter.textContent = `${text.length}/2200`;
+        if(charCounter) charCounter.textContent = `${text.length}/2200`;
         captionSlots.forEach(slot => {
             if (text.trim() === "") {
                 slot.textContent = "Sua legenda...";
@@ -48,7 +50,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    captionInput.addEventListener('input', (e) => updateCaptionPreview(e.target.value));
+
+    // A trava de segurança contra o erro "null"
+    if (captionInput) {
+        captionInput.addEventListener('input', (e) => updateCaptionPreview(e.target.value));
+    }
 
     // 4. CONTROLE DE AJUSTE DE IMAGEM (FIT)
     const fitBtns = document.querySelectorAll('.fit-btn');
@@ -64,50 +70,52 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyObjectFitToAllMedia() {
         document.querySelectorAll('.mockup-carousel-item img, .mockup-carousel-item video').forEach(media => {
             media.style.objectFit = currentObjectFit;
-            // Se for contain, coloca um fundo escuro elegante para preencher as bordas
             media.style.backgroundColor = currentObjectFit === 'contain' ? '#111827' : 'transparent';
         });
     }
 
-    // 5. UPLOAD DE MÍDIA E DRAG & DROP APRIMORADO
+    // 5. UPLOAD DE MÍDIA E DRAG & DROP 
     let selectedFiles = [];
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
     const emptyState = document.getElementById('dropzone-empty-state');
     const thumbnailsGrid = document.getElementById('thumbnails-grid');
 
-    dropZone.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'LABEL' && !e.target.closest('.media-thumbnail') && !e.target.closest('.btn-remove-media')) {
-             fileInput.click();
-        }
-    });
+    if(dropZone && fileInput) {
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'LABEL' && !e.target.closest('.media-thumbnail') && !e.target.closest('.btn-remove-media')) {
+                 fileInput.click();
+            }
+        });
 
-    fileInput.addEventListener('change', (e) => {
-        const newFiles = Array.from(e.target.files);
-        if (newFiles.length > 0) {
-            emptyState.style.display = 'none';
-            thumbnailsGrid.style.display = 'flex';
-            document.getElementById('image-fit-controls').style.display = 'flex'; // Mostra os botões de ajuste
-            
-            newFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    selectedFiles.push({
-                        id: Date.now() + Math.random(),
-                        file: file,
-                        url: ev.target.result,
-                        type: file.type.startsWith('video/') ? 'video' : 'image'
-                    });
-                    renderThumbnails();
-                    renderMockup();
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-        fileInput.value = ''; 
-    });
+        fileInput.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files);
+            if (newFiles.length > 0) {
+                if(emptyState) emptyState.style.display = 'none';
+                if(thumbnailsGrid) thumbnailsGrid.style.display = 'flex';
+                document.getElementById('image-fit-controls').style.display = 'flex'; 
+                
+                newFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        selectedFiles.push({
+                            id: Date.now() + Math.random(),
+                            file: file,
+                            url: ev.target.result,
+                            type: file.type.startsWith('video/') ? 'video' : 'image'
+                        });
+                        renderThumbnails();
+                        renderMockup();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+            fileInput.value = ''; 
+        });
+    }
 
     function renderThumbnails() {
+        if(!thumbnailsGrid) return;
         const items = thumbnailsGrid.querySelectorAll('.media-thumbnail');
         items.forEach(i => i.remove());
         const addBtn = thumbnailsGrid.querySelector('.btn-add-more-media');
@@ -128,7 +136,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="btn-remove-media" onclick="removeFile(${index})"><i class="fa-solid fa-xmark"></i></div>
             `;
 
-            // Eventos de Drag & Drop Melhorados
             div.addEventListener('dragstart', (e) => {
                 e.dataTransfer.effectAllowed = 'move';
                 e.target.closest('.media-thumbnail').classList.add('dragging');
@@ -158,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const fromIndex = +draggingItem.dataset.index;
                     const toIndex = +currentItem.dataset.index;
                     
-                    // Troca os itens no array
                     const itemToMove = selectedFiles[fromIndex];
                     selectedFiles.splice(fromIndex, 1);
                     selectedFiles.splice(toIndex, 0, itemToMove);
@@ -173,11 +179,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.media-thumbnail').forEach(el => el.classList.remove('drag-over'));
             });
 
-            thumbnailsGrid.insertBefore(div, addBtn);
+            if(addBtn) thumbnailsGrid.insertBefore(div, addBtn);
         });
 
         if (selectedFiles.length === 0) {
-            emptyState.style.display = 'flex';
+            if(emptyState) emptyState.style.display = 'flex';
             thumbnailsGrid.style.display = 'none';
             document.getElementById('image-fit-controls').style.display = 'none';
         }
@@ -235,6 +241,68 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 }
+            }
+        });
+    }
+
+    // 6. ENVIAR PARA A API (SALVAR POST)
+    const form = document.getElementById('create-post-form');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if(selectedFiles.length === 0) {
+                Swal.fire('Atenção', 'Adicione pelo menos uma imagem ou vídeo.', 'warning');
+                return;
+            }
+
+            // Verifica se tem alguma rede social conectada para esse cliente
+            const platforms = document.querySelectorAll('input[name="platform"]');
+            if(platforms.length === 0) {
+                 Swal.fire('Atenção', 'Este cliente não tem nenhuma rede social conectada.', 'warning');
+                 return;
+            }
+
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Salvando...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            
+            selectedFiles.forEach((item) => {
+                formData.append('media_files', item.file);
+            });
+
+            try {
+                // Aqui você vai apontar para a sua URL real de salvar no Django
+                const response = await fetch('/api/social/create_post/', { 
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: 'Post agendado e enviado para o Kanban!'
+                    }).then(() => {
+                        window.location.href = window.DASHBOARD_URL;
+                    });
+                } else {
+                    Swal.fire('Erro', result.message || 'Erro ao criar post.', 'error');
+                }
+            } catch (error) {
+                Swal.fire('Erro', 'Rota de salvar post ainda não configurada.', 'info');
+                console.log(error);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
     }

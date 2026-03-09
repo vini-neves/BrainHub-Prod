@@ -4,12 +4,13 @@
 {% block content %} 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/create_post.css' %}">
-    {% endblock %}
-
 
 <div class="create-post-container">
     <div class="left-column">
-        <div class="card-panel">
+        <form class="card-panel" id="create-post-form">
+            {% csrf_token %}
+            <input type="hidden" name="client_id" value="{{ selected_client.id }}">
+            
             <div class="section-header">
                 <div class="header-icon-box"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                 <div class="section-title">
@@ -53,7 +54,7 @@
                     <span class="char-count" id="char-counter">0/2200</span>
                 </div>
                 <div class="caption-box">
-                    <textarea id="caption-input" class="caption-textarea" placeholder="Escreva sua legenda aqui..."></textarea>
+                    <textarea id="caption-input" name="caption" class="caption-textarea" placeholder="Escreva sua legenda aqui..."></textarea>
                     <div class="caption-toolbar">
                         <i class="fa-regular fa-face-smile" title="Emoji"></i>
                         <i class="fa-solid fa-hashtag" title="Hashtag"></i>
@@ -70,7 +71,11 @@
                     <span class="hashtag-pill">#branding</span>
                 </div>
             </div>
-        </div> 
+
+            <button type="submit" class="btn w-100 py-3 mt-4 fw-bold" style="background-color: var(--primary-color, #333366); border:none; border-radius:10px; color:white; font-size:1.1rem; cursor:pointer;">
+                <i class="fa-solid fa-paper-plane me-2"></i> Agendar Postagem
+            </button>
+        </form> 
     </div>
 
     <div class="right-column">
@@ -234,8 +239,15 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Passando a variável Django para o JavaScript globalmente
+        window.CLIENT_NAME_FROM_DJANGO = "{{ selected_client.name|default:'Cliente'|escapejs }}";
+        // URL de redirecionamento para o dashboard
+        window.DASHBOARD_URL = "{% url 'social_dashboard' %}";
+    </script>
     <script src="{% static 'js/create_post_studio.js' %}"></script>
-
 {% endblock %}
