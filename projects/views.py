@@ -1140,15 +1140,19 @@ def create_post_studio(request):
     client_id = request.GET.get('client_id') 
     
     if not client_id:
-        return redirect('social_dashboard') # Volta se tentar acessar direto sem ID
+        return redirect('social_dashboard')
         
-    # Busca o cliente real no banco de dados
+    # 1. Busca o cliente real no banco de dados
     selected_client = get_object_or_404(Client, pk=client_id)
     
+    # 2. Busca as redes sociais conectadas deste cliente
+    # Tenta usar o related_name 'social_accounts' ou o padrão 'socialaccount_set' do Django
+    qs = getattr(selected_client, 'social_accounts', getattr(selected_client, 'socialaccount_set', None))
+    social_accounts = qs.filter(is_active=True) if qs else []
+    
     context = {
-        # Esta variável é a que o seu HTML está esperando na linha 257:
-        # const clientName = "{{ selected_client.name|default:'Cliente Genérico'|escapejs }}";
         'selected_client': selected_client, 
+        'social_accounts': social_accounts, # <- AQUI ESTAVA FALTANDO!
     }
     
     return render(request, 'projects/create_post_studio.html', context)

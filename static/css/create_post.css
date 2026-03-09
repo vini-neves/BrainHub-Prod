@@ -55,13 +55,13 @@
 
 .section-title h2 {
     font-size: 1.5rem;
-    color: var(--text-dark);
+    color: var(--c-dark);
     margin: 0;
     font-weight: 700;
 }
 
 .section-title p {
-    color: var(--text-gray);
+    color: var(--c-gray);
     margin: 5px 0 0 0;
 }
 
@@ -74,7 +74,7 @@
     align-items: center;
     margin-bottom: 8px;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--c-dark);
     font-size: 0.95rem;
 }
 
@@ -103,7 +103,7 @@
 }
 
 .fit-btn:hover {
-    color: var(--text-dark);
+    color: var(--c-dark);
 }
 
 .fit-btn.active {
@@ -147,13 +147,13 @@
 
 .dd-icon {
     font-size: 48px;
-    color: var(--text-gray);
+    color: var(--c-gray);
     margin-bottom: 15px;
     opacity: 0.5;
 }
 
 .dd-text h4 {
-    color: var(--text-dark);
+    color: var(--c-dark);
     margin-bottom: 5px;
     font-weight: 600;
 }
@@ -259,7 +259,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text-gray);
+    color: var(--c-gray);
     cursor: pointer;
     background: #fff;
     transition: all 0.2s;
@@ -275,7 +275,7 @@
       LEGENDA E HASHTAGS
       ========================================================================== */
 .char-count {
-    color: var(--text-gray);
+    color: var(--c-gray);
     font-weight: normal;
     font-size: 0.85rem;
 }
@@ -299,14 +299,14 @@ textarea.caption-textarea {
     height: 120px;
     font-size: 1rem;
     outline: none;
-    color: var(--text-dark);
+    color: var(--c-dark);
     font-family: inherit;
 }
 
 .caption-toolbar {
     display: flex;
     gap: 15px;
-    color: var(--text-gray);
+    color: var(--c-gray);
     font-size: 20px;
     margin-top: 10px;
     cursor: pointer;
@@ -327,7 +327,7 @@ textarea.caption-textarea {
 
 .hashtag-pill {
     background: var(--bg-light);
-    color: var(--text-gray);
+    color: var(--c-gray);
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -338,7 +338,7 @@ textarea.caption-textarea {
 
 .hashtag-pill:hover {
     background: #e5e7eb;
-    color: var(--text-dark);
+    color: var(--c-dark);
 }
 
 /* ==========================================================================
@@ -369,7 +369,7 @@ textarea.caption-textarea {
     border-radius: 20px;
     cursor: pointer;
     font-weight: 600;
-    color: var(--text-gray);
+    color: var(--c-gray);
     font-size: 0.9rem;
     transition: all 0.3s;
     background: transparent;
@@ -411,7 +411,7 @@ textarea.caption-textarea {
 
 .platform-radio:checked+.platform-pill-label {
     background: #f3f4f6;
-    color: var(--text-dark);
+    color: var(--c-dark);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -482,7 +482,7 @@ textarea.caption-textarea {
 .live-preview-label {
     text-align: center;
     margin-top: 15px;
-    color: var(--text-gray);
+    color: var(--c-gray);
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -534,7 +534,7 @@ textarea.caption-textarea {
 
 .mock-caption-text {
     font-size: 0.9rem;
-    color: var(--text-dark);
+    color: var(--c-dark);
     line-height: 1.4;
     white-space: pre-wrap;
 }
@@ -692,7 +692,7 @@ textarea.caption-textarea {
 
 .layout-facebook .meta-info {
     font-size: 0.8rem;
-    color: var(--text-gray);
+    color: var(--c-gray);
 }
 
 .layout-facebook .fb-caption-area {
@@ -708,7 +708,7 @@ textarea.caption-textarea {
     display: flex;
     justify-content: space-between;
     font-size: 0.85rem;
-    color: var(--text-gray);
+    color: var(--c-gray);
     border-bottom: 1px solid #eee;
 }
 
@@ -716,7 +716,7 @@ textarea.caption-textarea {
     display: flex;
     justify-content: space-around;
     padding: 10px 0;
-    color: var(--text-gray);
+    color: var(--c-gray);
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -818,7 +818,7 @@ textarea.caption-textarea {
 
 .layout-x .x-handle,
 .layout-x .x-time {
-    color: var(--text-gray);
+    color: var(--c-gray);
 }
 
 .layout-x .mock-media-container {
@@ -831,7 +831,7 @@ textarea.caption-textarea {
     margin-top: 15px;
     display: flex;
     justify-content: space-between;
-    color: var(--text-gray);
+    color: var(--c-gray);
     font-size: 0.9rem;
 }
 
@@ -854,7 +854,7 @@ textarea.caption-textarea {
     display: flex;
     flex-direction: column;
     font-size: 0.85rem;
-    color: var(--text-gray);
+    color: var(--c-gray);
 }
 
 .layout-linkedin .li-caption-area {
@@ -870,6 +870,6 @@ textarea.caption-textarea {
     display: flex;
     justify-content: space-between;
     font-size: 0.8rem;
-    color: var(--text-gray);
+    color: var(--c-gray);
     border-bottom: 1px solid #eee;
 }
