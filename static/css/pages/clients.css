@@ -108,9 +108,9 @@
 .bg-in { background: #0077b5; }
 .bg-tik { background: #000; }
 .bg-pinterest { background: #bd081c; }
-.bg-threads { background: #000; }
+.bg-threads { background: #505050; }
 .bg-yt { background: #ff0000; }
-.bg-x { background: #000; }
+.bg-x { background: #505050; }
 
 .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; white-space: nowrap;}
 .badge-active { background: #d1fae5; color: #065f46; }
