@@ -2,103 +2,104 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/social.css' %}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="{% static 'css/social.css' %}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 {% endblock %}
 
 {% block title %}Social Dashboard{% endblock %}
 
 {% block content %}
-    <div class="social-header">
-        <div>
-            <h1>Dashboard de Publicações</h1>
-            <p>Visão geral de todos os clientes da agência.</p>
-        </div>
-        <button onclick="openClientSelector()" class="form-button" style="background-color: var(--primary-color);">
-            <i data-feather="plus-square" style="margin-right:8px"></i> Agendar Novo Post
-        </button>
-    </div>
 
-    <div class="list-card">
-        <h3>Histórico de Postagens (Todos os Clientes)</h3>
-        <table id="posts-table" class="styled-table" style="width:100%">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Cliente</th>
-                    <th>Conteúdo</th>
-                    <th>Canais</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for post in posts_history %}
-                <tr>
-                    <td>{{ post.scheduled_for|date:"d/m/Y H:i" }}</td>
-                    <td><span style="font-weight:bold; color:var(--primary-color)">{{ post.client.name }}</span></td>
-                    <td>{{ post.caption|truncatechars:40 }}</td>
-                    <td>
-                        <div class="platform-icons-row">
+<div class="page-header">
+    <div class="page-title">
+        <h1>Dashboard de Publicações</h1>
+        <p>Visão geral de todos os clientes da agência.</p>
+    </div>
+    <button onclick="openClientSelector()" class="form-button" style="background-color: var(--primary-color);">
+        <i data-feather="plus-square" style="margin-right:8px"></i> Agendar Novo Post
+    </button>
+</div>
+
+<div class="modern-table-container">
+    <h3>Histórico de Postagens (Todos os Clientes)</h3>
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Conteúdo</th>
+                <th>Canais</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts_history %}
+            <tr>
+                <td>{{ post.scheduled_for|date:"d/m/Y H:i" }}</td>
+                <td><span style="font-weight:bold; color:var(--primary-color)">{{ post.client.name }}</span></td>
+                <td>{{ post.caption|truncatechars:40 }}</td>
+                <td>
+                    <div class="platform-icons-row">
                         {% for acc in post.accounts.all %}
-                            <i data-feather="{{ acc.platform }}" class="icon-small"></i>
+                        <i data-feather="{{ acc.platform }}" class="icon-small"></i>
                         {% endfor %}
-                        </div>
-                    </td>
-                    <td>
-                        {% if post.approval_status == 'approved_to_schedule' %}
-                            <span class="badge badge-success">Agendado</span>
-                        {% elif post.approval_status == 'draft' %}
-                            <span class="badge badge-gray">Rascunho</span>
-                        {% else %}
-                            <span class="badge badge-warning">{{ post.get_approval_status_display }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="#" class="icon-btn"><i data-feather="edit-2"></i></a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    </div>
+                </td>
+                <td>
+                    {% if post.approval_status == 'approved_to_schedule' %}
+                    <span class="badge badge-success">Agendado</span>
+                    {% elif post.approval_status == 'draft' %}
+                    <span class="badge badge-gray">Rascunho</span>
+                    {% else %}
+                    <span class="badge badge-warning">{{ post.get_approval_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="#" class="icon-btn"><i data-feather="edit-2"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function openClientSelector() {
-            Swal.fire({
-                title: 'Selecione o Cliente',
-                text: 'Para qual cliente você deseja criar o post?',
-                input: 'select',
-                inputOptions: {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function openClientSelector() {
+        Swal.fire({
+            title: 'Selecione o Cliente',
+            text: 'Para qual cliente você deseja criar o post?',
+            input: 'select',
+            inputOptions: {
                     {% for client in clients %}
-                        '{{ client.id }}': '{{ client.name }}',
-                    {% endfor %}
+    '{{ client.id }}': '{{ client.name }}',
+        {% endfor %}
                 },
-                inputPlaceholder: 'Selecione um cliente...',
-                showCancelButton: true,
-                confirmButtonText: 'Continuar para o Estúdio',
+    inputPlaceholder: 'Selecione um cliente...',
+        showCancelButton: true,
+            confirmButtonText: 'Continuar para o Estúdio',
                 confirmButtonColor: 'var(--primary-color)',
             }).then((result) => {
-                if (result.isConfirmed && result.value) {
-                    // Redireciona para o estúdio com o ID na URL
-                    window.location.href = "{% url 'create_post_studio' %}?client_id=" + result.value;
-                }
-            });
+                    if (result.isConfirmed && result.value) {
+                        // Redireciona para o estúdio com o ID na URL
+                        window.location.href = "{% url 'create_post_studio' %}?client_id=" + result.value;
+                    }
+                });
         }
-    </script>
+</script>
 {% endblock %}
 
 {% block extra_js %}
-    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#posts-table').DataTable({
-                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
-                "order": [[ 0, "desc" ]] // Ordena por data decrescente
-            });
-            feather.replace();
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#posts-table').DataTable({
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            "order": [[0, "desc"]] // Ordena por data decrescente
         });
-    </script>
+        feather.replace();
+    });
+</script>
 {% endblock %}
