@@ -873,3 +873,25 @@ textarea.caption-textarea {
     color: var(--c-gray);
     border-bottom: 1px solid #eee;
 }
+
+/* SETAS DE NAVEGAÇÃO DO CARROSSEL NO MOCKUP */
+.carousel-nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 30;
+    transition: 0.2s;
+    font-size: 14px;
+}
+.carousel-nav-arrow:hover { background: rgba(0, 0, 0, 0.9); transform: translateY(-50%) scale(1.1); }
+.carousel-nav-arrow.left-arrow { left: 8px; }
+.carousel-nav-arrow.right-arrow { right: 8px; }

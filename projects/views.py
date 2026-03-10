@@ -1160,42 +1160,48 @@ def create_post_studio(request):
 @login_required
 @require_POST
 def create_post_api(request):
-    """ API que recebe os dados do Estúdio e salva na tabela POST """
+    """ API que recebe os dados do Estúdio e salva no Kanban (Tabela Task) """
     try:
         # 1. Pega os dados do Formulário
         client_id = request.POST.get('client_id')
         caption = request.POST.get('caption')
         scheduled_for = request.POST.get('scheduled_for')
-        
-        # MUDANÇA AQUI: getlist() em vez de get() captura TODOS os checkboxes marcados
-        account_ids = request.POST.getlist('platforms') 
-        
-        media_files = request.FILES.getlist('media_files')
+        account_ids = request.POST.getlist('platforms') # A lista de IDs selecionados
+        media_files = request.FILES.getlist('media_files') # Múltiplos arquivos (se houver)
 
         client = get_object_or_404(Client, id=client_id)
 
-        # 2. Cria o Post "Pai" no banco de dados
-        novo_post = Post.objects.create(
+        # 2. Como o Estúdio pode salvar para várias redes, vamos descobrir o nome principal para salvar no Kanban
+        main_platform_name = 'instagram' # Default
+        if account_ids:
+            first_account = SocialAccount.objects.filter(id=account_ids[0]).first()
+            if first_account:
+                main_platform_name = first_account.platform
+
+        # 3. Cria a Tarefa no Kanban Operacional
+        nova_tarefa = Task.objects.create(
+            kanban_type='operational', # Define que é uma tarefa de Social Media
+            status='scheduled', # Ou 'briefing', 'review_internal', conforme seu fluxo
             client=client,
-            caption=caption,
-            scheduled_for=scheduled_for,
-            approval_status='approved_to_schedule'
+            title=f"Post Agendado - {client.name[:15]}", # Um título automático
+            caption_content=caption, # Salva a legenda no campo correto da Task
+            scheduled_date=scheduled_for,
+            social_network=main_platform_name,
+            content_type='feed', # Padrão, você pode mudar se quiser
+            created_by=request.user
         )
 
-        # 3. MUDANÇA AQUI: Vincula MÚLTIPLAS Redes Sociais ao Post
-        if account_ids:
-            # Busca todas as contas reais que batem com os IDs selecionados
-            accounts = SocialAccount.objects.filter(id__in=account_ids)
-            
-            # O asterisco (*) injeta todas as redes de uma vez no campo ManyToMany
-            novo_post.accounts.add(*accounts)
+        # 4. Salva a primeira imagem enviada no campo "final_art" da Task
+        if media_files:
+            # O campo final_art no seu models só aceita um arquivo, então pegamos o primeiro
+            nova_tarefa.final_art = media_files[0]
+            nova_tarefa.save()
 
-        # (Aqui vai a parte de salvar mídias se você tiver a tabela PostMedia)
-
-        return JsonResponse({'status': 'success', 'message': 'Post agendado com sucesso!'})
+        # 5. Sucesso!
+        return JsonResponse({'status': 'success', 'message': 'Post enviado para o Kanban com sucesso!'})
         
     except Exception as e:
-        print(f"Erro ao salvar post: {e}")
+        print(f"Erro ao salvar post no Kanban: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 # ==============================================================================
 # 6. AUTH SOCIAL (OAUTH)

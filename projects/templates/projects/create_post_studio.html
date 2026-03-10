@@ -1,8 +1,11 @@
 {% extends 'projects/base.html' %} 
 {% load static %}
 
-{% block content %} 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
     <link rel="stylesheet" href="{% static 'css/create_post.css' %}">
 
 <div class="create-post-container">
@@ -22,9 +25,10 @@
             <div style="margin-bottom: 30px;">
                 <div class="input-label-row">
                     <span>Mídia da Postagem</span>
-                    <div class="image-fit-controls" id="image-fit-controls">
-                        <button type="button" class="fit-btn active" data-fit="cover" title="Preencher espaço"><i class="fa-solid fa-expand"></i> Preencher</button>
-                        <button type="button" class="fit-btn" data-fit="contain" title="Mostrar imagem inteira"><i class="fa-solid fa-compress"></i> Ajustar</button>
+                    <div class="image-fit-controls" id="image-fit-controls" style="display: none;">
+                        <button type="button" class="fit-btn active" data-fit="cover"><i class="fa-solid fa-expand"></i> Preencher</button>
+                        <button type="button" class="fit-btn" data-fit="contain"><i class="fa-solid fa-compress"></i> Ajustar</button>
+                        <button type="button" class="fit-btn text-primary border-primary" onclick="openImageEditor()"><i class="fa-solid fa-crop-simple"></i> Enquadrar</button>
                     </div>
                 </div>
 

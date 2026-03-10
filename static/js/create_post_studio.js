@@ -226,7 +226,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             innerHTML += `</div>`;
 
+            // SE TIVER MAIS DE UMA IMAGEM, MOSTRA SETAS E BOLINHAS
             if (selectedFiles.length > 1) {
+                // Setas de Navegação Novas
+                innerHTML += `<div class="carousel-nav-arrow left-arrow" onclick="scrollMockupCarousel(-1)"><i class="fa-solid fa-chevron-left"></i></div>`;
+                innerHTML += `<div class="carousel-nav-arrow right-arrow" onclick="scrollMockupCarousel(1)"><i class="fa-solid fa-chevron-right"></i></div>`;
+                
                 innerHTML += `<div class="carousel-counter-pill">1/${selectedFiles.length}</div>`;
                 innerHTML += `<div class="carousel-indicators">`;
                 selectedFiles.forEach((_, i) => innerHTML += `<div class="carousel-dot ${i===0 ? 'active' : ''}"></div>`);
@@ -235,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             container.innerHTML = innerHTML;
 
+            // Sincroniza o número e as bolinhas ao passar a imagem
             if (selectedFiles.length > 1) {
                 const track = container.querySelector('.mockup-carousel');
                 const pill = container.querySelector('.carousel-counter-pill');
@@ -250,6 +256,81 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 }
+            }
+        });
+    }
+
+    // --- NOVA FUNÇÃO: ROLAR O CARROSSEL NAS SETAS ---
+    window.scrollMockupCarousel = function(direction) {
+        document.querySelectorAll('.mockup-carousel').forEach(track => {
+            const width = track.offsetWidth;
+            // Scrolla suavemente para a direita (+1) ou esquerda (-1)
+            track.scrollBy({ left: direction * width, behavior: 'smooth' });
+        });
+    }
+
+    // --- NOVA FUNÇÃO: ABRIR O EDITOR DE ENQUADRAMENTO (CROPPER) ---
+    window.openImageEditor = function() {
+        if(selectedFiles.length === 0) return;
+        
+        // Descobre qual imagem está aparecendo agora no celular
+        const track = document.querySelector('.platform-layout.active .mockup-carousel');
+        let currentIndex = 0;
+        if(track) {
+            currentIndex = Math.round(track.scrollLeft / track.offsetWidth) || 0;
+        }
+
+        const fileItem = selectedFiles[currentIndex];
+        
+        if(fileItem.type === 'video') {
+            Swal.fire('Aviso', 'O enquadramento avançado só está disponível para imagens.', 'info');
+            return;
+        }
+
+        // Abre um modal bonito com a ferramenta de edição
+        Swal.fire({
+            title: 'Enquadrar Imagem',
+            html: `<div style="max-height: 60vh; overflow: hidden; background: #000;">
+                     <img id="cropper-image" src="${fileItem.url}" style="max-width: 100%; display: block;">
+                   </div>
+                   <p style="font-size:0.8rem; margin-top:10px; color:#666;">Use o mouse para arrastar e a rodinha (scroll) para dar zoom.</p>`,
+            width: '800px',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-check"></i> Aplicar Corte',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: 'var(--primary-color)',
+            didOpen: () => {
+                const image = document.getElementById('cropper-image');
+                // Inicializa o Cropper.js no modo "Arrastar" (dragMode: 'move')
+                window.cropperInstance = new Cropper(image, {
+                    viewMode: 1,
+                    dragMode: 'move', // Permite clicar e arrastar a imagem
+                    background: false,
+                    autoCropArea: 1,
+                });
+            },
+            preConfirm: () => {
+                if(!window.cropperInstance) return;
+                // Pega a imagem exatamente como o usuário enquadrou
+                const canvas = window.cropperInstance.getCroppedCanvas({
+                    maxWidth: 2000,
+                    maxHeight: 2000
+                });
+                return new Promise((resolve) => {
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, fileItem.file.type, 0.95);
+                });
+            }
+        }).then((result) => {
+            if(result.isConfirmed && result.value) {
+                // Substitui a imagem original pela versão recortada/enquadrada!
+                const newFile = new File([result.value], fileItem.file.name, { type: fileItem.file.type });
+                selectedFiles[currentIndex].file = newFile;
+                selectedFiles[currentIndex].url = URL.createObjectURL(newFile);
+                
+                renderThumbnails();
+                renderMockup(); // Atualiza o celular com a nova imagem!
             }
         });
     }
