@@ -72,7 +72,12 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn w-100 py-3 mt-4 fw-bold" style="background-color: var(--primary-color, #333366); border:none; border-radius:10px; color:white; font-size:1.1rem; cursor:pointer;">
+            <div style="margin-bottom: 20px;">
+                <div class="input-label-row"><span>Data e Hora do Agendamento</span></div>
+                <input type="datetime-local" name="scheduled_for" class="form-control" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px;" required>
+            </div>
+
+            <button type="submit" class="btn w-100 py-3 mt-2 fw-bold" style="background-color: var(--primary-color, #333366); border:none; border-radius:10px; color:white; font-size:1.1rem; cursor:pointer;">
                 <i class="fa-solid fa-paper-plane me-2"></i> Agendar Postagem
             </button>
         </form> 
@@ -82,7 +87,7 @@
         <div class="platform-selector-bar">
             {% for account in social_accounts %}
                 <label class="platform-pill-label">
-                    <input type="radio" name="platform" data-platform="{{ account.platform }}" class="platform-radio" {% if forloop.first %}checked{% endif %}>
+                    <input type="checkbox" name="platforms" value="{{ account.id }}" data-platform="{{ account.platform }}" class="platform-radio" {% if forloop.first %}checked{% endif %}>
                     <span class="platform-dot dot-{{ account.platform }}"></span>{{ account.get_platform_display|default:account.platform|title }}
                 </label>
             {% empty %}

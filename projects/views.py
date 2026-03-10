@@ -1156,6 +1156,47 @@ def create_post_studio(request):
     }
     
     return render(request, 'projects/create_post_studio.html', context)
+
+@login_required
+@require_POST
+def create_post_api(request):
+    """ API que recebe os dados do Estúdio e salva na tabela POST """
+    try:
+        # 1. Pega os dados do Formulário
+        client_id = request.POST.get('client_id')
+        caption = request.POST.get('caption')
+        scheduled_for = request.POST.get('scheduled_for')
+        
+        # MUDANÇA AQUI: getlist() em vez de get() captura TODOS os checkboxes marcados
+        account_ids = request.POST.getlist('platforms') 
+        
+        media_files = request.FILES.getlist('media_files')
+
+        client = get_object_or_404(Client, id=client_id)
+
+        # 2. Cria o Post "Pai" no banco de dados
+        novo_post = Post.objects.create(
+            client=client,
+            caption=caption,
+            scheduled_for=scheduled_for,
+            approval_status='approved_to_schedule'
+        )
+
+        # 3. MUDANÇA AQUI: Vincula MÚLTIPLAS Redes Sociais ao Post
+        if account_ids:
+            # Busca todas as contas reais que batem com os IDs selecionados
+            accounts = SocialAccount.objects.filter(id__in=account_ids)
+            
+            # O asterisco (*) injeta todas as redes de uma vez no campo ManyToMany
+            novo_post.accounts.add(*accounts)
+
+        # (Aqui vai a parte de salvar mídias se você tiver a tabela PostMedia)
+
+        return JsonResponse({'status': 'success', 'message': 'Post agendado com sucesso!'})
+        
+    except Exception as e:
+        print(f"Erro ao salvar post: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 # ==============================================================================
 # 6. AUTH SOCIAL (OAUTH)
 # ==============================================================================

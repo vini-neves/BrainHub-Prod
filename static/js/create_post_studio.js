@@ -7,8 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
         slot.textContent = clientName;
     });
 
-    // 2. TROCA DE PLATAFORMA (E INICIALIZAÇÃO)
-    const platformRadios = document.querySelectorAll('input[name="platform"]');
+    // 2. TROCA DE PLATAFORMA (E INICIALIZAÇÃO - AGORA MÚLTIPLA)
+    // ATENÇÃO: Mudou de "platform" para "platforms" (plural)
+    const platformCheckboxes = document.querySelectorAll('input[name="platforms"]'); 
     const platformLayouts = document.querySelectorAll('.platform-layout');
     const previewLabelName = document.getElementById('preview-platform-name');
 
@@ -21,16 +22,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    platformRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            activatePlatform(this.getAttribute('data-platform'));
+    platformCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Se marcou a rede, atualiza o preview para ela
+            if (this.checked) {
+                activatePlatform(this.getAttribute('data-platform'));
+            } else {
+                // Se desmarcou, tenta voltar o preview para a primeira que ainda estiver marcada
+                const firstChecked = document.querySelector('input[name="platforms"]:checked');
+                if (firstChecked) {
+                    activatePlatform(firstChecked.getAttribute('data-platform'));
+                }
+            }
         });
     });
 
-    // Ativa a primeira plataforma ao carregar a página
-    if(platformRadios.length > 0) {
-        platformRadios[0].checked = true;
-        activatePlatform(platformRadios[0].getAttribute('data-platform'));
+    // Ativa o preview da primeira plataforma marcada ao carregar a página
+    if(platformCheckboxes.length > 0) {
+        const firstChecked = document.querySelector('input[name="platforms"]:checked');
+        if(firstChecked) activatePlatform(firstChecked.getAttribute('data-platform'));
     }
 
     // 3. SINCRONIZAÇÃO DA LEGENDA (COM TRAVA DE SEGURANÇA)
@@ -51,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // A trava de segurança contra o erro "null"
     if (captionInput) {
         captionInput.addEventListener('input', (e) => updateCaptionPreview(e.target.value));
     }
@@ -256,10 +265,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Verifica se tem alguma rede social conectada para esse cliente
-            const platforms = document.querySelectorAll('input[name="platform"]');
-            if(platforms.length === 0) {
-                 Swal.fire('Atenção', 'Este cliente não tem nenhuma rede social conectada.', 'warning');
+            // ATENÇÃO AQUI: Atualizamos a validação para buscar por 'platforms' no plural e garantir que ao menos 1 checkbox está MARCADO (:checked)
+            const markedPlatforms = document.querySelectorAll('input[name="platforms"]:checked');
+            
+            if(markedPlatforms.length === 0) {
+                 Swal.fire('Atenção', 'Selecione pelo menos uma rede social para publicar.', 'warning');
                  return;
             }
 
@@ -275,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             try {
-                // Aqui você vai apontar para a sua URL real de salvar no Django
                 const response = await fetch('/api/social/create_post/', { 
                     method: 'POST',
                     body: formData,
@@ -290,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire({
                         icon: 'success',
                         title: 'Sucesso!',
-                        text: 'Post agendado e enviado para o Kanban!'
+                        text: 'Post agendado e salvo no histórico!'
                     }).then(() => {
                         window.location.href = window.DASHBOARD_URL;
                     });
@@ -298,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire('Erro', result.message || 'Erro ao criar post.', 'error');
                 }
             } catch (error) {
-                Swal.fire('Erro', 'Rota de salvar post ainda não configurada.', 'info');
+                Swal.fire('Erro', 'Falha de comunicação com a API.', 'error');
                 console.log(error);
             } finally {
                 btn.innerHTML = originalText;
