@@ -1,12 +1,13 @@
 {% extends 'projects/base.html' %} 
 {% load static %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
     <link rel="stylesheet" href="{% static 'css/create_post.css' %}">
+{% endblock %}
+
+{% block content %}
 
 <div class="create-post-container">
     <div class="left-column">
