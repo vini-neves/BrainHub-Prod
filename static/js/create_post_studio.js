@@ -269,16 +269,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- NOVA FUNÇÃO: ABRIR O EDITOR DE ENQUADRAMENTO (CROPPER) ---
+    // --- NOVA FUNÇÃO: ABRIR O EDITOR DE ENQUADRAMENTO (CROPPER) --
     window.openImageEditor = function() {
         if(selectedFiles.length === 0) return;
         
-        // Descobre qual imagem está aparecendo agora no celular
         const track = document.querySelector('.platform-layout.active .mockup-carousel');
         let currentIndex = 0;
-        if(track) {
-            currentIndex = Math.round(track.scrollLeft / track.offsetWidth) || 0;
-        }
+        if(track) currentIndex = Math.round(track.scrollLeft / track.offsetWidth) || 0;
 
         const fileItem = selectedFiles[currentIndex];
         
@@ -287,35 +284,51 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Abre um modal bonito com a ferramenta de edição
         Swal.fire({
             title: 'Enquadrar Imagem',
-            html: `<div style="max-height: 60vh; overflow: hidden; background: #000;">
-                     <img id="cropper-image" src="${fileItem.url}" style="max-width: 100%; display: block;">
+            // Altura fixa garante que o Cropper não quebre a proporção
+            html: `<div style="width: 100%; height: 450px; background: #111827; position: relative; border-radius: 10px; overflow: hidden;">
+                     <img id="cropper-image" src="${fileItem.url}" style="max-width: 100%; max-height: 100%; display: block; margin: 0 auto;">
                    </div>
-                   <p style="font-size:0.8rem; margin-top:10px; color:#666;">Use o mouse para arrastar e a rodinha (scroll) para dar zoom.</p>`,
+                   <p style="font-size:0.85rem; margin-top:15px; color:#666;">
+                     <i class="fa-solid fa-mouse-pointer"></i> Clique e arraste para mover. <br>
+                     <i class="fa-solid fa-magnifying-glass"></i> Use o scroll do mouse para dar Zoom.
+                   </p>`,
             width: '800px',
             showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-check"></i> Aplicar Corte',
+            confirmButtonText: '<i class="fa-solid fa-check"></i> Aplicar Enquadramento',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: 'var(--primary-color)',
+            confirmButtonColor: 'var(--primary-color, #333366)',
             didOpen: () => {
                 const image = document.getElementById('cropper-image');
-                // Inicializa o Cropper.js no modo "Arrastar" (dragMode: 'move')
-                window.cropperInstance = new Cropper(image, {
-                    viewMode: 1,
-                    dragMode: 'move', // Permite clicar e arrastar a imagem
-                    background: false,
-                    autoCropArea: 1,
-                });
+                
+                // O SEGREDO: Só inicia o Cropper quando a imagem estiver desenhada na tela
+                const initCropper = () => {
+                    window.cropperInstance = new Cropper(image, {
+                        viewMode: 1,
+                        dragMode: 'move', // Move a imagem, não a caixa
+                        autoCropArea: 1, // Pega a área inteira
+                        background: false,
+                        guides: true, // Mostra as linhas de regra dos terços
+                    });
+                };
+
+                if (image.complete) {
+                    initCropper();
+                } else {
+                    image.onload = initCropper;
+                }
             },
             preConfirm: () => {
-                if(!window.cropperInstance) return;
-                // Pega a imagem exatamente como o usuário enquadrou
+                if(!window.cropperInstance) return null;
+                
+                // Extrai a imagem editada com qualidade alta
                 const canvas = window.cropperInstance.getCroppedCanvas({
-                    maxWidth: 2000,
-                    maxHeight: 2000
+                    maxWidth: 1920,
+                    maxHeight: 1920
                 });
+                
+                // Transforma em arquivo e retorna a promessa
                 return new Promise((resolve) => {
                     canvas.toBlob((blob) => {
                         resolve(blob);
@@ -324,13 +337,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }).then((result) => {
             if(result.isConfirmed && result.value) {
-                // Substitui a imagem original pela versão recortada/enquadrada!
+                // Substitui a imagem antiga no nosso Array pela imagem nova recortada
                 const newFile = new File([result.value], fileItem.file.name, { type: fileItem.file.type });
                 selectedFiles[currentIndex].file = newFile;
                 selectedFiles[currentIndex].url = URL.createObjectURL(newFile);
                 
+                // Recarrega as telas
                 renderThumbnails();
-                renderMockup(); // Atualiza o celular com a nova imagem!
+                renderMockup(); 
             }
         });
     }

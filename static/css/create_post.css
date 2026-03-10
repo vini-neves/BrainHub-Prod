@@ -342,79 +342,32 @@ textarea.caption-textarea {
 }
 
 /* ==========================================================================
-      SELETOR DE PLATAFORMA (PILLS)
-      ========================================================================== */
-.platform-selector-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    background: #fff;
-    padding: 10px 20px;
-    border-radius: 30px;
-    margin-bottom: 30px;
-    width: fit-content;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
+   SELETOR DE PLATAFORMA (CHECKBOXES MULTIPLOS)
+   ========================================================================== */
+.platform-selector-bar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #fff; padding: 10px 20px; border-radius: 30px; margin-bottom: 30px; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-.platform-radio {
-    display: none;
-}
+/* Esconde a caixinha do checkbox feia */
+.platform-checkbox { display: none; }
 
-.platform-pill-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 600;
-    color: var(--c-gray);
-    font-size: 0.9rem;
-    transition: all 0.3s;
-    background: transparent;
-}
+/* O visual do botão normal */
+.platform-pill { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; color: var(--text-gray); font-size: 0.9rem; transition: all 0.2s; border: 2px solid transparent; background: #f3f4f6; }
 
-.platform-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
+.platform-dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-facebook { background: var(--facebook-color, #1877F2); } 
+.dot-instagram { background: var(--instagram-color, #E1306C); }
+.dot-x { background: var(--x-color, #000000); } 
+.dot-linkedin { background: var(--linkedin-color, #0077B5); }
+.dot-pinterest { background: var(--pinterest-color, #E60023); } 
+.dot-youtube { background: var(--youtube-color, #FF0000); }
+.dot-tiktok { background: var(--tiktok-color, #000000); }
 
-.dot-facebook {
-    background: var(--facebook-color);
+/* O MÁGICA: O visual do botão quando está SELECIONADO */
+.platform-checkbox:checked + .platform-pill { 
+    background: #f0fdf4; 
+    border-color: var(--primary-color, #333366); 
+    color: var(--primary-color, #333366); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
-
-.dot-instagram {
-    background: var(--instagram-color);
-}
-
-.dot-x {
-    background: var(--x-color);
-}
-
-.dot-linkedin {
-    background: var(--linkedin-color);
-}
-
-.dot-pinterest {
-    background: var(--pinterest-color);
-}
-
-.dot-youtube {
-    background: var(--youtube-color);
-}
-
-.dot-tiktok {
-    background: var(--tiktok-color);
-}
-
-.platform-radio:checked+.platform-pill-label {
-    background: #f3f4f6;
-    color: var(--c-dark);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
 /* ==========================================================================
       MOCKUP DO CELULAR REALISTA
       ========================================================================== */

@@ -91,12 +91,15 @@
     <div class="right-column">
         <div class="platform-selector-bar">
             {% for account in social_accounts %}
-                <label class="platform-pill-label">
-                    <input type="checkbox" name="platforms" value="{{ account.id }}" data-platform="{{ account.platform }}" class="platform-radio" {% if forloop.first %}checked{% endif %}>
-                    <span class="platform-dot dot-{{ account.platform }}"></span>{{ account.get_platform_display|default:account.platform|title }}
-                </label>
+                <div class="platform-checkbox-wrapper">
+                    <input type="checkbox" id="plat_{{ account.id }}" name="platforms" value="{{ account.id }}" data-platform="{{ account.platform }}" class="platform-checkbox" {% if forloop.first %}checked{% endif %}>
+                    <label for="plat_{{ account.id }}" class="platform-pill">
+                        <span class="platform-dot dot-{{ account.platform }}"></span>
+                        {{ account.get_platform_display|default:account.platform|title }}
+                    </label>
+                </div>
             {% empty %}
-                <span class="platform-pill-label text-muted">Nenhuma rede social conectada para este cliente.</span>
+                <span class="text-muted">Nenhuma rede social conectada para este cliente.</span>
             {% endfor %}
         </div>
 
