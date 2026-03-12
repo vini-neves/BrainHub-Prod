@@ -1,10 +1,15 @@
 from django import template
-from projects.models import Agency # TROQUE 'Agency' PELO NOME REAL DO SEU MODEL DE AGÊNCIA
+from django.apps import apps
 
 register = template.Library()
 
 @register.simple_tag
 def get_agency_settings():
-    """Busca o primeiro cadastro de agência no banco de dados"""
-    # Se você tiver apenas 1 agência cadastrada, o .first() pega ela perfeitamente
-    return Agency.objects.first()
+    """Busca o cadastro da agência com proteção contra erros"""
+    try:
+        # Tenta buscar o model chamado 'AgencyProfile' dinamicamente
+        AgencyProfile = apps.get_model('projects', 'AgencyProfile')
+        return AgencyProfile.objects.first()
+    except LookupError:
+        # Se a tabela ainda não existir no banco, não quebra o site!
+        return None
