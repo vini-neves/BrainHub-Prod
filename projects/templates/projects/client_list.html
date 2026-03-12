@@ -40,7 +40,7 @@
                     <div class="client-info">
                         <div class="client-avatar">
                             {% if agency.logo %}
-                                <img src="{{ agency.logo.url }}" class="agency-logo-thumb">
+                                <img src="{{ task.client_logo }}" class="agency-logo-thumb">
                             {% else %}
                                 {% with client.name|slice:":2" as initials %}{{ initials|upper }}{% endwith %}
                             {% endif %}
