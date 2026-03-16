@@ -461,36 +461,36 @@ class Campaign(models.Model):
 # ==============================================================================
 # 7. PUBLICAÇÕES (POSTS AGENDADOS / ESTÚDIO DE CRIAÇÃO)
 # ==============================================================================
-# class Post(models.Model):
-#     STATUS_CHOICES = [
-#         ('draft', 'Rascunho'),
-#         ('pending_approval', 'Aguardando Aprovação'),
-#         ('approved_to_schedule', 'Agendado'),
-#         ('published', 'Publicado'),
-#         ('failed', 'Falha na Publicação'),
-#     ]
+class Post(models.Model):
+    STATUS_CHOICES = [
+        ('draft', 'Rascunho'),
+        ('pending_approval', 'Aguardando Aprovação'),
+        ('approved_to_schedule', 'Agendado'),
+        ('published', 'Publicado'),
+        ('failed', 'Falha na Publicação'),
+    ]
 
-#     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='posts', verbose_name="Cliente")
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='posts', verbose_name="Cliente")
     
-#     # ManyToMany porque um post pode ir para Face, Insta e LinkedIn ao mesmo tempo!
-#     accounts = models.ManyToManyField(SocialAccount, related_name='posts', verbose_name="Redes Sociais")
+    # ManyToMany porque um post pode ir para Face, Insta e LinkedIn ao mesmo tempo!
+    accounts = models.ManyToManyField(SocialAccount, related_name='posts', verbose_name="Redes Sociais")
     
-#     caption = models.TextField(blank=True, verbose_name="Legenda")
+    caption = models.TextField(blank=True, verbose_name="Legenda")
     
-#     # Campo para salvar a mídia caso queira mostrar no painel depois
-#     media = models.FileField(upload_to='posts_media/', blank=True, null=True, verbose_name="Mídia Principal")
+    # Campo para salvar a mídia caso queira mostrar no painel depois
+    media = models.FileField(upload_to='posts_media/', blank=True, null=True, verbose_name="Mídia Principal")
     
-#     scheduled_for = models.DateTimeField(verbose_name="Agendado para")
-#     approval_status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='draft', verbose_name="Status")
+    scheduled_for = models.DateTimeField(verbose_name="Agendado para")
+    approval_status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='draft', verbose_name="Status")
     
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-#     class Meta:
-#         ordering = ['-scheduled_for']
-#         verbose_name = "Publicação"
-#         verbose_name_plural = "Publicações"
+    class Meta:
+        ordering = ['-scheduled_for']
+        verbose_name = "Publicação"
+        verbose_name_plural = "Publicações"
 
-#     def __str__(self):
-#         data_formatada = self.scheduled_for.strftime('%d/%m/%Y %H:%M') if self.scheduled_for else "Sem Data"
-#         return f"{self.client.name} - {data_formatada}"
+    def __str__(self):
+        data_formatada = self.scheduled_for.strftime('%d/%m/%Y %H:%M') if self.scheduled_for else "Sem Data"
+        return f"{self.client.name} - {data_formatada}"

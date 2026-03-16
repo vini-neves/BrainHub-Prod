@@ -87,7 +87,7 @@ urlpatterns = [
     # --- SOCIAL DASHBOARD & AUTH ---
     path('social/', views.social_dashboard, name='social_dashboard'),
     path('social/studio/', views.create_post_studio, name='create_post_studio'),
-    # path('api/social/create_post/', views.create_post_api, name='create_post_api'),
+    path('api/social/create_post/', views.create_post_api, name='create_post_api'),
     
     # --- META (FACEBOOK & INSTAGRAM) ---
     # Início Separado (Novas Funções)
