@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import views as auth_views
 from django.core.files.base import ContentFile
-from projects.models import Client, SocialAccount, Campaign, Post
+from projects.models import Client, SocialAccount, Campaign#, Post
 
 # --- IMPORTS LOCAIS ---
 from .models import (
@@ -1157,119 +1157,119 @@ def create_post_studio(request):
     
     return render(request, 'projects/create_post_studio.html', context)
 
-@login_required
-@require_POST
-def create_post_api(request):
-    """ API que salva o Post e dispara IMAGEM + TEXTO para o LinkedIn em tempo real """
-    try:
-        client_id = request.POST.get('client_id')
-        caption = request.POST.get('caption', '')
-        scheduled_for = request.POST.get('scheduled_for')
-        account_ids = request.POST.getlist('platforms')
-        media_files = request.FILES.getlist('media_files') # Pega os arquivos upados
+# @login_required
+# @require_POST
+# def create_post_api(request):
+#     """ API que salva o Post e dispara IMAGEM + TEXTO para o LinkedIn em tempo real """
+#     try:
+#         client_id = request.POST.get('client_id')
+#         caption = request.POST.get('caption', '')
+#         scheduled_for = request.POST.get('scheduled_for')
+#         account_ids = request.POST.getlist('platforms')
+#         media_files = request.FILES.getlist('media_files') # Pega os arquivos upados
 
-        client = get_object_or_404(Client, id=client_id)
+#         client = get_object_or_404(Client, id=client_id)
 
-        # 1. Salva no banco de dados da BrainZ
-        novo_post = Post.objects.create(
-            client=client,
-            caption=caption,
-            scheduled_for=scheduled_for,
-            approval_status='approved_to_schedule'
-        )
+#         # 1. Salva no banco de dados da BrainZ
+#         novo_post = Post.objects.create(
+#             client=client,
+#             caption=caption,
+#             scheduled_for=scheduled_for,
+#             approval_status='approved_to_schedule'
+#         )
 
-        if account_ids:
-            accounts = SocialAccount.objects.filter(id__in=account_ids)
-            novo_post.accounts.add(*accounts)
+#         if account_ids:
+#             accounts = SocialAccount.objects.filter(id__in=account_ids)
+#             novo_post.accounts.add(*accounts)
 
-            # =================================================================
-            # 2. MOTOR DE PUBLICAÇÃO: LINKEDIN (TEXTO + IMAGEM)
-            # =================================================================
-            for account in accounts:
-                if account.platform == 'linkedin':
-                    token = account.access_token
-                    urn = account.account_id
+#             # =================================================================
+#             # 2. MOTOR DE PUBLICAÇÃO: LINKEDIN (TEXTO + IMAGEM)
+#             # =================================================================
+#             for account in accounts:
+#                 if account.platform == 'linkedin':
+#                     token = account.access_token
+#                     urn = account.account_id
 
-                    headers = {
-                        'Authorization': f'Bearer {token}',
-                        'Content-Type': 'application/json',
-                        'X-Restli-Protocol-Version': '2.0.0'
-                    }
+#                     headers = {
+#                         'Authorization': f'Bearer {token}',
+#                         'Content-Type': 'application/json',
+#                         'X-Restli-Protocol-Version': '2.0.0'
+#                     }
 
-                    # Descobre o ID do usuário caso ainda não esteja salvo
-                    if not urn or not urn.startswith('urn:li:'):
-                        me_res = requests.get('https://api.linkedin.com/v2/userinfo', headers=headers)
-                        if me_res.status_code == 200:
-                            urn = f"urn:li:person:{me_res.json().get('sub')}"
-                            account.account_id = urn
-                            account.save()
-                        else:
-                            continue
+#                     # Descobre o ID do usuário caso ainda não esteja salvo
+#                     if not urn or not urn.startswith('urn:li:'):
+#                         me_res = requests.get('https://api.linkedin.com/v2/userinfo', headers=headers)
+#                         if me_res.status_code == 200:
+#                             urn = f"urn:li:person:{me_res.json().get('sub')}"
+#                             account.account_id = urn
+#                             account.save()
+#                         else:
+#                             continue
 
-                    # --- LÓGICA DE UPLOAD SE HOUVER IMAGEM ---
-                    asset_urn = None
-                    if media_files:
-                        image_file = media_files[0] # Pega a primeira imagem para o teste
+#                     # --- LÓGICA DE UPLOAD SE HOUVER IMAGEM ---
+#                     asset_urn = None
+#                     if media_files:
+#                         image_file = media_files[0] # Pega a primeira imagem para o teste
                         
-                        # ETAPA A: Registrar o Upload
-                        reg_url = 'https://api.linkedin.com/v2/assets?action=registerUpload'
-                        reg_data = {
-                            "registerUploadRequest": {
-                                "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
-                                "owner": urn,
-                                "serviceRelationships": [{"relationshipType": "OWNER", "identifier": "urn:li:userGeneratedContent"}]
-                            }
-                        }
-                        reg_res = requests.post(reg_url, headers=headers, json=reg_data)
+#                         # ETAPA A: Registrar o Upload
+#                         reg_url = 'https://api.linkedin.com/v2/assets?action=registerUpload'
+#                         reg_data = {
+#                             "registerUploadRequest": {
+#                                 "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
+#                                 "owner": urn,
+#                                 "serviceRelationships": [{"relationshipType": "OWNER", "identifier": "urn:li:userGeneratedContent"}]
+#                             }
+#                         }
+#                         reg_res = requests.post(reg_url, headers=headers, json=reg_data)
                         
-                        if reg_res.status_code == 200:
-                            reg_json = reg_res.json()
-                            upload_url = reg_json['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl']
-                            asset_urn = reg_json['value']['asset']
+#                         if reg_res.status_code == 200:
+#                             reg_json = reg_res.json()
+#                             upload_url = reg_json['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl']
+#                             asset_urn = reg_json['value']['asset']
 
-                            # ETAPA B: Fazer o Upload do Binário da Imagem
-                            image_data = image_file.read()
-                            upload_headers = {'Authorization': f'Bearer {token}'} # Sem content-type para evitar conflitos binários
-                            requests.post(upload_url, headers=upload_headers, data=image_data)
+#                             # ETAPA B: Fazer o Upload do Binário da Imagem
+#                             image_data = image_file.read()
+#                             upload_headers = {'Authorization': f'Bearer {token}'} # Sem content-type para evitar conflitos binários
+#                             requests.post(upload_url, headers=upload_headers, data=image_data)
 
-                    # ETAPA C: Montar o Post Final
-                    post_data = {
-                        "author": urn,
-                        "lifecycleState": "PUBLISHED",
-                        "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"}
-                    }
+#                     # ETAPA C: Montar o Post Final
+#                     post_data = {
+#                         "author": urn,
+#                         "lifecycleState": "PUBLISHED",
+#                         "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"}
+#                     }
 
-                    # Se conseguiu subir a imagem, anexa no post. Se não, vai só texto.
-                    if asset_urn:
-                        post_data["specificContent"] = {
-                            "com.linkedin.ugc.ShareContent": {
-                                "shareCommentary": {"text": caption},
-                                "shareMediaCategory": "IMAGE",
-                                "media": [{"status": "READY", "media": asset_urn}]
-                            }
-                        }
-                    else:
-                        post_data["specificContent"] = {
-                            "com.linkedin.ugc.ShareContent": {
-                                "shareCommentary": {"text": caption},
-                                "shareMediaCategory": "NONE"
-                            }
-                        }
+#                     # Se conseguiu subir a imagem, anexa no post. Se não, vai só texto.
+#                     if asset_urn:
+#                         post_data["specificContent"] = {
+#                             "com.linkedin.ugc.ShareContent": {
+#                                 "shareCommentary": {"text": caption},
+#                                 "shareMediaCategory": "IMAGE",
+#                                 "media": [{"status": "READY", "media": asset_urn}]
+#                             }
+#                         }
+#                     else:
+#                         post_data["specificContent"] = {
+#                             "com.linkedin.ugc.ShareContent": {
+#                                 "shareCommentary": {"text": caption},
+#                                 "shareMediaCategory": "NONE"
+#                             }
+#                         }
 
-                    # Dispara o Post para o mundo!
-                    post_url = 'https://api.linkedin.com/v2/ugcPosts'
-                    response = requests.post(post_url, headers=headers, json=post_data)
+#                     # Dispara o Post para o mundo!
+#                     post_url = 'https://api.linkedin.com/v2/ugcPosts'
+#                     response = requests.post(post_url, headers=headers, json=post_data)
 
-                    if response.status_code in [200, 201]:
-                        print("🚀 SUCESSO! Post publicado no LinkedIn com Imagem!")
-                    else:
-                        print("❌ Erro no LinkedIn:", response.json())
+#                     if response.status_code in [200, 201]:
+#                         print("🚀 SUCESSO! Post publicado no LinkedIn com Imagem!")
+#                     else:
+#                         print("❌ Erro no LinkedIn:", response.json())
 
-        return JsonResponse({'status': 'success', 'message': 'Post publicado e salvo com sucesso!'})
+#         return JsonResponse({'status': 'success', 'message': 'Post publicado e salvo com sucesso!'})
         
-    except Exception as e:
-        print(f"Erro fatal: {e}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+#     except Exception as e:
+#         print(f"Erro fatal: {e}")
+#         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 # 6. AUTH SOCIAL (OAUTH)
